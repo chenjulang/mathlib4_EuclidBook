@@ -252,7 +252,7 @@ theorem map_one : f 1 = 1 :=
 
 /-- A group homomorphism sends inverses to inverses. -/
 @[to_additive "An additive group homomorphism sends negations to negations."]
-theorem map_inv (a : α) : f a⁻¹ = (f a)⁻¹ :=
+theorem map_inv (hf : IsGroupHom f) (a : α) : f a⁻¹ = (f a)⁻¹ :=
   eq_inv_of_mul_eq_one_left <| by rw [← hf.map_mul, inv_mul_self, hf.map_one]
 
 @[to_additive]
