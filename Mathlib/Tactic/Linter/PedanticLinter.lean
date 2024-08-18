@@ -141,6 +141,12 @@ def pedantic : Linter where run := withSetOptionIn fun stx ↦ do
       -- but the pretty-printed context does not, do not report this.
       -- Pretty-printing loses in-source comments, hence this is most likely a false positive.
       if ((srcCtxt.splitOn "-").length >= 2) && (ppCtxt.splitOn "-").length <= 1 then return
+
+      let mut errData := m!"source context\n'{srcCtxt}'\n'{ppCtxt}'\npretty-printed context"
+      -- Heuristic on unhelpful errors: print additionally the full diff.
+      if srcCtxt.isEmpty && ppCtxt.isEmpty then
+        errData := m!"source context\n'{srcCtxt}'\n'{ppCtxt}'\npretty-printed context;¬\
+        the full diff is\n{st}{real}\nactual code last"
       Linter.logLint linter.pedantic (.ofRange ⟨⟨pos⟩, ⟨pos + extraLth + 1⟩⟩)
         m!"source context\n'{srcCtxt}'\n'{ppCtxt}'\npretty-printed context"
 
