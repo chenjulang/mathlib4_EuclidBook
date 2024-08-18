@@ -274,7 +274,7 @@ def letCase (funPropDecl : FunPropDecl) (e : Expr) (f : Expr)
   | _ => throwError "expected expression of the form `fun x => lam y := ..; ..`"
 
 
-/-- Prove function property of using "morphism theorems" e.g. bundled linear map is linear map.  -/
+/-- Prove function property of using "morphism theorems" e.g. bundled linear map is linear map. -/
 def applyMorRules (funPropDecl : FunPropDecl) (e : Expr) (fData : FunctionData)
     (funProp : Expr → FunPropM (Option Result)) : FunPropM (Option Result) := do
   trace[Meta.Tactic.fun_prop.step] "applying morphism theoresm to {← ppExpr e}"
@@ -302,7 +302,7 @@ def applyMorRules (funPropDecl : FunPropDecl) (e : Expr) (fData : FunctionData)
     trace[Meta.Tactic.fun_prop.step] "no theorem matched"
     return none
 
-/-- Prove function property of using "transition theorems" e.g. continuity from linearity.  -/
+/-- Prove function property of using "transition theorems" e.g. continuity from linearity. -/
 def applyTransitionRules (e : Expr) (funProp : Expr → FunPropM (Option Result)) :
     FunPropM (Option Result) := do
 

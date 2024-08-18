@@ -237,7 +237,7 @@ theorem wellFounded_lt_exact_sequence {β γ : Type*} [PartialOrder β] [Preorde
     (InvImage.wf _ (h₁.prod_lex h₂))
 
 /-- A generalization of the theorem that if `N` is a submodule of `M` and
-  `N` and `M / N` are both Noetherian, then `M` is Noetherian.  -/
+  `N` and `M / N` are both Noetherian, then `M` is Noetherian. -/
 theorem wellFounded_gt_exact_sequence {β γ : Type*} [Preorder β] [PartialOrder γ]
     (h₁ : WellFounded ((· > ·) : β → β → Prop)) (h₂ : WellFounded ((· > ·) : γ → γ → Prop)) (K : α)
     (f₁ : β → α) (f₂ : α → β) (g₁ : γ → α) (g₂ : α → γ) (gci : GaloisCoinsertion f₁ f₂)
