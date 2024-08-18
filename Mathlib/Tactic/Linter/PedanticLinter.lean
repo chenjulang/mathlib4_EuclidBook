@@ -59,7 +59,7 @@ it only replace all whitespace starting from a linebreak (`\n`) with a single wh
 def polishSource (s : String) : String × Array Nat :=
   let split := s.split (· == '\n')
   --let lengths := split.map (·.length)
-  let preWS := split.foldl (init := #[]) fun p q =>
+  let preWS := split.foldl (init := #[]) fun p q ↦
     let txt := q.trimLeft.length
     (p.push (q.length - txt)).push txt
   let preWS := preWS.eraseIdx 0
@@ -116,12 +116,9 @@ def capSyntax (stx : Syntax) (p : Nat) : Syntax :=
 
 namespace Pedantic
 
-/-- Gets the value of the `linter.pedantic` option. -/
-def getLinterHash (o : Options) : Bool := Linter.getLinterValue linter.pedantic o
-
 @[inherit_doc Mathlib.Linter.linter.pedantic]
 def pedantic : Linter where run := withSetOptionIn fun stx ↦ do
-    unless getLinterHash (← getOptions) do
+    unless Linter.getLinterValue linter.pedantic (← getOptions) do
       return
     if (← MonadState.get).messages.hasErrors then
       return
@@ -142,6 +139,10 @@ def pedantic : Linter where run := withSetOptionIn fun stx ↦ do
       let extraLth := (f.takeWhile (· != st.get diff)).length
       let srcCtxt := zoomString real diff.1 5
       let ppCtxt  := zoomString st diff.1 5
+      -- Heuristic to avoid false positives: when the source context contains the string "-- ",
+      -- but the pretty-printed context does not, do not report this.
+      -- Pretty-printing loses in-source comments, hence this is most likely a false positive.
+      if ((srcCtxt.splitOn "-").length >= 2) && (ppCtxt.splitOn "-").length <= 1 then return
       Linter.logLint linter.pedantic (.ofRange ⟨⟨pos⟩, ⟨pos + extraLth + 1⟩⟩)
         m!"source context\n'{srcCtxt}'\n'{ppCtxt}'\npretty-printed context"
 
