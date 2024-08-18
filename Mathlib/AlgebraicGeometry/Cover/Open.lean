@@ -46,7 +46,7 @@ structure OpenCover (X : Scheme.{u}) where
   obj : J → Scheme
   /-- the embedding of subschemes to `X` -/
   map : ∀ j : J, obj j ⟶ X
-  /-- given a point of `x : X`, `f x` is the index of the subscheme which contains `x`  -/
+  /-- given a point of `x : X`, `f x` is the index of the subscheme which contains `x` -/
   f : X → J
   /-- the subschemes covers `X` -/
   covers : ∀ x, x ∈ Set.range (map (f x)).1.base
@@ -274,7 +274,7 @@ structure AffineOpenCover (X : Scheme.{u}) where
   obj : J → CommRingCat.{u}
   /-- the embedding of subschemes to `X` -/
   map : ∀ j : J, Spec (obj j) ⟶ X
-  /-- given a point of `x : X`, `f x` is the index of the subscheme which contains `x`  -/
+  /-- given a point of `x : X`, `f x` is the index of the subscheme which contains `x` -/
   f : X → J
   /-- the subschemes covers `X` -/
   covers : ∀ x, x ∈ Set.range (map (f x)).1.base

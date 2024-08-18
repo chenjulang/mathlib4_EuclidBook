@@ -216,7 +216,7 @@ by induction on the word using `consRecOn`.
 variable (φ)
 
 /-- The data we need to pick a normal form for words in the pushout. We need to pick a
-canonical element of each coset. We also need all the maps in the diagram to be injective  -/
+canonical element of each coset. We also need all the maps in the diagram to be injective -/
 structure Transversal : Type _ where
   /-- All maps in the diagram are injective -/
   injective : ∀ i, Injective (φ i)
@@ -301,7 +301,7 @@ theorem prod_empty : (empty : NormalWord d).prod = 1 := by
   simp [prod, empty]
 
 /-- A constructor that multiplies a `NormalWord` by an element, with condition to make
-sure the underlying list does get longer.  -/
+sure the underlying list does get longer. -/
 @[simps!]
 noncomputable def cons {i} (g : G i) (w : NormalWord d) (hmw : w.fstIdx ≠ some i)
     (hgr : g ∉ (φ i).range) : NormalWord d :=

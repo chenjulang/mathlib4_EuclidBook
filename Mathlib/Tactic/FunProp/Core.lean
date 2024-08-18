@@ -228,7 +228,7 @@ Try to prove `e` using *composition lambda theorem*.
 For example, `e = q(Continuous fun x => f (g x))` and `funPropDecl` is `FunPropDecl` for
 `Continuous`
 
-You also have to provide the functions `f` and `g`.  -/
+You also have to provide the functions `f` and `g`. -/
 def applyCompRule (funPropDecl : FunPropDecl) (e f g : Expr)
     (funProp : Expr → FunPropM (Option Result)) : FunPropM (Option Result) := do
 
