@@ -199,7 +199,7 @@ theorem rtakeWhile_eq_nil_iff : rtakeWhile p l = [] ↔ ∀ hl : l ≠ [], ¬p (
     intro f; contradiction
   · simp only [rtakeWhile, reverse_append, takeWhile, ne_eq, not_false_eq_true,
       getLast_append_of_ne_nil, getLast_singleton]
-    refine ⟨fun h => ?_ , fun h => ?_⟩
+    refine ⟨fun h => ?_, fun h => ?_⟩
     · split at h <;> simp_all
     · simp [h]
 
