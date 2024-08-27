@@ -103,7 +103,9 @@ lemma IsSelfAdjoint.toReal_spectralRadius_eq_norm {a : A} (ha : IsSelfAdjoint a)
     (spectralRadius ℝ a).toReal = ‖a‖ := by
   simp [ha.spectrumRestricts.spectralRadius_eq, ha.spectralRadius_eq_nnnorm]
 
-lemma CStarRing.norm_or_neg_norm_mem_spectrum [Nontrivial A] {a : A}
+namespace CStarRing
+
+lemma norm_or_neg_norm_mem_spectrum [Nontrivial A] {a : A}
     (ha : IsSelfAdjoint a := by cfc_tac) : ‖a‖ ∈ spectrum ℝ a ∨ -‖a‖ ∈ spectrum ℝ a := by
   have ha' : SpectrumRestricts a Complex.reCLM := ha.spectrumRestricts
   rw [← ha.toReal_spectralRadius_eq_norm]
@@ -111,16 +113,52 @@ lemma CStarRing.norm_or_neg_norm_mem_spectrum [Nontrivial A] {a : A}
 
 variable [PartialOrder A] [StarOrderedRing A]
 
-lemma CStarRing.nnnorm_mem_spectrum_of_nonneg [Nontrivial A] {a : A} (ha : 0 ≤ a := by cfc_tac) :
+lemma nnnorm_mem_spectrum_of_nonneg [Nontrivial A] {a : A} (ha : 0 ≤ a := by cfc_tac) :
     ‖a‖₊ ∈ spectrum ℝ≥0 a := by
   have : IsSelfAdjoint a := .of_nonneg ha
   convert NNReal.spectralRadius_mem_spectrum (a := a) ?_ (.nnreal_of_nonneg ha)
   · simp [this.spectrumRestricts.spectralRadius_eq, this.spectralRadius_eq_nnnorm]
   · exact this.spectrumRestricts.image ▸ (spectrum.nonempty a).image _
 
-lemma CStarRing.norm_mem_spectrum_of_nonneg [Nontrivial A] {a : A} (ha : 0 ≤ a := by cfc_tac) :
+lemma norm_mem_spectrum_of_nonneg [Nontrivial A] {a : A} (ha : 0 ≤ a := by cfc_tac) :
     ‖a‖ ∈ spectrum ℝ a := by
-  simpa using spectrum.algebraMap_mem ℝ <| CStarRing.nnnorm_mem_spectrum_of_nonneg ha
+  simpa using spectrum.algebraMap_mem ℝ <| nnnorm_mem_spectrum_of_nonneg ha
+
+lemma norm_le_iff_of_nonneg (a : A) {r : ℝ} (hr : 0 ≤ r) (ha : 0 ≤ a := by cfc_tac) :
+    ‖a‖ ≤ r ↔ a ≤ algebraMap ℝ A r := by
+  obtain (h | _) := subsingleton_or_nontrivial A
+  · simp [Subsingleton.elim a 0, hr]
+  · conv_rhs =>
+      rw [← cfc_id ℝ a, ← cfc_const r a, cfc_le_iff ..]
+      rfl
+    exact ⟨fun h x hx ↦ Real.le_norm_self x |>.trans (spectrum.norm_le_norm_of_mem hx) |>.trans h,
+      fun h ↦ h ‖a‖ <| norm_mem_spectrum_of_nonneg⟩
+
+lemma nnnorm_le_iff_of_nonneg (a : A) (r : ℝ≥0) (ha : 0 ≤ a := by cfc_tac) :
+    ‖a‖₊ ≤ r ↔ a ≤ algebraMap ℝ≥0 A r := by
+  rw [← NNReal.coe_le_coe]
+  exact norm_le_iff_of_nonneg a r.2
+
+lemma norm_le_one_iff_of_nonneg (a : A) (ha : 0 ≤ a := by cfc_tac) :
+    ‖a‖ ≤ 1 ↔ a ≤ 1 := by
+  simpa using norm_le_iff_of_nonneg a zero_le_one
+
+lemma nnnorm_le_one_iff_of_nonneg (a : A) (ha : 0 ≤ a := by cfc_tac) :
+    ‖a‖₊ ≤ 1 ↔ a ≤ 1 := by
+  rw [← NNReal.coe_le_coe]
+  exact norm_le_one_iff_of_nonneg a
+
+lemma norm_le_ofNat_iff_of_nonneg (a : A) (n : ℕ) (ha : 0 ≤ a := by cfc_tac) :
+    ‖a‖ ≤ n ↔ a ≤ algebraMap ℕ A n := by
+  simpa using norm_le_iff_of_nonneg a n.cast_nonneg
+
+lemma nnnorm_le_ofNat_iff_of_nonneg (a : A) (n : ℕ) (ha : 0 ≤ a := by cfc_tac) :
+    ‖a‖ ≤ n ↔ a ≤ algebraMap ℕ A n := by
+  simpa using nnnorm_le_iff_of_nonneg a n
+
+end CStarRing
+
+#exit
 
 end CStar_unital
 
