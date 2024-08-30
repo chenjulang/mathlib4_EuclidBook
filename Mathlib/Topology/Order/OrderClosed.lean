@@ -666,6 +666,40 @@ theorem Ico_mem_nhds {a b x : α} (ha : a < x) (hb : x < b) : Ico a b ∈ 𝓝 x
 theorem Icc_mem_nhds {a b x : α} (ha : a < x) (hb : x < b) : Icc a b ∈ 𝓝 x :=
   mem_of_superset (Ioo_mem_nhds ha hb) Ioo_subset_Icc_self
 
+theorem eventually_le_nhds (hab : a < b) : ∀ᶠ x in 𝓝 a, x ≤ b := Iic_mem_nhds hab
+
+theorem eventually_lt_nhds (hab : a < b) : ∀ᶠ x in 𝓝 a, x < b := Iio_mem_nhds hab
+
+theorem eventually_ge_nhds (hab : b < a) : ∀ᶠ x in 𝓝 a, b ≤ x := Ici_mem_nhds hab
+
+theorem eventually_gt_nhds (hab : b < a) : ∀ᶠ x in 𝓝 a, b < x := Ioi_mem_nhds hab
+
+theorem lt_mem_nhds {a b : α} (h : a < b) : ∀ᶠ x in 𝓝 b, a < x := isOpen_Ioi.mem_nhds h
+
+theorem le_mem_nhds {a b : α} (h : a < b) : ∀ᶠ x in 𝓝 b, a ≤ x :=
+  (lt_mem_nhds h).mono fun _ => le_of_lt
+
+theorem gt_mem_nhds {a b : α} (h : a < b) : ∀ᶠ x in 𝓝 a, x < b := isOpen_Iio.mem_nhds h
+
+theorem ge_mem_nhds {a b : α} (h : a < b) : ∀ᶠ x in 𝓝 a, x ≤ b :=
+  (gt_mem_nhds h).mono fun _ => le_of_lt
+
+theorem eventually_lt_of_tendsto_lt {l : Filter γ} {f : γ → α} {u v : α} (hv : v < u)
+    (h : Filter.Tendsto f l (𝓝 v)) : ∀ᶠ a in l, f a < u :=
+  h.eventually _
+
+theorem eventually_gt_of_tendsto_gt {l : Filter γ} {f : γ → α} {u v : α} (hv : u < v)
+    (h : Filter.Tendsto f l (𝓝 v)) : ∀ᶠ a in l, u < f a :=
+  tendsto_nhds.1 h (· > u) isOpen_Ioi hv
+
+theorem eventually_le_of_tendsto_lt {l : Filter γ} {f : γ → α} {u v : α} (hv : v < u)
+    (h : Tendsto f l (𝓝 v)) : ∀ᶠ a in l, f a ≤ u :=
+  (eventually_lt_of_tendsto_lt hv h).mono fun _ => le_of_lt
+
+theorem eventually_ge_of_tendsto_gt {l : Filter γ} {f : γ → α} {u v : α} (hv : u < v)
+    (h : Tendsto f l (𝓝 v)) : ∀ᶠ a in l, u ≤ f a :=
+  (eventually_gt_of_tendsto_gt hv h).mono fun _ => le_of_lt
+
 variable [TopologicalSpace γ]
 
 end LinearOrder
