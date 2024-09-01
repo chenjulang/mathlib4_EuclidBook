@@ -66,6 +66,8 @@ inductive StyleError where
   | windowsLineEnding
   /-- A line contains trailing whitespace -/
   | trailingWhitespace
+  /-- A line contains the string " ;" -/
+  | semicolon
 deriving BEq
 
 /-- How to format style errors -/
@@ -97,6 +99,7 @@ def StyleError.errorMessage (err : StyleError) : String := match err with
   | windowsLineEnding => "This line ends with a windows line ending (\r\n): please use Unix line\
     endings (\n) instead"
   | trailingWhitespace => "This line ends with some whitespace: please remove this"
+  | semicolon => "This line contains a space before a semicolon"
 
 /-- The error code for a given style error. Keep this in sync with `parse?_errorContext` below! -/
 -- FUTURE: we're matching the old codes in `lint-style.py` for compatibility;
@@ -108,6 +111,7 @@ def StyleError.errorCode (err : StyleError) : String := match err with
   | StyleError.broadImport _ => "ERR_IMP"
   | StyleError.windowsLineEnding => "ERR_WIN"
   | StyleError.trailingWhitespace => "ERR_TWS"
+  | StyleError.semicolon => "ERR_SEM"
 
 /-- Context for a style error: the actual error, the line number in the file we're reading
 and the path to the file. -/
@@ -329,6 +333,18 @@ def trailingWhitespaceLinter : TextbasedLinter := fun lines ↦ Id.run do
       fixedLines := fixedLines.set! idx line.trimRight
   return (errors, if errors.size > 0 then some fixedLines else none)
 
+/-- Lint a collection of input strings for the substring " ;". -/
+def semicolonLinter : TextbasedLinter := fun lines ↦ Id.run do
+  let mut errors := Array.mkEmpty 0
+  let mut fixedLines := lines
+  for h : idx in [:lines.size] do
+    let line := lines[idx]
+    if line.contains ';' then
+      let replaced := (line.replace " ;" "; ").replace "  " " "
+      if replaced != line then
+        errors := errors.push (StyleError.semicolon, idx + 1)
+        fixedLines := fixedLines.set! idx replaced
+   return (errors, if errors.size > 0 then some fixedLines else none)
 
 /-- Whether a collection of lines consists *only* of imports, blank lines and single-line comments.
 In practice, this means it's an imports-only file and exempt from almost all linting. -/
@@ -341,7 +357,8 @@ end
 
 /-- All text-based linters registered in this file. -/
 def allLinters : Array TextbasedLinter := #[
-    copyrightHeaderLinter, adaptationNoteLinter, broadImportsLinter, trailingWhitespaceLinter
+    copyrightHeaderLinter, adaptationNoteLinter, broadImportsLinter, trailingWhitespaceLinter,
+    semicolonLinter
   ]
 
 
