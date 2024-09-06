@@ -340,11 +340,13 @@ def semicolonLinter : TextbasedLinter := fun lines ↦ Id.run do
   let mut fixedLines := lines
   for h : idx in [:lines.size] do
     let line := lines[idx]
-    if line.contains ';' then
-      let replaced := (line.replace " ;" "; ").replace "  " " "
-      if replaced != line then
-        errors := errors.push (StyleError.semicolon, idx + 1)
-        fixedLines := fixedLines.set! idx replaced
+    let pos := line.find (· == ';')
+    if pos != line.endPos then
+      if line.get (line.prev pos) == ' ' then
+        let replaced := (line.replace " ;" "; ").replace "  " " "
+        if replaced != line then
+          errors := errors.push (StyleError.semicolon, idx + 1)
+          fixedLines := fixedLines.set! idx replaced
    return (errors, if errors.size > 0 then some fixedLines else none)
 
 /-- Whether a collection of lines consists *only* of imports, blank lines and single-line comments.
