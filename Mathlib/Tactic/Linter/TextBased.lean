@@ -199,6 +199,7 @@ def parse?_errorContext (line : String) : Option ErrorContext := Id.run do
         | "ERR_ADN" => some (StyleError.adaptationNote)
         | "ERR_TWS" => some (StyleError.trailingWhitespace)
         | "ERR_WIN" => some (StyleError.windowsLineEnding)
+        | "ERR_SEM" => some (StyleError.semicolon)
         | "ERR_IMP" =>
           -- XXX tweak exceptions messages to ease parsing?
           if (errorMessage.get! 0).containsSubstr "tactic" then
