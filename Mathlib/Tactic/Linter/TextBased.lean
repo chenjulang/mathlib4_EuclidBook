@@ -334,19 +334,6 @@ def trailingWhitespaceLinter : TextbasedLinter := fun lines ↦ Id.run do
       fixedLines := fixedLines.set! idx line.trimRight
   return (errors, if errors.size > 0 then some fixedLines else none)
 
-private partial def _root_.String.hasSemicolon (source : String) : Bool :=
-  let rec loop (i : String.Iterator) :=
-    if i.atEnd then
-      false
-    else
-      let posOfSemi := i.find (. == ';')
-      if posOfSemi == i.toEnd then false else
-      if posOfSemi.prev.curr == ' ' then
-        true
-      else
-        loop posOfSemi.next
-  loop source.iter
-
 /-- Lint a collection of input strings for the substring " ;". -/
 def semicolonLinter : TextbasedLinter := fun lines ↦ Id.run do
   let mut errors := Array.mkEmpty 0
@@ -400,19 +387,10 @@ def lintFile (path : FilePath) (exceptions : Array ErrorContext) :
   if isImportsOnlyFile lines then
     return (errors, if changes_made then some lines else none)
 
-
-
   -- All further style errors raised in this file.
   let mut allOutput := #[]
   -- A working copy of the lines in this file, modified by applying the auto-fixes.
   let mut changed := lines
-
-  if replaced.hasSemicolon then
-    let (err, changes) := semicolonLinter lines
-    if let some changed_lines := changes then
-      allOutput := allOutput.append (Array.map (fun (e, n) ↦ #[(ErrorContext.mk e n path)]) err)
-      changed := changed_lines
-      changes_made := true
 
   for lint in allLinters do
     let (err, changes) := lint changed
