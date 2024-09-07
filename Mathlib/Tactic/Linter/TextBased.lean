@@ -337,8 +337,7 @@ def trailingWhitespaceLinter : TextbasedLinter := fun lines ↦ Id.run do
 def semicolonLinter : TextbasedLinter := fun lines ↦ Id.run do
   let mut errors := Array.mkEmpty 0
   let mut fixedLines := lines
-  for h : idx in [:lines.size] do
-    let line := lines[idx]
+  for (line, idx) in lines.zipWithIndex do
     let pos := line.find (· == ';')
     if pos != line.endPos then
       if line.get (line.prev pos) == ' ' then
