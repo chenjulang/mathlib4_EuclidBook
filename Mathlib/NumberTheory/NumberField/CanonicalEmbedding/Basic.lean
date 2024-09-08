@@ -4,8 +4,10 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Xavier Roblot
 -/
 import Mathlib.Algebra.Module.Zlattice.Basic
-import Mathlib.NumberTheory.NumberField.Embeddings
+import Mathlib.Analysis.InnerProductSpace.ProdL2
+import Mathlib.Analysis.Normed.Lp.ProdLp
 import Mathlib.NumberTheory.NumberField.FractionalIdeal
+import Mathlib.NumberTheory.NumberField.Units.Basic
 
 /-!
 # Canonical embedding of a number field
@@ -24,11 +26,11 @@ sending `x : K` to the vector `(φ x)` indexed by `φ : K →+* ℂ`.
 image of the ring of integers by the canonical embedding and any ball centered at `0` of finite
 radius is finite.
 
-* `NumberField.mixedEmbedding`: the ring homomorphism from `K →+* ({ w // IsReal w } → ℝ) ×
-({ w // IsComplex w } → ℂ)` that sends `x ∈ K` to `(φ_w x)_w` where `φ_w` is the embedding
-associated to the infinite place `w`. In particular, if `w` is real then `φ_w : K →+* ℝ` and, if
-`w` is complex, `φ_w` is an arbitrary choice between the two complex embeddings defining the place
-`w`.
+* `NumberField.mixedEmbedding`: the ring homomorphism from `K` to the mixed space
+`K →+* ({ w // IsReal w } → ℝ) × ({ w // IsComplex w } → ℂ)` that sends `x ∈ K` to `(φ_w x)_w`
+where `φ_w` is the embedding associated to the infinite place `w`. In particular, if `w` is real
+then `φ_w : K →+* ℝ` and, if `w` is complex, `φ_w` is an arbitrary choice between the two complex
+embeddings defining the place `w`.
 
 ## Tags
 
@@ -180,16 +182,44 @@ namespace NumberField.mixedEmbedding
 
 open NumberField.InfinitePlace FiniteDimensional Finset
 
-/-- The space `ℝ^r₁ × ℂ^r₂` with `(r₁, r₂)` the signature of `K`. -/
-local notation "E" K =>
+/-- The mixed space `ℝ^r₁ × ℂ^r₂` with `(r₁, r₂)` the signature of `K`. -/
+abbrev mixedSpace :=
   ({w : InfinitePlace K // IsReal w} → ℝ) × ({w : InfinitePlace K // IsComplex w} → ℂ)
 
-/-- The mixed embedding of a number field `K` of signature `(r₁, r₂)` into `ℝ^r₁ × ℂ^r₂`. -/
-noncomputable def _root_.NumberField.mixedEmbedding : K →+* (E K) :=
+section Measure
+
+open MeasureTheory.Measure MeasureTheory
+
+open Classical in
+instance [NumberField K] : IsAddHaarMeasure (volume : Measure (mixedSpace K)) :=
+  prod.instIsAddHaarMeasure volume volume
+
+open Classical in
+instance [NumberField K] : NoAtoms (volume : Measure (mixedSpace K)) := by
+  obtain ⟨w⟩ := (inferInstance : Nonempty (InfinitePlace K))
+  by_cases hw : IsReal w
+  · exact @prod.instNoAtoms_fst _ _ _ _ volume volume _ (pi_noAtoms ⟨w, hw⟩)
+  · exact @prod.instNoAtoms_snd _ _ _ _ volume volume _
+      (pi_noAtoms ⟨w, not_isReal_iff_isComplex.mp hw⟩)
+
+end Measure
+
+/-- The mixed embedding of a number field `K` into the mixed space of `K`. -/
+noncomputable def _root_.NumberField.mixedEmbedding : K →+* (mixedSpace K) :=
   RingHom.prod (Pi.ringHom fun w => embedding_of_isReal w.prop)
     (Pi.ringHom fun w => w.val.embedding)
 
-instance [NumberField K] : Nontrivial (E K) := by
+@[simp]
+theorem mixedEmbedding_apply_ofIsReal (x : K) (w : {w // IsReal w}) :
+    (mixedEmbedding K x).1 w = embedding_of_isReal w.prop x := by
+  simp_rw [mixedEmbedding, RingHom.prod_apply, Pi.ringHom_apply]
+
+@[simp]
+theorem mixedEmbedding_apply_ofIsComplex (x : K) (w : {w // IsComplex w}) :
+    (mixedEmbedding K x).2 w = w.val.embedding x := by
+  simp_rw [mixedEmbedding, RingHom.prod_apply, Pi.ringHom_apply]
+
+instance [NumberField K] : Nontrivial (mixedSpace K) := by
   obtain ⟨w⟩ := (inferInstance : Nonempty (InfinitePlace K))
   obtain hw | hw := w.isReal_or_isComplex
   · have : Nonempty {w : InfinitePlace K // IsReal w} := ⟨⟨w, hw⟩⟩
@@ -197,7 +227,7 @@ instance [NumberField K] : Nontrivial (E K) := by
   · have : Nonempty {w : InfinitePlace K // IsComplex w} := ⟨⟨w, hw⟩⟩
     exact nontrivial_prod_right
 
-protected theorem finrank [NumberField K] : finrank ℝ (E K) = finrank ℚ K := by
+protected theorem finrank [NumberField K] : finrank ℝ (mixedSpace K) = finrank ℚ K := by
   classical
   rw [finrank_prod, finrank_pi, finrank_pi_fintype, Complex.finrank_real_complex, sum_const,
     card_univ, ← NrRealPlaces, ← NrComplexPlaces, ← card_real_embeddings, Algebra.id.smul_eq_mul,
@@ -212,7 +242,7 @@ section commMap
 
 /-- The linear map that makes `canonicalEmbedding` and `mixedEmbedding` commute, see
 `commMap_canonical_eq_mixed`. -/
-noncomputable def commMap : ((K →+* ℂ) → ℂ) →ₗ[ℝ] (E K) where
+noncomputable def commMap : ((K →+* ℂ) → ℂ) →ₗ[ℝ] (mixedSpace K) where
   toFun := fun x => ⟨fun w => (x w.val.embedding).re, fun w => x w.val.embedding⟩
   map_add' := by
     simp only [Pi.add_apply, Complex.add_re, Prod.mk_add_mk, Prod.mk.injEq]
@@ -270,30 +300,29 @@ open scoped Classical
 
 variable {K}
 
-/-- The norm at the infinite place `w` of an element of
-`({w // IsReal w} → ℝ) × ({ w // IsComplex w } → ℂ)`. -/
-def normAtPlace (w : InfinitePlace K) : (E K) →*₀ ℝ where
+/-- The norm at the infinite place `w` of an element of the mixed space. --/
+def normAtPlace (w : InfinitePlace K) : (mixedSpace K) →*₀ ℝ where
   toFun x := if hw : IsReal w then ‖x.1 ⟨w, hw⟩‖ else ‖x.2 ⟨w, not_isReal_iff_isComplex.mp hw⟩‖
   map_zero' := by simp
   map_one' := by simp
   map_mul' x y := by split_ifs <;> simp
 
-theorem normAtPlace_nonneg (w : InfinitePlace K) (x : E K) :
+theorem normAtPlace_nonneg (w : InfinitePlace K) (x : mixedSpace K) :
     0 ≤ normAtPlace w x := by
   rw [normAtPlace, MonoidWithZeroHom.coe_mk, ZeroHom.coe_mk]
   split_ifs <;> exact norm_nonneg _
 
-theorem normAtPlace_neg (w : InfinitePlace K) (x : E K)  :
+theorem normAtPlace_neg (w : InfinitePlace K) (x : mixedSpace K)  :
     normAtPlace w (- x) = normAtPlace w x := by
   rw [normAtPlace, MonoidWithZeroHom.coe_mk, ZeroHom.coe_mk]
   split_ifs <;> simp
 
-theorem normAtPlace_add_le (w : InfinitePlace K) (x y : E K) :
+theorem normAtPlace_add_le (w : InfinitePlace K) (x y : mixedSpace K) :
     normAtPlace w (x + y) ≤ normAtPlace w x + normAtPlace w y := by
   rw [normAtPlace, MonoidWithZeroHom.coe_mk, ZeroHom.coe_mk]
   split_ifs <;> exact norm_add_le _ _
 
-theorem normAtPlace_smul (w : InfinitePlace K) (x : E K) (c : ℝ) :
+theorem normAtPlace_smul (w : InfinitePlace K) (x : mixedSpace K) (c : ℝ) :
     normAtPlace w (c • x) = |c| * normAtPlace w x := by
   rw [normAtPlace, MonoidWithZeroHom.coe_mk, ZeroHom.coe_mk]
   split_ifs
@@ -301,15 +330,15 @@ theorem normAtPlace_smul (w : InfinitePlace K) (x : E K) (c : ℝ) :
   · rw [Prod.smul_snd, Pi.smul_apply, norm_smul, Real.norm_eq_abs, Complex.norm_eq_abs]
 
 theorem normAtPlace_real (w : InfinitePlace K) (c : ℝ) :
-    normAtPlace w ((fun _ ↦ c, fun _ ↦ c) : (E K)) = |c| := by
-  rw [show ((fun _ ↦ c, fun _ ↦ c) : (E K)) = c • 1 by ext <;> simp, normAtPlace_smul, map_one,
-    mul_one]
+    normAtPlace w ((fun _ ↦ c, fun _ ↦ c) : (mixedSpace K)) = |c| := by
+  rw [show ((fun _ ↦ c, fun _ ↦ c) : (mixedSpace K)) = c • 1 by ext <;> simp, normAtPlace_smul,
+    map_one, mul_one]
 
-theorem normAtPlace_apply_isReal {w : InfinitePlace K} (hw : IsReal w) (x : E K) :
+theorem normAtPlace_apply_isReal {w : InfinitePlace K} (hw : IsReal w) (x : mixedSpace K) :
     normAtPlace w x = ‖x.1 ⟨w, hw⟩‖ := by
   rw [normAtPlace, MonoidWithZeroHom.coe_mk, ZeroHom.coe_mk, dif_pos]
 
-theorem normAtPlace_apply_isComplex {w : InfinitePlace K} (hw : IsComplex w) (x : E K) :
+theorem normAtPlace_apply_isComplex {w : InfinitePlace K} (hw : IsComplex w) (x : mixedSpace K) :
     normAtPlace w x = ‖x.2 ⟨w, hw⟩‖ := by
   rw [normAtPlace, MonoidWithZeroHom.coe_mk, ZeroHom.coe_mk,
     dif_neg (not_isReal_iff_isComplex.mpr hw)]
@@ -321,7 +350,7 @@ theorem normAtPlace_apply (w : InfinitePlace K) (x : K) :
     RingHom.prod_apply, Pi.ringHom_apply, norm_embedding_of_isReal, norm_embedding_eq, dite_eq_ite,
     ite_id]
 
-theorem normAtPlace_eq_zero {x : E K} :
+theorem normAtPlace_eq_zero {x : mixedSpace K} :
     (∀ w, normAtPlace w x = 0) ↔ x = 0 := by
   refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
   · ext w
@@ -331,7 +360,7 @@ theorem normAtPlace_eq_zero {x : E K} :
 
 variable [NumberField K]
 
-theorem nnnorm_eq_sup_normAtPlace (x : E K) :
+theorem nnnorm_eq_sup_normAtPlace (x : mixedSpace K) :
     ‖x‖₊ = univ.sup fun w ↦ ⟨normAtPlace w x, normAtPlace_nonneg w x⟩ := by
   have :
       (univ : Finset (InfinitePlace K)) =
@@ -346,7 +375,7 @@ theorem nnnorm_eq_sup_normAtPlace (x : E K) :
   · ext w
     simp [normAtPlace_apply_isComplex w.prop]
 
-theorem norm_eq_sup'_normAtPlace (x : E K) :
+theorem norm_eq_sup'_normAtPlace (x : mixedSpace K) :
     ‖x‖ = univ.sup' univ_nonempty fun w ↦ normAtPlace w x := by
   rw [← coe_nnnorm, nnnorm_eq_sup_normAtPlace, ← sup'_eq_sup univ_nonempty, ← NNReal.val_eq_coe,
     ← OrderHom.Subtype.val_coe, map_finset_sup', OrderHom.Subtype.val_coe]
@@ -355,47 +384,53 @@ theorem norm_eq_sup'_normAtPlace (x : E K) :
 /-- The norm of `x` is `∏ w, (normAtPlace x) ^ mult w`. It is defined such that the norm of
 `mixedEmbedding K a` for `a : K` is equal to the absolute value of the norm of `a` over `ℚ`,
 see `norm_eq_norm`. -/
-protected def norm : (E K) →*₀ ℝ where
+protected def norm : (mixedSpace K) →*₀ ℝ where
   toFun x := ∏ w, (normAtPlace w x) ^ (mult w)
   map_one' := by simp only [map_one, one_pow, prod_const_one]
   map_zero' := by simp [mult]
   map_mul' _ _ := by simp only [map_mul, mul_pow, prod_mul_distrib]
 
-protected theorem norm_apply (x : E K) :
+protected theorem norm_apply (x : mixedSpace K) :
     mixedEmbedding.norm x = ∏ w, (normAtPlace w x) ^ (mult w) := rfl
 
-protected theorem norm_nonneg (x : E K) :
+protected theorem norm_nonneg (x : mixedSpace K) :
     0 ≤ mixedEmbedding.norm x := univ.prod_nonneg fun _ _ ↦ pow_nonneg (normAtPlace_nonneg _ _) _
 
-protected theorem norm_eq_zero_iff {x : E K} :
+protected theorem norm_eq_zero_iff {x : mixedSpace K} :
     mixedEmbedding.norm x = 0 ↔ ∃ w, normAtPlace w x = 0 := by
   simp_rw [mixedEmbedding.norm, MonoidWithZeroHom.coe_mk, ZeroHom.coe_mk, prod_eq_zero_iff,
     mem_univ, true_and, pow_eq_zero_iff mult_ne_zero]
 
-protected theorem norm_ne_zero_iff {x : E K} :
+protected theorem norm_ne_zero_iff {x : mixedSpace K} :
     mixedEmbedding.norm x ≠ 0 ↔ ∀ w, normAtPlace w x ≠ 0 := by
   rw [← not_iff_not]
   simp_rw [ne_eq, mixedEmbedding.norm_eq_zero_iff, not_not, not_forall, not_not]
 
-theorem norm_smul (c : ℝ) (x : E K) :
+theorem norm_smul (c : ℝ) (x : mixedSpace K) :
     mixedEmbedding.norm (c • x) = |c| ^ finrank ℚ K * (mixedEmbedding.norm x) := by
   simp_rw [mixedEmbedding.norm_apply, normAtPlace_smul, mul_pow, prod_mul_distrib,
     prod_pow_eq_pow_sum, sum_mult_eq]
 
 theorem norm_real (c : ℝ) :
-    mixedEmbedding.norm ((fun _ ↦ c, fun _ ↦ c) : (E K)) = |c| ^ finrank ℚ K := by
-  rw [show ((fun _ ↦ c, fun _ ↦ c) : (E K)) = c • 1 by ext <;> simp, norm_smul, map_one, mul_one]
+    mixedEmbedding.norm ((fun _ ↦ c, fun _ ↦ c) : (mixedSpace K)) = |c| ^ finrank ℚ K := by
+  rw [show ((fun _ ↦ c, fun _ ↦ c) : (mixedSpace K)) = c • 1 by ext <;> simp, norm_smul, map_one,
+    mul_one]
 
 @[simp]
 theorem norm_eq_norm (x : K) :
     mixedEmbedding.norm (mixedEmbedding K x) = |Algebra.norm ℚ x| := by
   simp_rw [mixedEmbedding.norm_apply, normAtPlace_apply, prod_eq_abs_norm]
 
-theorem norm_eq_zero_iff' {x : E K} (hx : x ∈ Set.range (mixedEmbedding K)) :
+theorem norm_eq_zero_iff' {x : mixedSpace K} (hx : x ∈ Set.range (mixedEmbedding K)) :
     mixedEmbedding.norm x = 0 ↔ x = 0 := by
   obtain ⟨a, rfl⟩ := hx
   rw [norm_eq_norm, Rat.cast_abs, abs_eq_zero, Rat.cast_eq_zero, Algebra.norm_eq_zero_iff,
     map_eq_zero]
+
+@[simp]
+theorem norm_unit (u : (𝓞 K)ˣ) :
+    mixedEmbedding.norm (mixedEmbedding K (u : 𝓞 K)) = 1 := by
+  rw [norm_eq_norm, Units.norm, Rat.cast_one]
 
 end norm
 
@@ -410,25 +445,27 @@ variable [NumberField K]
 /-- The type indexing the basis `stdBasis`. -/
 abbrev index := {w : InfinitePlace K // IsReal w} ⊕ ({w : InfinitePlace K // IsComplex w}) × (Fin 2)
 
-/-- The `ℝ`-basis of `({w // IsReal w} → ℝ) × ({ w // IsComplex w } → ℂ)` formed by the vector
-equal to `1` at `w` and `0` elsewhere for `IsReal w` and by the couple of vectors equal to `1`
-(resp. `I`) at `w` and `0` elsewhere for `IsComplex w`. -/
-def stdBasis : Basis (index K) ℝ (E K) :=
+/-- The `ℝ`-basis of the mixed space of `K` formed by the vector equal to `1` at `w` and `0`
+elsewhere for `IsReal w` and by the couple of vectors equal to `1` (resp. `I`) at `w` and `0`
+elsewhere for `IsComplex w`. -/
+def stdBasis : Basis (index K) ℝ (mixedSpace K) :=
   Basis.prod (Pi.basisFun ℝ _)
     (Basis.reindex (Pi.basis fun _ => basisOneI) (Equiv.sigmaEquivProd _ _))
 
 variable {K}
 
 @[simp]
-theorem stdBasis_apply_ofIsReal (x : E K) (w : {w : InfinitePlace K // IsReal w}) :
+theorem stdBasis_apply_ofIsReal (x : mixedSpace K) (w : {w : InfinitePlace K // IsReal w}) :
     (stdBasis K).repr x (Sum.inl w) = x.1 w := rfl
 
 @[simp]
-theorem stdBasis_apply_ofIsComplex_fst (x : E K) (w : {w : InfinitePlace K // IsComplex w}) :
+theorem stdBasis_apply_ofIsComplex_fst (x : mixedSpace K)
+    (w : {w : InfinitePlace K // IsComplex w}) :
     (stdBasis K).repr x (Sum.inr ⟨w, 0⟩) = (x.2 w).re := rfl
 
 @[simp]
-theorem stdBasis_apply_ofIsComplex_snd (x : E K) (w : {w : InfinitePlace K // IsComplex w}) :
+theorem stdBasis_apply_ofIsComplex_snd (x : mixedSpace K)
+    (w : {w : InfinitePlace K // IsComplex w}) :
     (stdBasis K).repr x (Sum.inr ⟨w, 1⟩) = (x.2 w).im := rfl
 
 variable (K)
@@ -547,9 +584,12 @@ open Module.Free
 
 open scoped nonZeroDivisors
 
-/-- A `ℝ`-basis of `ℝ^r₁ × ℂ^r₂` that is also a `ℤ`-basis of the image of `𝓞 K`. -/
+protected abbrev integerLattice : Subring (mixedSpace K) :=
+  ((mixedEmbedding K).comp (algebraMap (𝓞 K) K)).range
+
+/-- A `ℝ`-basis of the mixed space that is also a `ℤ`-basis of the image of `𝓞 K`. -/
 def latticeBasis :
-    Basis (ChooseBasisIndex ℤ (𝓞 K)) ℝ (E K) := by
+    Basis (ChooseBasisIndex ℤ (𝓞 K)) ℝ (mixedSpace K) := by
   classical
     -- We construct an `ℝ`-linear independent family from the image of
     -- `canonicalEmbedding.lattice_basis` by `commMap`
@@ -571,9 +611,9 @@ theorem latticeBasis_apply (i : ChooseBasisIndex ℤ (𝓞 K)) :
   simp only [latticeBasis, coe_basisOfLinearIndependentOfCardEqFinrank, Function.comp_apply,
     canonicalEmbedding.latticeBasis_apply, integralBasis_apply, commMap_canonical_eq_mixed]
 
-theorem mem_span_latticeBasis (x : (E K)) :
+theorem mem_span_latticeBasis (x : (mixedSpace K)) :
     x ∈ Submodule.span ℤ (Set.range (latticeBasis K)) ↔
-      x ∈ ((mixedEmbedding K).comp (algebraMap (𝓞 K) K)).range := by
+      x ∈ mixedEmbedding.integerLattice K := by
   rw [show Set.range (latticeBasis K) =
       (mixedEmbedding K).toIntAlgHom.toLinearMap '' (Set.range (integralBasis K)) by
     rw [← Set.range_comp]; exact congrArg Set.range (funext (fun i => latticeBasis_apply K i))]
@@ -581,6 +621,22 @@ theorem mem_span_latticeBasis (x : (E K)) :
   simp only [Set.mem_image, SetLike.mem_coe, mem_span_integralBasis K,
     RingHom.mem_range, exists_exists_eq_and]
   rfl
+
+theorem span_latticeBasis :
+    (Submodule.span ℤ (Set.range (latticeBasis K))).toAddSubgroup =
+      (mixedEmbedding.integerLattice K).toAddSubgroup := by
+  ext
+  rw [Submodule.mem_toAddSubgroup, mem_span_latticeBasis, Subring.mem_toAddSubgroup]
+
+instance : DiscreteTopology (mixedEmbedding.integerLattice K).toAddSubgroup := by
+  classical
+  rw [← span_latticeBasis]
+  infer_instance
+
+open Classical in
+instance : IsZlattice ℝ (mixedEmbedding.integerLattice K).toAddSubgroup := by
+  simp_rw [← span_latticeBasis]
+  exact Zspan.isZlattice (latticeBasis K)
 
 theorem mem_rat_span_latticeBasis (x : K) :
     mixedEmbedding K x ∈ Submodule.span ℚ (Set.range (latticeBasis K)) := by
@@ -611,8 +667,8 @@ variable (I : (FractionalIdeal (𝓞 K)⁰ K)ˣ)
 /-- The generalized index of the lattice generated by `I` in the lattice generated by
 `𝓞 K` is equal to the norm of the ideal `I`. The result is stated in terms of base change
 determinant and is the translation of `NumberField.det_basisOfFractionalIdeal_eq_absNorm` in
-`ℝ^r₁ × ℂ^r₂`. This is useful, in particular, to prove that the family obtained from
-the `ℤ`-basis of `I` is actually an `ℝ`-basis of `ℝ^r₁ × ℂ^r₂`, see
+the mixed space. This is useful, in particular, to prove that the family obtained from
+the `ℤ`-basis of `I` is actually an `ℝ`-basis of the mixed space, see
 `fractionalIdealLatticeBasis`. -/
 theorem det_basisOfFractionalIdeal_eq_norm
     (e : (ChooseBasisIndex ℤ (𝓞 K)) ≃ (ChooseBasisIndex ℤ I)) :
@@ -628,10 +684,10 @@ theorem det_basisOfFractionalIdeal_eq_norm
   simp_rw [RingHom.mapMatrix_apply, Matrix.map_apply, Basis.toMatrix_apply, Function.comp_apply]
   exact latticeBasis_repr_apply K _ i
 
-/-- A `ℝ`-basis of `ℝ^r₁ × ℂ^r₂` that is also a `ℤ`-basis of the image of the fractional
+/-- A `ℝ`-basis of the mixed space of `K` that is also a `ℤ`-basis of the image of the fractional
 ideal `I`. -/
 def fractionalIdealLatticeBasis :
-    Basis (ChooseBasisIndex ℤ I) ℝ (E K) := by
+    Basis (ChooseBasisIndex ℤ I) ℝ (mixedSpace K) := by
   let e : (ChooseBasisIndex ℤ (𝓞 K)) ≃ (ChooseBasisIndex ℤ I) := by
     refine Fintype.equivOfCardEq ?_
     rw [← finrank_eq_card_chooseBasisIndex, ← finrank_eq_card_chooseBasisIndex,
@@ -650,7 +706,7 @@ theorem fractionalIdealLatticeBasis_apply (i : ChooseBasisIndex ℤ I) :
   simp only [fractionalIdealLatticeBasis, Basis.coe_reindex, Basis.coe_mk, Function.comp_apply,
     Equiv.apply_symm_apply]
 
-theorem mem_span_fractionalIdealLatticeBasis (x : (E K)) :
+theorem mem_span_fractionalIdealLatticeBasis (x : (mixedSpace K)) :
     x ∈ Submodule.span ℤ (Set.range (fractionalIdealLatticeBasis K I)) ↔
       x ∈ mixedEmbedding K '' I := by
   rw [show Set.range (fractionalIdealLatticeBasis K I) =
@@ -663,5 +719,82 @@ theorem mem_span_fractionalIdealLatticeBasis (x : (E K)) :
   rfl
 
 end integerLattice
+
+noncomputable section
+
+namespace euclidean
+
+open MeasureTheory NumberField Submodule
+
+/-- The mixed space `ℝ^r₁ × ℂ^r₂`, with `(r₁, r₂)` the signature of `K`, as an Euclidean space. -/
+protected abbrev mixedSpace :=
+    (WithLp 2 ((EuclideanSpace ℝ {w : InfinitePlace K // IsReal w}) ×
+      (EuclideanSpace ℂ {w : InfinitePlace K // IsComplex w})))
+
+instance : Ring (euclidean.mixedSpace K) := by
+  have : Ring (EuclideanSpace ℝ {w : InfinitePlace K // IsReal w}) := Pi.ring
+  have : Ring (EuclideanSpace ℂ {w : InfinitePlace K // IsComplex w}) := Pi.ring
+  exact Prod.instRing
+
+instance : MeasurableSpace (euclidean.mixedSpace K) := borel _
+
+instance : BorelSpace (euclidean.mixedSpace K)  :=  ⟨rfl⟩
+
+variable [NumberField K]
+
+open Classical in
+instance : T2Space (euclidean.mixedSpace K) := Prod.t2Space
+
+open Classical in
+/-- The continuous linear equivalence between the euclidean mixed space and the mixed space. -/
+def toMixed : (euclidean.mixedSpace K) ≃L[ℝ] (mixedSpace K) :=
+  (WithLp.linearEquiv _ _ _).toContinuousLinearEquiv
+
+instance : Nontrivial (euclidean.mixedSpace K) := (toMixed K).toEquiv.nontrivial
+
+protected theorem finrank :
+    FiniteDimensional.finrank ℝ (euclidean.mixedSpace K) = FiniteDimensional.finrank ℚ K := by
+  rw [LinearEquiv.finrank_eq (toMixed K).toLinearEquiv, mixedEmbedding.finrank]
+
+open Classical in
+/-- An orthonormal basis of the euclidean mixed space. -/
+def stdOrthonormalBasis : OrthonormalBasis (index K) ℝ (euclidean.mixedSpace K) :=
+  OrthonormalBasis.prod (EuclideanSpace.basisFun _ ℝ)
+    ((Pi.orthonormalBasis fun _ ↦ Complex.orthonormalBasisOneI).reindex (Equiv.sigmaEquivProd _ _))
+
+open Classical in
+theorem stdOrthonormalBasis_map_eq :
+    (euclidean.stdOrthonormalBasis K).toBasis.map (toMixed K).toLinearEquiv =
+      mixedEmbedding.stdBasis K := by
+  ext _ _ <;> rfl
+
+open Classical in
+theorem volumePreserving_toMixed :
+    MeasurePreserving (toMixed K) where
+  measurable := (toMixed K).continuous.measurable
+  map_eq := by
+    rw [← (OrthonormalBasis.addHaar_eq_volume (euclidean.stdOrthonormalBasis K)), Basis.map_addHaar,
+      stdOrthonormalBasis_map_eq, Basis.addHaar_eq_iff, Basis.coe_parallelepiped,
+      ← measure_congr (Zspan.fundamentalDomain_ae_parallelepiped (stdBasis K) volume),
+      volume_fundamentalDomain_stdBasis K]
+
+/-- The image of ring of integers `𝓞 K` in the euclidean mixed space. -/
+protected def integerLattice : AddSubgroup (euclidean.mixedSpace K) :=
+  ((mixedEmbedding.integerLattice K).toAddSubgroup.comap (toMixed K).toAddMonoidHom)
+
+instance : DiscreteTopology (euclidean.integerLattice K) := by
+  classical
+  rw [euclidean.integerLattice]
+  infer_instance
+
+open Classical in
+instance : IsZlattice ℝ (euclidean.integerLattice K) := IsZlattice.comap ℝ _ _
+
+theorem integerLattice_eq_preimage :
+    euclidean.integerLattice K = (toMixed K)⁻¹' mixedEmbedding.integerLattice K := rfl
+
+end euclidean
+
+end
 
 end NumberField.mixedEmbedding

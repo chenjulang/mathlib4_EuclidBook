@@ -51,6 +51,10 @@ variable (b : Basis ι K E)
 
 theorem span_top : span K (span ℤ (Set.range b) : Set E) = ⊤ := by simp [span_span_of_tower]
 
+theorem map {F : Type*} [NormedAddCommGroup F] [NormedSpace K F] (f : E ≃ₗ[K] F) :
+    Submodule.map (f.restrictScalars ℤ) (span ℤ (Set.range b)) = span ℤ (Set.range (b.map f)) := by
+  simp_rw [Submodule.map_span, LinearEquiv.restrictScalars_apply, Basis.coe_map, Set.range_comp]
+
 /-- The fundamental domain of the ℤ-lattice spanned by `b`. See `Zspan.isAddFundamentalDomain`
 for the proof that it is a fundamental domain. -/
 def fundamentalDomain : Set E := {m | ∀ i, b.repr m i ∈ Set.Ico (0 : K) 1}
@@ -290,7 +294,7 @@ instance [Finite ι] : DiscreteTopology (span ℤ (Set.range b)) := by
   · exact discreteTopology_pi_basisFun
   · refine Subtype.map_injective _ (Basis.equivFun b).injective
 
-instance [Finite ι] : DiscreteTopology (span ℤ (Set.range b)).toAddSubgroup :=
+instance instDiscreteTopology [Finite ι] : DiscreteTopology (span ℤ (Set.range b)).toAddSubgroup :=
   inferInstanceAs <| DiscreteTopology (span ℤ (Set.range b))
 
 @[measurability]
@@ -604,4 +608,46 @@ instance instCountable_of_discrete_addSubgroup {E : Type*} [NormedAddCommGroup E
   simp_rw [← (Module.Free.chooseBasis ℤ L).ofZlatticeBasis_span ℝ, mem_toAddSubgroup]
   infer_instance
 
+section comap
+
+variable (K : Type*) [NormedField K] {E F : Type*} [NormedAddCommGroup E] [NormedSpace K E]
+    [NormedAddCommGroup F] [NormedSpace K F]
+
+def Zlattice.comap (L : AddSubgroup E) (e : F ≃L[K] E) := L.comap e.toAddMonoidHom
+
+instance (L : AddSubgroup E) [DiscreteTopology L] (e : F ≃L[K] E) :
+    DiscreteTopology (Zlattice.comap K L e) := by
+  change DiscreteTopology (e ⁻¹' L)
+  exact DiscreteTopology.preimage_of_continuous_injective _ e.continuous e.injective
+
+instance (L : AddSubgroup E) [DiscreteTopology L] [IsZlattice K L] (e : F ≃L[K] E) :
+    IsZlattice K (Zlattice.comap K L e) where
+  span_top := by
+    rw [Zlattice.comap, AddSubgroup.coe_comap, LinearMap.toAddMonoidHom_coe,
+      LinearEquiv.coe_toLinearMap, ← LinearEquiv.image_symm_eq_preimage, ← Submodule.map_span,
+      IsZlattice.span_top, Submodule.map_top, LinearEquivClass.range]
+
+def Basis.ofZlatticeComap (L : AddSubgroup E) {ι : Type*} [Fintype ι] (b : Basis ι ℤ L)
+    (e : F ≃L[K] E) : Basis ι ℤ (Zlattice.comap K L e) := by
+  have := b.linearIndependent
+  let f : (AddSubgroup.toIntSubmodule L) →ₗ[ℤ]
+      (AddSubgroup.toIntSubmodule (Zlattice.comap K L e)) := by
+    let h := e.symm.toLinearMap.restrictScalars ℤ
+    refine LinearMap.restrict h ?_
+    sorry
+  have := LinearIndependent.map' this f ?_
+  refine Basis.mk this ?_
+
+
+  have := b.span_eq
+  let f := (AddSubgroup.toIntSubmodule L).subtype
+  have := congr_arg (fun s ↦ Submodule.map f s) this
+  dsimp at this
+  rw [Submodule.map_span] at this
+  rw [Submodule.map_top] at this
+  
+
+  sorry
+
+end comap
 end Zlattice
