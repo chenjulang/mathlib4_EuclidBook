@@ -42,8 +42,6 @@ variable (K : Type*) [Field K]
 
 namespace NumberField.canonicalEmbedding
 
---open NumberField
-
 /-- The canonical embedding of a number field `K` of degree `n` into `ℂ^n`. -/
 def _root_.NumberField.canonicalEmbedding : K →+* ((K →+* ℂ) → ℂ) := Pi.ringHom fun φ => φ
 
@@ -267,7 +265,7 @@ theorem commMap_canonical_eq_mixed (x : K) :
   exact ⟨rfl, rfl⟩
 
 /-- This is a technical result to ensure that the image of the `ℂ`-basis of `ℂ^n` defined in
-`canonicalEmbedding.latticeBasis` is a `ℝ`-basis of `ℝ^r₁ × ℂ^r₂`,
+`canonicalEmbedding.latticeBasis` is a `ℝ`-basis of the mixed space `ℝ^r₁ × ℂ^r₂`,
 see `mixedEmbedding.latticeBasis`. -/
 theorem disjoint_span_commMap_ker [NumberField K] :
     Disjoint (Submodule.span ℝ (Set.range (canonicalEmbedding.latticeBasis K)))
@@ -433,6 +431,12 @@ theorem norm_unit (u : (𝓞 K)ˣ) :
     mixedEmbedding.norm (mixedEmbedding K (u : 𝓞 K)) = 1 := by
   rw [norm_eq_norm, Units.norm, Rat.cast_one]
 
+variable (K) in
+protected theorem continuous_norm : Continuous (mixedEmbedding.norm : (mixedSpace K) → ℝ) := by
+  refine continuous_finset_prod Finset.univ fun _ _ ↦ ?_
+  simp_rw [normAtPlace, MonoidWithZeroHom.coe_mk, ZeroHom.coe_mk, dite_pow]
+  split_ifs <;> fun_prop
+
 end norm
 
 noncomputable section stdBasis
@@ -585,6 +589,7 @@ open Module.Free
 
 open scoped nonZeroDivisors
 
+/-- The image of the ring of integers of `K` in the mixed space. -/
 protected abbrev integerLattice : Submodule ℤ (mixedSpace K) :=
   LinearMap.range ((mixedEmbedding K).comp (algebraMap (𝓞 K) K)).toIntAlgHom.toLinearMap
 
@@ -779,10 +784,15 @@ theorem volumePreserving_toMixed :
       volume_fundamentalDomain_stdBasis K]
 
 open Classical in
+theorem volumePreserving_toMixed_symm :
+    MeasurePreserving (toMixed K).symm := by
+  have : MeasurePreserving (toMixed K).toHomeomorph.toMeasurableEquiv := volumePreserving_toMixed K
+  exact this.symm
+
+open Classical in
 /-- The image of ring of integers `𝓞 K` in the euclidean mixed space. -/
 protected def integerLattice : Submodule ℤ (euclidean.mixedSpace K) :=
   ZLattice.map ℝ (mixedEmbedding.integerLattice K) (toMixed K).symm
-
 
 instance : DiscreteTopology (euclidean.integerLattice K) := by
   classical

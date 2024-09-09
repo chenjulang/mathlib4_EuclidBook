@@ -264,8 +264,8 @@ open scoped Real Classical NNReal
 variable [NumberField K] (B : ℝ)
 variable {K}
 
-/-- The function that sends `x : mixedSpace K` to
-  `∑ w, ‖x.1 w‖ + 2 * ∑ w, ‖x.2 w‖`. It defines a norm and it used to define `convexBodySum`. -/
+/-- The function that sends `x : mixedSpace K` to `∑ w, ‖x.1 w‖ + 2 * ∑ w, ‖x.2 w‖`. It defines a
+norm and it used to define `convexBodySum`. -/
 noncomputable abbrev convexBodySumFun (x : mixedSpace K) : ℝ := ∑ w, mult w * normAtPlace w x
 
 theorem convexBodySumFun_apply (x : mixedSpace K) :
