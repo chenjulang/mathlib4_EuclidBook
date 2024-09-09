@@ -3,9 +3,10 @@ Copyright (c) 2022 Xavier Roblot. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Xavier Roblot
 -/
-import Mathlib.Algebra.Module.Zlattice.Basic
+import Mathlib.Algebra.Module.ZLattice.Basic
 import Mathlib.Analysis.InnerProductSpace.ProdL2
 import Mathlib.Analysis.Normed.Lp.ProdLp
+import Mathlib.NumberTheory.NumberField.Embeddings
 import Mathlib.NumberTheory.NumberField.FractionalIdeal
 import Mathlib.NumberTheory.NumberField.Units.Basic
 
@@ -438,7 +439,7 @@ noncomputable section stdBasis
 
 open scoped Classical
 
-open Complex MeasureTheory MeasureTheory.Measure Zspan Matrix ComplexConjugate
+open Complex MeasureTheory MeasureTheory.Measure ZSpan Matrix ComplexConjugate
 
 variable [NumberField K]
 
@@ -634,9 +635,9 @@ instance : DiscreteTopology (mixedEmbedding.integerLattice K).toAddSubgroup := b
   infer_instance
 
 open Classical in
-instance : IsZlattice ℝ (mixedEmbedding.integerLattice K).toAddSubgroup := by
+instance : IsZLattice ℝ (mixedEmbedding.integerLattice K).toAddSubgroup := by
   simp_rw [← span_latticeBasis]
-  exact Zspan.isZlattice (latticeBasis K)
+  exact ZSpan.isZLattice (latticeBasis K)
 
 theorem mem_rat_span_latticeBasis (x : K) :
     mixedEmbedding K x ∈ Submodule.span ℚ (Set.range (latticeBasis K)) := by
@@ -775,7 +776,7 @@ theorem volumePreserving_toMixed :
   map_eq := by
     rw [← (OrthonormalBasis.addHaar_eq_volume (euclidean.stdOrthonormalBasis K)), Basis.map_addHaar,
       stdOrthonormalBasis_map_eq, Basis.addHaar_eq_iff, Basis.coe_parallelepiped,
-      ← measure_congr (Zspan.fundamentalDomain_ae_parallelepiped (stdBasis K) volume),
+      ← measure_congr (ZSpan.fundamentalDomain_ae_parallelepiped (stdBasis K) volume),
       volume_fundamentalDomain_stdBasis K]
 
 /-- The image of ring of integers `𝓞 K` in the euclidean mixed space. -/
@@ -785,10 +786,13 @@ protected def integerLattice : AddSubgroup (euclidean.mixedSpace K) :=
 instance : DiscreteTopology (euclidean.integerLattice K) := by
   classical
   rw [euclidean.integerLattice]
-  infer_instance
+--  infer_instance
+  sorry
 
 open Classical in
-instance : IsZlattice ℝ (euclidean.integerLattice K) := IsZlattice.comap ℝ _ _
+instance : IsZLattice ℝ (euclidean.integerLattice K) :=
+  -- IsZLattice.comap ℝ _ _
+  sorry
 
 theorem integerLattice_eq_preimage :
     euclidean.integerLattice K = (toMixed K)⁻¹' mixedEmbedding.integerLattice K := rfl

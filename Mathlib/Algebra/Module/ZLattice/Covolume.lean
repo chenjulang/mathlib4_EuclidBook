@@ -3,7 +3,7 @@ Copyright (c) 2024 Xavier Roblot. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Xavier Roblot
 -/
-import Mathlib.Algebra.Module.Zlattice.Basic
+import Mathlib.Algebra.Module.ZLattice.Basic
 
 /-!
 # Covolume of ℤ-lattices
@@ -14,32 +14,32 @@ Let `L` be a `ℤ`-lattice `L` defined as a discrete `AddSubgroup E` that spans 
 
 ## Main definitions and results
 
-* `Zlattice.covolume`: the covolume of `L` defined as the volume of an arbitrary fundamental
+* `ZLattice.covolume`: the covolume of `L` defined as the volume of an arbitrary fundamental
 domain of `L`.
 
-* `Zlattice.covolume_eq_measure_fundamentalDomain`: the covolume of `L` does not depend on the
+* `ZLattice.covolume_eq_measure_fundamentalDomain`: the covolume of `L` does not depend on the
 choice of the fundamental domain of `L`.
 
-* `Zlattice.covolume_eq_det`: if `L` is a lattice in `ℝ^n`, then its covolume is the absolute
+* `ZLattice.covolume_eq_det`: if `L` is a lattice in `ℝ^n`, then its covolume is the absolute
 value of the determinant of any `ℤ`-basis of `L`.
 
 -/
 
 noncomputable section
 
-namespace Zlattice
+namespace ZLattice
 
-open Submodule MeasureTheory FiniteDimensional MeasureTheory Module Zspan
+open Submodule MeasureTheory FiniteDimensional MeasureTheory Module ZSpan
 
 section General
 
 variable (K : Type*) [NormedLinearOrderedField K] [HasSolidNorm K] [FloorRing K]
 variable {E : Type*} [NormedAddCommGroup E] [NormedSpace K E] [FiniteDimensional K E]
 variable [ProperSpace E] [MeasurableSpace E]
-variable (L : AddSubgroup E) [DiscreteTopology L] [IsZlattice K L]
+variable (L : AddSubgroup E) [DiscreteTopology L] [IsZLattice K L]
 
 /-- The covolume of a `ℤ`-lattice is the volume of some fundamental domain; see
-`Zlattice.covolume_eq_volume` for the proof that the volume does not depend on the choice of
+`ZLattice.covolume_eq_volume` for the proof that the volume does not depend on the choice of
 the fundamental domain. -/
 def covolume (μ : Measure E := by volume_tac) : ℝ := (addCovolume L E μ).toReal
 
@@ -49,7 +49,7 @@ section Real
 
 variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] [FiniteDimensional ℝ E]
 variable [MeasurableSpace E] [BorelSpace E]
-variable (L : AddSubgroup E) [DiscreteTopology L] [IsZlattice ℝ L]
+variable (L : AddSubgroup E) [DiscreteTopology L] [IsZLattice ℝ L]
 variable (μ : Measure E := by volume_tac) [Measure.IsAddHaarMeasure μ]
 
 theorem covolume_eq_measure_fundamentalDomain {F : Set E} (h : IsAddFundamentalDomain L F μ) :
@@ -72,55 +72,56 @@ theorem covolume_eq_det_mul_measure {ι : Type*} [Fintype ι] [DecidableEq ι] (
     ENNReal.toReal_mul, ENNReal.toReal_ofReal (by positivity)]
   congr
   ext
-  exact b.ofZlatticeBasis_apply ℝ L _
+  exact b.ofZLatticeBasis_apply ℝ L _
 
 theorem covolume_eq_det {ι : Type*} [Fintype ι] [DecidableEq ι] (L : AddSubgroup (ι → ℝ))
-    [DiscreteTopology L] [IsZlattice ℝ L] (b : Basis ι ℤ L) :
+    [DiscreteTopology L] [IsZLattice ℝ L] (b : Basis ι ℤ L) :
     covolume L = |(Matrix.of ((↑) ∘ b)).det| := by
   rw [covolume_eq_measure_fundamentalDomain L volume (isAddFundamentalDomain b volume),
     volume_fundamentalDomain, ENNReal.toReal_ofReal (by positivity)]
   congr
   ext1
-  exact b.ofZlatticeBasis_apply ℝ L _
+  exact b.ofZLatticeBasis_apply ℝ L _
 
 theorem covolume_comap {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F] [FiniteDimensional ℝ F]
     [MeasurableSpace F] [BorelSpace F] (ν : Measure F := by volume_tac) [Measure.IsAddHaarMeasure ν]
     {e : F ≃L[ℝ] E} (he : MeasurePreserving e ν μ) :
     covolume (L.comap e.toAddMonoidHom) ν = covolume L μ := by
-  have : IsZlattice ℝ (L.comap e.toAddMonoidHom) := IsZlattice.comap ℝ _ _
-  let b := Free.chooseBasis ℤ L
+  sorry
+--  have : IsZLattice ℝ (L.comap e.toAddMonoidHom) := IsZLattice.comap ℝ _ _
+--   let b := Free.chooseBasis ℤ L
 
-  have : IsAddFundamentalDomain (L.comap e.toAddMonoidHom)
-      (e ⁻¹' (fundamentalDomain ((Free.chooseBasis ℤ L).ofZlatticeBasis ℝ))) ν := by
+--   have : IsAddFundamentalDomain (L.comap e.toAddMonoidHom)
+--       (e ⁻¹' (fundamentalDomain ((Free.chooseBasis ℤ L).ofZLatticeBasis ℝ))) ν := by
 
-    have := (Free.chooseBasis ℤ L).ofZlatticeBasis_span ℝ
-    have := congr_arg (AddSubgroup.comap e.toAddMonoidHom ·) this
-    dsimp at this
+--     have := (Free.chooseBasis ℤ L).ofZLatticeBasis_span ℝ
+--     have := congr_arg (AddSubgroup.comap e.toAddMonoidHom ·) this
+--     dsimp at this
 
 
-    rw [← e.image_symm_eq_preimage, ← e.symm.coe_toLinearEquiv, Zspan.map_fundamentalDomain]
-    rw [← this, Submodule.map_span]
+--     rw [← e.image_symm_eq_preimage, ← e.symm.coe_toLinearEquiv, ZSpan.map_fundamentalDomain]
+-- --    rw [← this, Submodule.map_span]
 
-    convert
-      Zspan.isAddFundamentalDomain (((Free.chooseBasis ℤ L).ofZlatticeBasis ℝ).map e.symm) ν
+--     convert
+--       Zspan.isAddFundamentalDomain (((Free.chooseBasis ℤ L).ofZlatticeBasis ℝ).map e.symm) ν
 
-    have := (Free.chooseBasis ℤ L).ofZlatticeBasis_span ℝ
+--     have := (Free.chooseBasis ℤ L).ofZlatticeBasis_span ℝ
 
-    have : (L.comap e.toAddMonoidHom) = (span ℤ (Set.range
-        (((Free.chooseBasis ℤ L).ofZlatticeBasis ℝ).map e.symm))).toAddSubgroup := by
-      simp_rw [← b.ofZlatticeBasis_span ℝ]
+--     have : (L.comap e.toAddMonoidHom) = (span ℤ (Set.range
+--         (((Free.chooseBasis ℤ L).ofZlatticeBasis ℝ).map e.symm))).toAddSubgroup := by
+--       simp_rw [← b.ofZlatticeBasis_span ℝ]
 
-    rw [this]
-    exact Zspan.isAddFundamentalDomain _ ν
+--     rw [this]
+--     exact Zspan.isAddFundamentalDomain _ ν
 
-  rw [covolume_eq_measure_fundamentalDomain _ ν this, he.measure_preimage
-    (fundamentalDomain_measurableSet _).nullMeasurableSet,
-    ← covolume_eq_measure_fundamentalDomain _ μ (Zlattice.isAddFundamentalDomain _ μ)]
+--   rw [covolume_eq_measure_fundamentalDomain _ ν this, he.measure_preimage
+--     (fundamentalDomain_measurableSet _).nullMeasurableSet,
+--     ← covolume_eq_measure_fundamentalDomain _ μ (Zlattice.isAddFundamentalDomain _ μ)]
 
 theorem volume_image_eq_volume_div_covolume {ι : Type*} [Fintype ι]
-    (L : AddSubgroup (ι → ℝ)) [DiscreteTopology L] [IsZlattice ℝ L] (b : Basis ι ℤ L)
+    (L : AddSubgroup (ι → ℝ)) [DiscreteTopology L] [IsZLattice ℝ L] (b : Basis ι ℤ L)
     (s : Set (ι → ℝ)) :
-    volume ((b.ofZlatticeBasis ℝ L).equivFun '' s) = (volume s) / ENNReal.ofReal (covolume L) := by
+    volume ((b.ofZLatticeBasis ℝ L).equivFun '' s) = (volume s) / ENNReal.ofReal (covolume L) := by
   sorry
 
 end Real
@@ -130,12 +131,12 @@ section InnerProductSpace
 variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E] [FiniteDimensional ℝ E]
   [MeasurableSpace E] [BorelSpace E]
 
-variable (L : AddSubgroup E) [DiscreteTopology L] [IsZlattice ℝ L]
+variable (L : AddSubgroup E) [DiscreteTopology L] [IsZLattice ℝ L]
 
 
 theorem volume_image_eq_volume_div_covolume' {s : Set E} (hs : MeasurableSet s)
     {ι : Type*} [Fintype ι] (b : Basis ι ℤ L) :
-    volume ((b.ofZlatticeBasis ℝ).equivFun '' s) = volume s / ENNReal.ofReal (covolume L) := by
+    volume ((b.ofZLatticeBasis ℝ).equivFun '' s) = volume s / ENNReal.ofReal (covolume L) := by
   sorry
 
 open Bornology Filter Topology
@@ -151,4 +152,4 @@ theorem tendsto_card_le_div_covolume' {X : Set E} (hX : ∀ ⦃x⦄ ⦃r : ℝ�
 
 end InnerProductSpace
 
-end Zlattice
+end ZLattice
