@@ -3,7 +3,6 @@ Copyright (c) 2024 Xavier Roblot. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Xavier Roblot
 -/
-import Mathlib.Algebra.Module.Zlattice.Covolume
 import Mathlib.NumberTheory.NumberField.CanonicalEmbedding.FundamentalCone.NormLessThanOne
 import Mathlib.NumberTheory.NumberField.Units.Regulator
 
@@ -37,7 +36,7 @@ theorem ideal.tendsto_is_principal_norm_le_div_atop :
   have h : ∀ n : ℝ,
       {x | x ∈ toMixed K ⁻¹' fundamentalCone K ∧ mixedEmbedding.norm (toMixed K x) ≤ n} =
         toMixed K ⁻¹' {x | x ∈ fundamentalCone K ∧ mixedEmbedding.norm x ≤ n} := fun _ ↦ rfl
-  convert (Zlattice.tendsto_card_le_div_covolume' (euclidean.integerLattice K)
+  convert (ZLattice.tendsto_card_le_div_covolume' (euclidean.integerLattice K)
       (F := fun x ↦ mixedEmbedding.norm (toMixed K x))
       (X := (toMixed K)⁻¹' (fundamentalCone K)) (fun _ _ _ h ↦ ?_) (fun _ _ h ↦ ?_)
       (isBounded_normLessThanOne K) ?_ ?_).mul (tendsto_const_nhds (x := (torsionOrder K : ℝ)⁻¹))
@@ -46,14 +45,13 @@ theorem ideal.tendsto_is_principal_norm_le_div_atop :
       div_mul_eq_mul_div₀, ← Nat.cast_mul, card_isPrincipal_norm_le, Nat.card_congr
       (ideal.tendsto_is_principal_norm_le_div_atop_aux K _)]
   · rw [h, (volumePreserving_toMixed K).measure_preimage
-      (measurableSet_normLessThanOne K).nullMeasurableSet, volume_normLessThanOne]
-    have : Zlattice.covolume (euclidean.integerLattice K) =
-      (2 : ℝ)⁻¹ ^ NrComplexPlaces K * Real.sqrt |discr K| := by sorry
-    rw [this]
-    rw [ENNReal.toReal_mul, ENNReal.toReal_mul, ENNReal.toReal_pow, ENNReal.toReal_pow,
-      ENNReal.toReal_ofNat,
-      ENNReal.coe_toReal, NNReal.coe_real_pi, ENNReal.coe_toReal, Real.coe_toNNReal _
-      (regulator_pos K).le]
+      (measurableSet_normLessThanOne K).nullMeasurableSet, volume_normLessThanOne,
+      euclidean.integerLattice, ZLattice.covolume_map _ _ _ (volumePreserving_toMixed_symm K),
+      ZLattice.covolume_eq_measure_fundamentalDomain _ _ (fundamentalDomain_integerLattice K),
+      volume_fundamentalDomain_latticeBasis]
+    simp_rw [ENNReal.toReal_mul, ENNReal.toReal_pow, ENNReal.toReal_inv, ENNReal.toReal_ofNat,
+      ENNReal.coe_toReal, NNReal.coe_real_pi, Real.coe_toNNReal _ (regulator_pos K).le,
+      Real.coe_sqrt, coe_nnnorm, Int.norm_eq_abs]
     ring_nf
   · rwa [Set.mem_preimage, map_smul, smul_mem_iff_mem (ne_of_gt h)]
   · simp_rw [map_smul, mixedEmbedding.norm_smul, euclidean.finrank, abs_of_pos h]

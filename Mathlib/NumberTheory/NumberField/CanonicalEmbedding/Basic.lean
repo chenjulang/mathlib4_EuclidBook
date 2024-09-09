@@ -643,6 +643,13 @@ instance : IsZLattice ℝ (mixedEmbedding.integerLattice K) := by
   simp_rw [← span_latticeBasis]
   exact ZSpan.isZLattice (latticeBasis K)
 
+open Classical in
+theorem fundamentalDomain_integerLattice :
+    MeasureTheory.IsAddFundamentalDomain (mixedEmbedding.integerLattice K)
+      (ZSpan.fundamentalDomain (latticeBasis K)) := by
+  rw [← span_latticeBasis]
+  exact ZSpan.isAddFundamentalDomain (latticeBasis K) _
+
 theorem mem_rat_span_latticeBasis (x : K) :
     mixedEmbedding K x ∈ Submodule.span ℚ (Set.range (latticeBasis K)) := by
   rw [← Basis.sum_repr (integralBasis K) x, map_sum]

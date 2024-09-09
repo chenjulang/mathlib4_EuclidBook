@@ -86,7 +86,7 @@ theorem covolume_eq_det {ι : Type*} [Fintype ι] [DecidableEq ι] (L : Submodul
   ext1
   exact b.ofZLatticeBasis_apply ℝ L _
 
-theorem covolume_comap {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F] [FiniteDimensional ℝ F]
+theorem covolume_map {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F] [FiniteDimensional ℝ F]
     [MeasurableSpace F] [BorelSpace F] (ν : Measure F := by volume_tac) [Measure.IsAddHaarMeasure ν]
     {e : E ≃L[ℝ] F} (he : MeasurePreserving e μ ν) :
     covolume (ZLattice.map ℝ L e) ν = covolume L μ := by
