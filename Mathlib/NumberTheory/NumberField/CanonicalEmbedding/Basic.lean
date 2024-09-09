@@ -585,8 +585,8 @@ open Module.Free
 
 open scoped nonZeroDivisors
 
-protected abbrev integerLattice : Subring (mixedSpace K) :=
-  ((mixedEmbedding K).comp (algebraMap (𝓞 K) K)).range
+protected abbrev integerLattice : Submodule ℤ (mixedSpace K) :=
+  LinearMap.range ((mixedEmbedding K).comp (algebraMap (𝓞 K) K)).toIntAlgHom.toLinearMap
 
 /-- A `ℝ`-basis of the mixed space that is also a `ℤ`-basis of the image of `𝓞 K`. -/
 def latticeBasis :
@@ -624,18 +624,17 @@ theorem mem_span_latticeBasis (x : (mixedSpace K)) :
   rfl
 
 theorem span_latticeBasis :
-    (Submodule.span ℤ (Set.range (latticeBasis K))).toAddSubgroup =
-      (mixedEmbedding.integerLattice K).toAddSubgroup := by
-  ext
-  rw [Submodule.mem_toAddSubgroup, mem_span_latticeBasis, Subring.mem_toAddSubgroup]
+    (Submodule.span ℤ (Set.range (latticeBasis K))) =
+      (mixedEmbedding.integerLattice K) :=
+  Submodule.ext_iff.mpr (mem_span_latticeBasis K)
 
-instance : DiscreteTopology (mixedEmbedding.integerLattice K).toAddSubgroup := by
+instance : DiscreteTopology (mixedEmbedding.integerLattice K) := by
   classical
   rw [← span_latticeBasis]
   infer_instance
 
 open Classical in
-instance : IsZLattice ℝ (mixedEmbedding.integerLattice K).toAddSubgroup := by
+instance : IsZLattice ℝ (mixedEmbedding.integerLattice K) := by
   simp_rw [← span_latticeBasis]
   exact ZSpan.isZLattice (latticeBasis K)
 
@@ -779,23 +778,26 @@ theorem volumePreserving_toMixed :
       ← measure_congr (ZSpan.fundamentalDomain_ae_parallelepiped (stdBasis K) volume),
       volume_fundamentalDomain_stdBasis K]
 
+open Classical in
 /-- The image of ring of integers `𝓞 K` in the euclidean mixed space. -/
-protected def integerLattice : AddSubgroup (euclidean.mixedSpace K) :=
-  ((mixedEmbedding.integerLattice K).toAddSubgroup.comap (toMixed K).toAddMonoidHom)
+protected def integerLattice : Submodule ℤ (euclidean.mixedSpace K) :=
+  ZLattice.map ℝ (mixedEmbedding.integerLattice K) (toMixed K).symm
+
 
 instance : DiscreteTopology (euclidean.integerLattice K) := by
   classical
   rw [euclidean.integerLattice]
---  infer_instance
-  sorry
+  infer_instance
 
 open Classical in
-instance : IsZLattice ℝ (euclidean.integerLattice K) :=
-  -- IsZLattice.comap ℝ _ _
-  sorry
+instance : IsZLattice ℝ (euclidean.integerLattice K) := by
+  simp_rw [euclidean.integerLattice]
+  infer_instance
 
 theorem integerLattice_eq_preimage :
-    euclidean.integerLattice K = (toMixed K)⁻¹' mixedEmbedding.integerLattice K := rfl
+    euclidean.integerLattice K = (toMixed K)⁻¹' mixedEmbedding.integerLattice K := by
+  rw [← ContinuousLinearEquiv.image_symm_eq_preimage]
+  rfl
 
 end euclidean
 

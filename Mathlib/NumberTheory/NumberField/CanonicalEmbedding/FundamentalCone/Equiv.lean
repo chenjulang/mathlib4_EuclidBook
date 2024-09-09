@@ -188,7 +188,7 @@ open Classical in
 a scalar, see `smul_mem_of_mem`--, that is also a fundamental domain for the action of `(𝓞 K)ˣ` up
 to roots of unity, see `exists_unitSMul_mem` and `torsion_unitSMul_mem_of_mem`. -/
 def fundamentalCone : Set (mixedSpace K) :=
-  logMap⁻¹' (Zspan.fundamentalDomain ((basisUnitLattice K).ofZlatticeBasis ℝ _)) \
+  logMap⁻¹' (ZSpan.fundamentalDomain ((basisUnitLattice K).ofZLatticeBasis ℝ)) \
     {x | mixedEmbedding.norm x = 0}
 
 namespace fundamentalCone
@@ -198,7 +198,7 @@ variable {K}
 open Classical in
 theorem mem_fundamentalCone {x : mixedSpace K} :
     x ∈ fundamentalCone K ↔
-      logMap x ∈ Zspan.fundamentalDomain ((basisUnitLattice K).ofZlatticeBasis ℝ _) ∧
+      logMap x ∈ ZSpan.fundamentalDomain ((basisUnitLattice K).ofZLatticeBasis ℝ _) ∧
       mixedEmbedding.norm x ≠ 0 := Set.mem_def
 
 theorem smul_mem_of_mem {x : mixedSpace K} (hx : x ∈ fundamentalCone K) {c : ℝ} (hc : c ≠ 0) :
