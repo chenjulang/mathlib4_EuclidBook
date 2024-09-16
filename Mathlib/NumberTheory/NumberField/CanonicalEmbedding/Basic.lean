@@ -810,7 +810,7 @@ theorem volumePreserving_toMixed_symm :
 open Classical in
 /-- The image of ring of integers `𝓞 K` in the euclidean mixed space. -/
 protected def integerLattice : Submodule ℤ (euclidean.mixedSpace K) :=
-  ZLattice.map ℝ (mixedEmbedding.integerLattice K) (toMixed K).symm
+  ZLattice.comap ℝ (mixedEmbedding.integerLattice K) (toMixed K).toLinearMap
 
 instance : DiscreteTopology (euclidean.integerLattice K) := by
   classical
@@ -823,9 +823,7 @@ instance : IsZLattice ℝ (euclidean.integerLattice K) := by
   infer_instance
 
 theorem integerLattice_eq_preimage :
-    euclidean.integerLattice K = (toMixed K)⁻¹' mixedEmbedding.integerLattice K := by
-  rw [← ContinuousLinearEquiv.image_symm_eq_preimage]
-  rfl
+    euclidean.integerLattice K = (toMixed K) ⁻¹' mixedEmbedding.integerLattice K := rfl
 
 end euclidean
 

@@ -23,8 +23,11 @@ private noncomputable def ideal.tendsto_is_principal_norm_le_div_atop_aux (n : �
   refine (((toMixed K).toEquiv.image _).trans (Equiv.setCongr ?_)).trans
     (Equiv.subtypeSubtypeEquivSubtypeInter _ (mixedEmbedding.norm · ≤ n)).symm
   ext x
-  exact ⟨fun ⟨_, ⟨⟨h₁, h₂⟩, h₃⟩, rfl⟩ ↦ ⟨⟨h₁, h₃⟩, h₂⟩,
-    fun ⟨⟨h₁, h₂⟩, h₃⟩ ↦ ⟨(toMixed K).symm x, ⟨⟨h₁, h₃⟩, h₂⟩, rfl⟩⟩
+  refine ⟨?_, ?_⟩
+  sorry
+  sorry
+--  exact ⟨fun ⟨_, ⟨⟨h₁, h₂⟩, h₃⟩, rfl⟩ ↦ ⟨⟨h₁, h₃⟩, h₂⟩,
+--    fun ⟨⟨h₁, h₂⟩, h₃⟩ ↦ ⟨(toMixed K).symm x, ⟨⟨h₁, h₃⟩, h₂⟩, rfl⟩⟩
 
 open Classical in
 theorem ideal.tendsto_is_principal_norm_le_div_atop :
@@ -36,14 +39,19 @@ theorem ideal.tendsto_is_principal_norm_le_div_atop :
   have h : ∀ n : ℝ,
       {x | x ∈ toMixed K ⁻¹' fundamentalCone K ∧ mixedEmbedding.norm (toMixed K x) ≤ n} =
         toMixed K ⁻¹' {x | x ∈ fundamentalCone K ∧ mixedEmbedding.norm x ≤ n} := fun _ ↦ rfl
-  convert (ZLattice.tendsto_card_le_div_covolume' (euclidean.integerLattice K)
+  convert (ZLattice.covolume.tendsto_card_le_div' (euclidean.integerLattice K)
       (F := fun x ↦ mixedEmbedding.norm (toMixed K x))
       (X := (toMixed K)⁻¹' (fundamentalCone K)) (fun _ _ _ h ↦ ?_) (fun _ _ h ↦ ?_)
       (isBounded_normLessThanOne K) ?_ ?_).mul (tendsto_const_nhds (x := (torsionOrder K : ℝ)⁻¹))
       using 2 with n
-  · rw [eq_comm, mul_inv_eq_iff_eq_mul₀ (Nat.cast_ne_zero.mpr (torsionOrder K).ne_zero),
-      div_mul_eq_mul_div₀, ← Nat.cast_mul, card_isPrincipal_norm_le, Nat.card_congr
-      (ideal.tendsto_is_principal_norm_le_div_atop_aux K _)]
+  · rw [eq_comm, mul_inv_eq_iff_eq_mul₀ (Nat.cast_ne_zero.mpr (torsionOrder K).ne_zero)]
+    rw [div_mul_eq_mul_div₀, ← Nat.cast_mul]
+    have := card_isPrincipal_norm_le K 
+
+    sorry
+    -- rw [eq_comm, mul_inv_eq_iff_eq_mul₀ (Nat.cast_ne_zero.mpr (torsionOrder K).ne_zero),
+    --   div_mul_eq_mul_div₀, ← Nat.cast_mul, card_isPrincipal_norm_le, Nat.card_congr
+    --   (ideal.tendsto_is_principal_norm_le_div_atop_aux K _)]
   · rw [h, (volumePreserving_toMixed K).measure_preimage
       (measurableSet_normLessThanOne K).nullMeasurableSet, volume_normLessThanOne,
       euclidean.integerLattice, ZLattice.covolume_map _ _ _ (volumePreserving_toMixed_symm K),
