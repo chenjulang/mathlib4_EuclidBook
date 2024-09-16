@@ -349,13 +349,20 @@ theorem normAtPlace_apply (w : InfinitePlace K) (x : K) :
     RingHom.prod_apply, Pi.ringHom_apply, norm_embedding_of_isReal, norm_embedding_eq, dite_eq_ite,
     ite_id]
 
-theorem normAtPlace_eq_zero {x : mixedSpace K} :
+theorem forall_normAtPlace_eq_zero_iff {x : mixedSpace K} :
     (∀ w, normAtPlace w x = 0) ↔ x = 0 := by
   refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
   · ext w
     · exact norm_eq_zero'.mp (normAtPlace_apply_isReal w.prop _ ▸ h w.1)
     · exact norm_eq_zero'.mp (normAtPlace_apply_isComplex w.prop _ ▸ h w.1)
   · simp_rw [h, map_zero, implies_true]
+
+@[deprecated (since := "2024-09-13")] alias normAtPlace_eq_zero := forall_normAtPlace_eq_zero_iff
+
+@[simp]
+theorem exists_normAtPlace_ne_zero_iff {x : mixedSpace K} :
+    (∃ w, normAtPlace w x ≠ 0) ↔ x ≠ 0 := by
+  rw [ne_eq, ← forall_normAtPlace_eq_zero_iff, not_forall]
 
 variable [NumberField K]
 
@@ -405,6 +412,11 @@ protected theorem norm_ne_zero_iff {x : mixedSpace K} :
   rw [← not_iff_not]
   simp_rw [ne_eq, mixedEmbedding.norm_eq_zero_iff, not_not, not_forall, not_not]
 
+theorem norm_eq_of_normAtPlace_eq {x y : mixedSpace K}
+    (h : ∀ w, normAtPlace w x = normAtPlace w y) :
+    mixedEmbedding.norm x = mixedEmbedding.norm y := by
+  simp_rw [mixedEmbedding.norm_apply, h]
+
 theorem norm_smul (c : ℝ) (x : mixedSpace K) :
     mixedEmbedding.norm (c • x) = |c| ^ finrank ℚ K * (mixedEmbedding.norm x) := by
   simp_rw [mixedEmbedding.norm_apply, normAtPlace_smul, mul_pow, prod_mul_distrib,
@@ -420,16 +432,15 @@ theorem norm_eq_norm (x : K) :
     mixedEmbedding.norm (mixedEmbedding K x) = |Algebra.norm ℚ x| := by
   simp_rw [mixedEmbedding.norm_apply, normAtPlace_apply, prod_eq_abs_norm]
 
+theorem norm_unit (u : (𝓞 K)ˣ) :
+    mixedEmbedding.norm (mixedEmbedding K u) = 1 := by
+  rw [norm_eq_norm, Units.norm, Rat.cast_one]
+
 theorem norm_eq_zero_iff' {x : mixedSpace K} (hx : x ∈ Set.range (mixedEmbedding K)) :
     mixedEmbedding.norm x = 0 ↔ x = 0 := by
   obtain ⟨a, rfl⟩ := hx
   rw [norm_eq_norm, Rat.cast_abs, abs_eq_zero, Rat.cast_eq_zero, Algebra.norm_eq_zero_iff,
     map_eq_zero]
-
-@[simp]
-theorem norm_unit (u : (𝓞 K)ˣ) :
-    mixedEmbedding.norm (mixedEmbedding K (u : 𝓞 K)) = 1 := by
-  rw [norm_eq_norm, Units.norm, Rat.cast_one]
 
 variable (K) in
 protected theorem continuous_norm : Continuous (mixedEmbedding.norm : (mixedSpace K) → ℝ) := by
