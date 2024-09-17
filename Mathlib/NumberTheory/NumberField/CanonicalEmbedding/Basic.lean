@@ -822,8 +822,8 @@ instance : IsZLattice ℝ (euclidean.integerLattice K) := by
   simp_rw [euclidean.integerLattice]
   infer_instance
 
-theorem integerLattice_eq_preimage :
-    euclidean.integerLattice K = (toMixed K) ⁻¹' mixedEmbedding.integerLattice K := rfl
+theorem integerLattice_eq_symm_image :
+    euclidean.integerLattice K = (toMixed K).symm '' mixedEmbedding.integerLattice K := sorry
 
 end euclidean
 

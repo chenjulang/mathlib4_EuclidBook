@@ -252,15 +252,16 @@ variable (K) in
 /-- The set of images by `mixedEmbedding` of algebraic integers of `K` contained in the
 fundamental cone. -/
 def integralPoint : Set (mixedSpace K) :=
-  fundamentalCone K ∩ mixedEmbedding K '' (Set.range (algebraMap (𝓞 K) K))
+  fundamentalCone K ∩ (mixedEmbedding.integerLattice K)
 
 theorem mem_integralPoint {a : mixedSpace K} :
     a ∈ integralPoint K ↔ a ∈ fundamentalCone K ∧ ∃ x : (𝓞 K), mixedEmbedding K x = a:= by
-  refine ⟨?_, ?_⟩
-  · rintro ⟨h, ⟨_, ⟨x, rfl⟩, rfl⟩⟩
-    exact ⟨h, x, rfl⟩
-  · rintro ⟨h, ⟨x, rfl⟩⟩
-    exact ⟨h, ⟨x, ⟨x, rfl⟩, rfl⟩⟩
+  sorry
+  -- refine ⟨?_, ?_⟩
+  -- · rintro ⟨h, ⟨_, ⟨x, rfl⟩, rfl⟩⟩
+  --   exact ⟨h, x, rfl⟩
+  -- · rintro ⟨h, ⟨x, rfl⟩⟩
+  --   exact ⟨h, ⟨x, ⟨x, rfl⟩, rfl⟩⟩
 
 /-- If `a` is an integral point, then there is a *unique* algebraic integer in `𝓞 K` such
 that `mixedEmbedding K x = a`. -/
@@ -302,14 +303,16 @@ theorem exists_unitSMul_mem_integralPoint {x : mixedSpace K} (hx : x ≠ 0)
       (norm_eq_zero_iff' (Set.mem_range_of_mem_image (mixedEmbedding K) _ hx')).not.mpr hx
   obtain ⟨u, hu⟩ := exists_unit_smul_mem hx
   obtain ⟨_, ⟨⟨x, rfl⟩, ⟨_, rfl⟩⟩⟩ := hx'
-  exact ⟨u, hu, (u * x : K), ⟨u * x, rfl⟩, by simp_rw [unitSMul_smul, ← map_mul]⟩
+  sorry
+--  exact ⟨u, hu, (u * x : K), ⟨u * x, rfl⟩, by simp_rw [unitSMul_smul, ← map_mul]⟩
 
 /-- The set `integralPoint K` is stable under the action of roots of unity. -/
 theorem torsion_unitSMul_mem_integralPoint {x : mixedSpace K} {ζ : (𝓞 K)ˣ} (hζ : ζ ∈ torsion K)
     (hx : x ∈ integralPoint K) :
     ζ • x ∈ integralPoint K := by
   obtain ⟨_, ⟨a, rfl⟩, rfl⟩ := hx.2
-  exact ⟨torsion_smul_mem_of_mem hx.1 hζ, ⟨ζ * a, ⟨ζ * a, rfl⟩, by rw [unitSMul_smul, map_mul]⟩⟩
+  sorry
+--  exact ⟨torsion_smul_mem_of_mem hx.1 hζ, ⟨ζ * a, ⟨ζ * a, rfl⟩, by rw [unitSMul_smul, map_mul]⟩⟩
 
 /-- The action of `torsion K` on `integralPoint K`. -/
 @[simps]
