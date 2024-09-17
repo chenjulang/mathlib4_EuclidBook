@@ -19,26 +19,12 @@ open scoped nonZeroDivisors Real
 private noncomputable def ideal.tendsto_is_principal_norm_le_div_atop_aux (s : ℝ) :
     ↑({x | x ∈ toMixed K ⁻¹' fundamentalCone K ∧ mixedEmbedding.norm ((toMixed K) x) ≤ s} ∩
         (euclidean.integerLattice K)) ≃ {a : integralPoint K | ↑(intNorm a) ≤ s} := by
-  simp_rw [intNorm_coe]
+  simp_rw [intNorm_coe, euclidean.integerLattice_eq_symm_image]
   refine (((toMixed K).toEquiv.image _).trans (Equiv.setCongr ?_)).trans
     (Equiv.subtypeSubtypeEquivSubtypeInter _ (mixedEmbedding.norm · ≤ s)).symm
   ext x
-  refine ⟨?_, ?_⟩
-  · rintro ⟨_, ⟨⟨h₁, h₂⟩, ⟨x, rfl⟩⟩, rfl⟩
-    refine ⟨?_, ?_⟩
-    sorry
-    sorry
-  --  refine ⟨⟨h₁, ⟨x, ⟨x, rfl⟩, rfl⟩⟩, h₂⟩
-  · rintro ⟨h, h2⟩
-    refine ⟨(toMixed K).symm x, ⟨⟨?_, ?_⟩, ?_⟩ , rfl⟩
-    exact h.1
-    exact h2
-    rw [euclidean.integerLattice_eq_symm_image]
-    refine Set.mem_image_of_mem ⇑(toMixed K).symm ?_
-    exact h.2
-
---  exact ⟨fun ⟨_, ⟨⟨h₁, h₂⟩, h₃⟩, rfl⟩ ↦ ⟨⟨h₁, h₃⟩, h₂⟩,
---    fun ⟨⟨h₁, h₂⟩, h₃⟩ ↦ ⟨(toMixed K).symm x, ⟨⟨h₁, h₃⟩, h₂⟩, rfl⟩⟩
+  exact ⟨fun ⟨_, ⟨⟨h₁, h₂⟩, ⟨_, h₃, rfl⟩⟩, rfl⟩ ↦ ⟨⟨h₁, h₃⟩, h₂⟩,
+    fun ⟨h₁, h₂⟩ ↦ ⟨(toMixed K).symm x, ⟨⟨h₁.1, h₂⟩, ⟨x, h₁.2, rfl⟩⟩, rfl⟩⟩
 
 open Classical in
 theorem ideal.tendsto_is_principal_norm_le_div_atop :
