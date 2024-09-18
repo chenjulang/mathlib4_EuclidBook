@@ -1750,6 +1750,10 @@ protected def refl : M₁ ≃L[R₁] M₁ :=
 
 end
 
+@[simp]
+theorem refl_apply (x : M₁) :
+    ContinuousLinearEquiv.refl R₁ M₁ x = x := rfl
+
 @[simp, norm_cast]
 theorem coe_refl : ↑(ContinuousLinearEquiv.refl R₁ M₁) = ContinuousLinearMap.id R₁ M₁ :=
   rfl
@@ -2033,7 +2037,7 @@ theorem piCongrRight_apply {ι : Type*} {M : ι → Type*} [∀ i, TopologicalSp
     ContinuousLinearEquiv.piCongrRight f m i = (f i) (m i) := rfl
 
 @[simp]
-theorem poCongrRight_symm_apply {ι : Type*} {M : ι → Type*} [∀ i, TopologicalSpace (M i)]
+theorem piCongrRight_symm_apply {ι : Type*} {M : ι → Type*} [∀ i, TopologicalSpace (M i)]
     [∀ i, AddCommMonoid (M i)] [∀ i, Module R₁ (M i)] {N : ι → Type*} [∀ i, TopologicalSpace (N i)]
     [∀ i, AddCommMonoid (N i)] [∀ i, Module R₁ (N i)] (f : (i : ι) → M i ≃L[R₁] N i)
     (n : (i : ι) → N i) (i : ι) :

@@ -5,8 +5,7 @@ Authors: Xavier Roblot
 -/
 import Mathlib.Algebra.Module.ZLattice.Basic
 import Mathlib.Analysis.InnerProductSpace.ProdL2
-import Mathlib.Analysis.Normed.Lp.ProdLp
-import Mathlib.NumberTheory.NumberField.Embeddings
+import Mathlib.MeasureTheory.Measure.Haar.Unique
 import Mathlib.NumberTheory.NumberField.FractionalIdeal
 import Mathlib.NumberTheory.NumberField.Units.Basic
 
@@ -189,12 +188,14 @@ section Measure
 
 open MeasureTheory.Measure MeasureTheory
 
+variable [NumberField K]
+
 open Classical in
-instance [NumberField K] : IsAddHaarMeasure (volume : Measure (mixedSpace K)) :=
+instance : IsAddHaarMeasure (volume : Measure (mixedSpace K)) :=
   prod.instIsAddHaarMeasure volume volume
 
 open Classical in
-instance [NumberField K] : NoAtoms (volume : Measure (mixedSpace K)) := by
+instance : NoAtoms (volume : Measure (mixedSpace K)) := by
   obtain ⟨w⟩ := (inferInstance : Nonempty (InfinitePlace K))
   by_cases hw : IsReal w
   · exact @prod.instNoAtoms_fst _ _ _ _ volume volume _ (pi_noAtoms ⟨w, hw⟩)
@@ -745,203 +746,222 @@ end integerLattice
 
 noncomputable section plusPart
 
+variable {K}
+
 open Classical in
-def negAt (s : Finset {w : InfinitePlace K // IsReal w}) :
+/-- Let `s` be a set of real places, define the continuous linear equiv of the mixed space that
+changes sign at places in `s` and leaves the rest unchanged. -/
+def negAt (s : Set {w : InfinitePlace K // IsReal w}) :
     (mixedSpace K) ≃L[ℝ] (mixedSpace K) :=
   (ContinuousLinearEquiv.piCongrRight
     fun w ↦ if w ∈ s then ContinuousLinearEquiv.neg ℝ else ContinuousLinearEquiv.refl ℝ ℝ).prod
       (ContinuousLinearEquiv.refl ℝ _)
 
--- theorem negAt_apply_of_isReal_and_mem  {s : Finset {w // IsReal w}} (x : E K)
---     {w : {w // IsReal w}} (hw : w ∈ s) :
---     (negAt s x).1 w = - x.1 w := by
---   simp_rw [negAt, ContinuousLinearEquiv.prod_apply, ContinuousLinearEquiv.piCongrRight_apply,
---     if_pos hw, ContinuousLinearEquiv.neg_apply]
+@[simp]
+theorem negAt_apply_of_isReal_and_mem  {s : Set {w // IsReal w}} (x : mixedSpace K)
+    {w : {w // IsReal w}} (hw : w ∈ s) :
+    (negAt s x).1 w = - x.1 w := by
+  simp_rw [negAt, ContinuousLinearEquiv.prod_apply, ContinuousLinearEquiv.piCongrRight_apply,
+    if_pos hw, ContinuousLinearEquiv.neg_apply]
 
--- theorem negAt_apply_of_isReal_and_not_mem {s : Finset {w // IsReal w}} (x : E K)
---     {w : {w // IsReal w}} (hw : w ∉ s) :
---     (negAt s x).1 w = x.1 w := by
---   simp_rw [negAt, ContinuousLinearEquiv.prod_apply, ContinuousLinearEquiv.piCongrRight_apply,
---     if_neg hw, ContinuousLinearEquiv.refl_apply]
+@[simp]
+theorem negAt_apply_of_isReal_and_not_mem {s : Set {w // IsReal w}} (x : mixedSpace K)
+    {w : {w // IsReal w}} (hw : w ∉ s) :
+    (negAt s x).1 w = x.1 w := by
+  simp_rw [negAt, ContinuousLinearEquiv.prod_apply, ContinuousLinearEquiv.piCongrRight_apply,
+    if_neg hw, ContinuousLinearEquiv.refl_apply]
 
--- theorem negAt_apply_of_isComplex (s : Finset {w // IsReal w}) (x : E K)
---     (w : {w // IsComplex w})  :
---     (negAt s x).2 w = x.2 w := rfl
+@[simp]
+theorem negAt_apply_abs_of_isReal {s : Set {w // IsReal w}} (x : mixedSpace K)
+    (w : {w // IsReal w}) :
+    |(negAt s x).1 w| = |x.1 w| := by
+  by_cases hw : w ∈ s
+  · rw [negAt_apply_of_isReal_and_mem _ hw, abs_neg]
+  · rw [negAt_apply_of_isReal_and_not_mem _ hw]
 
--- theorem normAtPlace_negAt_eq (s : Finset {w // IsReal w}) (x : E K) (w : InfinitePlace K) :
---     normAtPlace w (negAt s x) = normAtPlace w x := by
---   obtain hw | hw := isReal_or_isComplex w
---   · simp_rw [normAtPlace_apply_isReal hw]
---     · by_cases hw' : ⟨w, hw⟩ ∈ s
---       · rw [negAt_apply_of_isReal_and_mem _ hw', norm_neg]
---       · rw [negAt_apply_of_isReal_and_not_mem _ hw']
---   · simp_rw [normAtPlace_apply_isComplex hw, negAt_apply_of_isComplex _ _ ⟨w, hw⟩]
+@[simp]
+theorem negAt_apply_snd (s : Set {w // IsReal w}) (x : mixedSpace K) :
+    (negAt s x).2 = x.2 := rfl
 
--- open Classical in
--- theorem volume_preserving_negAt [NumberField K] (s : Finset {w : InfinitePlace K // IsReal w}) :
---     MeasurePreserving (negAt s) := by
---   refine MeasurePreserving.prod (volume_preserving_pi fun w ↦ ?_) (MeasurePreserving.id _)
---   by_cases hw : w ∈ s
---   · simp_rw [if_pos hw]
---     exact measurePreserving_neg _
---   · simp_rw [if_neg hw]
---     exact MeasurePreserving.id _
+open MeasureTheory Classical in
+/-- `negAt` preserves the volume . -/
+theorem volume_preserving_negAt [NumberField K] (s : Set {w : InfinitePlace K // IsReal w}) :
+    MeasurePreserving (negAt s) := by
+  refine MeasurePreserving.prod (volume_preserving_pi fun w ↦ ?_) (MeasurePreserving.id _)
+  by_cases hw : w ∈ s
+  · simp_rw [if_pos hw]
+    exact Measure.measurePreserving_neg _
+  · simp_rw [if_neg hw]
+    exact MeasurePreserving.id _
 
--- theorem negAt_symm (s : Finset {w : InfinitePlace K // IsReal w}) :
---     (negAt s).symm = negAt s := by
---   ext x w
---   · by_cases h : w ∈ s
---     · simp_rw [negAt, ContinuousLinearEquiv.prod_symm, ContinuousLinearEquiv.prod_apply,
---         ContinuousLinearEquiv.piCongrRight_symm_apply, ContinuousLinearEquiv.piCongrRight_apply,
---         if_pos h, ContinuousLinearEquiv.symm_neg]
---     · simp_rw [negAt, ContinuousLinearEquiv.prod_symm, ContinuousLinearEquiv.prod_apply,
---         ContinuousLinearEquiv.piCongrRight_symm_apply, ContinuousLinearEquiv.piCongrRight_apply,
---         if_neg h, ContinuousLinearEquiv.refl_symm]
---   · rfl
+/-- `negAt` preserves `normAtPlace`. -/
+@[simp]
+theorem normAtPlace_negAt (s : Set {w // IsReal w}) (x : mixedSpace K) (w : InfinitePlace K) :
+    normAtPlace w (negAt s x) = normAtPlace w x := by
+  obtain hw | hw := isReal_or_isComplex w
+  · simp_rw [normAtPlace_apply_isReal hw, Real.norm_eq_abs, negAt_apply_abs_of_isReal]
+  · simp_rw [normAtPlace_apply_isComplex hw, congr_fun (negAt_apply_snd s x) ⟨w, hw⟩]
 
--- variable (A : Set (E K)) (hA₁ : MeasurableSet A) (hA₂ : ∀ s, negAt s '' A ⊆ A)
+/-- `negAt` preserves the `norm`. -/
+@[simp]
+theorem norm_negAt [NumberField K] (s : Set {w // IsReal w}) (x : mixedSpace K) :
+    mixedEmbedding.norm (negAt s x) = mixedEmbedding.norm x :=
+  norm_eq_of_normAtPlace_eq (fun w ↦ normAtPlace_negAt _ _ w)
 
--- abbrev plusPart : Set (E K) := A ∩ {x | ∀ w, 0 < x.1 w}
+open ContinuousLinearEquiv in
+/-- `negAt` is equal to its inverse. -/
+theorem negAt_symm (s : Set {w : InfinitePlace K // IsReal w}) :
+    (negAt s).symm = negAt s := by
+  ext x w
+  · by_cases hw : w ∈ s
+    · simp_rw [negAt_apply_of_isReal_and_mem _ hw, negAt, prod_symm,
+        ContinuousLinearEquiv.prod_apply, piCongrRight_symm_apply, if_pos hw, symm_neg, neg_apply]
+    · simp_rw [negAt_apply_of_isReal_and_not_mem _ hw, negAt, prod_symm,
+        ContinuousLinearEquiv.prod_apply, piCongrRight_symm_apply, if_neg hw, refl_symm, refl_apply]
+  · rfl
 
--- include hA₁ in
--- theorem measurableSet_plusPart [NumberField K] :
---     MeasurableSet (plusPart A) := by
---   convert_to MeasurableSet (A ∩ (⋂ w, {x | 0 < x.1 w}))
---   · ext; simp
---   · refine MeasurableSet.inter hA₁ ?_
---     refine MeasurableSet.iInter fun _ ↦ ?_
---     exact measurableSet_lt measurable_const ((measurable_pi_apply _).comp'  measurable_fst)
+variable (A : Set (mixedSpace K))
 
--- abbrev negAtPlus (s : Finset {w : InfinitePlace K // IsReal w}) : Set (E K) :=
---     negAt s '' (plusPart A)
+/-- `negAt s A` is also equal to the preimage of `A` by `negAt s`. This fact can be useful to
+simplify some proofs. -/
+theorem negAt_preimage (s : Set {w // IsReal w} ) :
+    negAt s ⁻¹' A = negAt s '' A := by
+  rw [ContinuousLinearEquiv.image_eq_preimage, negAt_symm]
 
--- include hA₁ in
--- theorem measurableSet_negAtPlus [NumberField K] (s : Finset {w : InfinitePlace K // IsReal w}) :
---     MeasurableSet (negAtPlus A s) := by
---   rw [negAtPlus, ← negAt_symm, ContinuousLinearEquiv.image_symm_eq_preimage]
---   exact (measurableSet_plusPart A hA₁).preimage (negAt s).continuous.measurable
+/-- The `Plus` part of a subset `A` of the `mixedSpace` is the set of points in `A` that are
+positive at all real places. -/
+abbrev plusPart : Set (mixedSpace K) := A ∩ {x | ∀ w, 0 < x.1 w}
 
--- theorem negAtPlus_neg_of_mem {s : Finset {w // IsReal w}} {x : E K} (hx : x ∈ negAtPlus A s)
---     {w : {w // IsReal w}} (hw : w ∈ s) :
---     x.1 w < 0 := by
---   obtain ⟨y, hy, rfl⟩ := hx
---   rw [negAt_apply_of_isReal_and_mem _ hw, neg_lt_zero]
---   exact hy.2 w
+/-- Let `s` be a set of real places. `negAtPlusPart A s` is the image of `plusPart A` by `negAt s`,
+thus it is equal to the set of elements of `A` that are negative at real places in `s` and
+positive at real places not in `s`. -/
+abbrev negAtPlusPart (s : Set {w : InfinitePlace K // IsReal w}) : Set (mixedSpace K) :=
+    negAt s '' (plusPart A)
 
--- theorem negAtPlus_pos_of_not_mem {s : Finset {w // IsReal w}} {x : E K} (hx : x ∈ negAtPlus A s)
---     {w : {w // IsReal w}} (hw : w ∉ s) :
---     0 < x.1 w := by
---   obtain ⟨y, hy, rfl⟩ := hx
---   rw [negAt_apply_of_isReal_and_not_mem _ hw]
---   exact hy.2 w
+theorem negAtPlusPart_neg_of_mem {s : Set {w // IsReal w}} {x : mixedSpace K}
+    (hx : x ∈ negAtPlusPart A s) {w : {w // IsReal w}} (hw : w ∈ s) :
+    x.1 w < 0 := by
+  obtain ⟨y, hy, rfl⟩ := hx
+  rw [negAt_apply_of_isReal_and_mem _ hw, neg_lt_zero]
+  exact hy.2 w
 
--- -- Use this to golf proofs?
--- theorem negAtPlus_eq_preimage (s : Finset {w // IsReal w} ) :
---     negAtPlus A s = negAt s ⁻¹' (plusPart A) := by
---   rw [← negAt_symm, ← ContinuousLinearEquiv.image_eq_preimage]
+theorem negAtPlusPart_pos_of_not_mem {s : Set {w // IsReal w}} {x : mixedSpace K}
+    (hx : x ∈ negAtPlusPart A s) {w : {w // IsReal w}} (hw : w ∉ s) :
+    0 < x.1 w := by
+  obtain ⟨y, hy, rfl⟩ := hx
+  rw [negAt_apply_of_isReal_and_not_mem _ hw]
+  exact hy.2 w
 
--- theorem res1 : Pairwise (Disjoint on (negAtPlus A)) := by
---   classical
---   intro s t hst
---   have : ∃ w, (w ∈ s ∧ w ∉ t) ∨ (w ∈ t ∧ w ∉ s) := by
---     obtain ⟨w, hw⟩ := Finset.symmDiff_nonempty.mpr hst
---     refine ⟨w, ?_⟩
---     obtain h | h := Finset.mem_union.mp hw
---     · left
---       rwa [← Finset.mem_sdiff]
---     · right
---       rwa [← Finset.mem_sdiff]
---   obtain ⟨w, hw⟩ := this
---   refine Set.disjoint_left.mpr fun _ hx hx' ↦ ?_
---   obtain hw | hw := hw
---   · exact lt_irrefl _ <|
---       (negAtPlus_neg_of_mem A hx hw.1).trans (negAtPlus_pos_of_not_mem A hx' hw.2)
---   · exact lt_irrefl _ <|
---       (negAtPlus_neg_of_mem A hx' hw.1).trans (negAtPlus_pos_of_not_mem A hx hw.2)
+open Classical in
+theorem mem_negAtPlusPart_of_mem (hA : ∀ x, x ∈ A ↔ (fun w ↦ |x.1 w|, x.2) ∈ A)
+    (s : Set {w // IsReal w}) {x : mixedSpace K} (hx₁ : x ∈ A) (hx₂ : ∀ w, x.1 w ≠ 0) :
+    x ∈ negAtPlusPart A s ↔ (∀ w, w ∈ s → x.1 w < 0) ∧ (∀ w, w ∉ s → x.1 w > 0) := by
+  refine ⟨fun hx ↦ ⟨fun _ hw ↦ negAtPlusPart_neg_of_mem A hx hw,
+      fun _ hw ↦ negAtPlusPart_pos_of_not_mem A hx hw⟩,
+      fun ⟨h₁, h₂⟩ ↦ ⟨(fun w ↦ |x.1 w|, x.2), ⟨(hA x).mp hx₁, fun w ↦ abs_pos.mpr (hx₂ w)⟩, ?_⟩⟩
+  ext w
+  · by_cases hw : w ∈ s
+    · simp_rw [negAt_apply_of_isReal_and_mem _ hw, abs_of_neg (h₁ w hw), neg_neg]
+    · simp_rw [negAt_apply_of_isReal_and_not_mem _ hw, abs_of_pos (h₂ w hw)]
+  · rfl
 
--- include hA₂ in
--- theorem res211 (s) : negAtPlus A s ⊆ A := by
---   rintro _ ⟨x, hx, rfl⟩
---   exact hA₂ s (Set.mem_image_of_mem (negAt s) hx.1)
+/-- The sets `negAtPlusPart` are pairwise disjoint. -/
+theorem disjoint_negAtPlusPart : Pairwise (Disjoint on (negAtPlusPart A)) := by
+  classical
+  intro s t hst
+  refine Set.disjoint_left.mpr fun _ hx hx' ↦ ?_
+  obtain ⟨w, hw | hw⟩ : ∃ w, (w ∈ s ∧ w ∉ t) ∨ (w ∈ t ∧ w ∉ s) := by
+    exact Set.symmDiff_nonempty.mpr hst
+  · exact lt_irrefl _ <|
+      (negAtPlusPart_neg_of_mem A hx hw.1).trans (negAtPlusPart_pos_of_not_mem A hx' hw.2)
+  · exact lt_irrefl _ <|
+      (negAtPlusPart_neg_of_mem A hx' hw.1).trans (negAtPlusPart_pos_of_not_mem A hx hw.2)
 
--- open Classical in
--- def signSet [NumberField K] (x : E K) : Finset {w : InfinitePlace K // IsReal w} :=
---   Set.toFinset (fun w ↦ x.1 w ≤ 0)
+/-- For `x : mixedSpace K`, the set `signSet x` is the set of real places `w` s.t. `x w ≤ 0`. -/
+def signSet (x : mixedSpace K) : Set {w : InfinitePlace K // IsReal w} := {w | x.1 w ≤ 0}
 
--- theorem mem_signSet [NumberField K] {x : E K} {w : {w // IsReal w}} :
---     w ∈ signSet x ↔ x.1 w ≤ 0 := by
---   simp_rw [signSet, Set.mem_toFinset, Set.mem_def]
+@[simp]
+theorem negAt_signSet_apply_of_isReal (x : mixedSpace K) (w : {w // IsReal w}) :
+    (negAt (signSet x) x).1 w = |x.1 w| := by
+  by_cases hw : x.1 w ≤ 0
+  · rw [negAt_apply_of_isReal_and_mem _ hw, abs_of_nonpos hw]
+  · rw [negAt_apply_of_isReal_and_not_mem _ hw, abs_of_pos (lt_of_not_ge hw)]
 
--- theorem negAt_signSet_apply [NumberField K] (x : E K) :
---     negAt (signSet x) x = (fun w ↦ |x.1 w|, x.2) := by
---   ext w
---   · by_cases hw : w ∈ signSet x
---     · simp_rw [negAt_apply_of_isReal_and_mem _ hw, abs_of_nonpos (mem_signSet.mp hw)]
---     · simp_rw [negAt_apply_of_isReal_and_not_mem _ hw, abs_of_pos
---         (lt_of_not_ge (mem_signSet.not.mp hw))]
---   · rfl
+@[simp]
+theorem negAt_signSet_apply_of_isComplex (x : mixedSpace K) (w : {w // IsComplex w}) :
+    (negAt (signSet x) x).2 w = x.2 w := rfl
 
--- variable [NumberField K]
+/-- Assume that the images of `plusPart A` under `negAt` are all subset of `A`. Then, the union of
+all the `negPlusPart` and the set of elements of `A` that are zero at at least one real place is
+equal to `A`. -/
+theorem iUnion_negAtPlusPart_union (hA : ∀ x, x ∈ A ↔ (fun w ↦ |x.1 w|, x.2) ∈ A) :
+    (⋃ s, negAtPlusPart A s) ∪ (A ∩ (⋃ w, {x | x.1 w = 0})) = A := by
+  ext x
+  rw [Set.mem_union, Set.mem_inter_iff, Set.mem_iUnion, Set.mem_iUnion]
+  refine ⟨?_, fun h ↦ ?_⟩
+  · rintro (⟨s, ⟨x, ⟨hx, _⟩, rfl⟩⟩ | h)
+    · simp_rw (config := {singlePass := true}) [hA, negAt_apply_abs_of_isReal, negAt_apply_snd]
+      rwa [← hA]
+    · exact h.left
+  · obtain hx | hx := exists_or_forall_not (fun w ↦ x.1 w = 0)
+    · exact Or.inr ⟨h, hx⟩
+    · refine Or.inl ⟨signSet x,
+        (mem_negAtPlusPart_of_mem A hA _ h hx).mpr ⟨fun w hw ↦ ?_, fun w hw ↦ ?_⟩⟩
+      · exact lt_of_le_of_ne hw (hx w)
+      · exact lt_of_le_of_ne (lt_of_not_ge hw).le (Ne.symm (hx w))
 
--- include hA₂ in
--- theorem res22 {x : E K} (hx : x ∈ A) (hx' : ∀ w, x.1 w ≠ 0) :
---     x ∈ negAtPlus A (signSet x) := by
---   rw [negAtPlus, ← negAt_symm, ContinuousLinearEquiv.image_symm_eq_preimage, Set.mem_preimage]
---   refine Set.mem_inter ?_ ?_
---   · exact (hA₂ (signSet x)) (Set.mem_image_of_mem _ hx)
---   · rw [negAt_signSet_apply]
---     exact fun w ↦ abs_pos.mpr (hx' w)
+open MeasureTheory
 
--- abbrev part₀ : Set (E K) := A ∩ (⋃ w, {x | x.1 w = 0})
+variable [NumberField K]
 
--- include hA₂ in
--- theorem res21 : A = (⋃ s, negAtPlus A s) ∪ part₀ A := by
---   refine Set.Subset.antisymm_iff.mpr ⟨fun x hx ↦ ?_,
---     Set.union_subset (Set.iUnion_subset fun _ ↦ res211 A hA₂ _) Set.inter_subset_left⟩
---   by_cases hw : ∃ w, x.1 w = 0
---   · refine Set.mem_union_right _ ?_
---     refine Set.mem_inter hx ?_
---     exact Set.mem_iUnion.mpr hw
---   · refine Set.mem_union_left _ ?_
---     refine Set.mem_iUnion.mpr ⟨?_, ?_⟩
---     · exact signSet x
---     · exact res22 A hA₂ hx (not_exists.mp hw)
+open Classical in
+/-- The set of points in the mixedSpace that are equal to `0` at a fixed (real) place has
+volume zero. -/
+theorem volume_eq_zero (w : {w // IsReal w}) :
+    volume ({x : mixedSpace K | x.1 w = 0}) = 0 := by
+  let A : AffineSubspace ℝ (mixedSpace K) :=
+    Submodule.toAffineSubspace (Submodule.mk ⟨⟨{x | x.1 w = 0}, by aesop⟩, rfl⟩ (by aesop))
+  convert Measure.addHaar_affineSubspace volume A fun h ↦ ?_
+  have : 1 ∈ A := h ▸ Set.mem_univ _
+  simp [A] at this
 
--- open Classical in
--- theorem volume_eq_zero (w : {w // IsReal w}):
---     volume ({x : E K | x.1 w = 0}) = 0 := by
---   let A : AffineSubspace ℝ (E K) :=
---     Submodule.toAffineSubspace (Submodule.mk ⟨⟨{x | x.1 w = 0}, by aesop⟩, rfl⟩ (by aesop))
---   convert Measure.addHaar_affineSubspace volume A fun h ↦ ?_
---   have : 1 ∈ A := h ▸ Set.mem_univ _
---   simp [A] at this
+open Classical in
+theorem iUnion_negAtPart_ae (hA : ∀ x, x ∈ A ↔ (fun w ↦ |x.1 w|, x.2) ∈ A) :
+  ⋃ s, negAtPlusPart A s =ᵐ[volume] A := by
+  nth_rewrite 2 [← iUnion_negAtPlusPart_union A hA]
+  refine (MeasureTheory.union_ae_eq_left_of_ae_eq_empty (ae_eq_empty.mpr ?_)).symm
+  exact measure_mono_null Set.inter_subset_right
+    (measure_iUnion_null_iff.mpr fun _ ↦ volume_eq_zero _)
 
--- open Classical in
--- theorem volume_part₀ :
---     volume (part₀ A) = 0 :=
---   measure_mono_null Set.inter_subset_right (measure_iUnion_null_iff.mpr fun _ ↦ volume_eq_zero _)
+theorem measurableSet_plusPart (hm : MeasurableSet A) :
+    MeasurableSet (plusPart A) := by
+  convert_to MeasurableSet (A ∩ (⋂ w, {x | 0 < x.1 w}))
+  · ext; simp
+  · refine hm.inter (MeasurableSet.iInter fun _ ↦ ?_)
+    exact measurableSet_lt measurable_const ((measurable_pi_apply _).comp' measurable_fst)
 
--- open Classical in
--- include hA₂ in
--- theorem res2 : A =ᵐ[volume] ⋃ s, negAtPlus A s := by
---   convert union_ae_eq_left_of_ae_eq_empty (ae_eq_empty.mpr (volume_part₀ A))
---   exact res21 A hA₂
+theorem measurableSet_negAtPlusPart (s : Set {w : InfinitePlace K // IsReal w})
+    (hm : MeasurableSet A) :
+    MeasurableSet (negAtPlusPart A s) := by
+  rw [negAtPlusPart, ← negAt_preimage]
+  exact (measurableSet_plusPart A hm).preimage (negAt s).continuous.measurable
 
--- include hA₁ in
--- open Classical in
--- theorem res3 (s) : volume (negAtPlus A s) = volume (plusPart A) := by
---   rw [negAtPlus, ← negAt_symm, ContinuousLinearEquiv.image_symm_eq_preimage,
---     (volume_preserving_negAt s).measure_preimage (measurableSet_plusPart A hA₁).nullMeasurableSet]
+open Classical in
+theorem volume_negAtPlusPart (hm : MeasurableSet A) (s : Set {w // IsReal w}) :
+    volume (negAtPlusPart A s) = volume (plusPart A) := by
+  rw [negAtPlusPart, ← negAt_symm, ContinuousLinearEquiv.image_symm_eq_preimage,
+    (volume_preserving_negAt s).measure_preimage (measurableSet_plusPart A hm).nullMeasurableSet]
 
--- include hA₁ hA₂ in
--- open Classical in
--- theorem main : volume A = 2 ^ NrRealPlaces K * volume (plusPart A) := by
---   rw [ measure_congr (res2 A hA₂), measure_iUnion]
---   · simp_rw [res3 _ hA₁]
---     rw [tsum_fintype, Finset.sum_const, ← Fintype.card, Fintype.card_finset, NrRealPlaces,
---       nsmul_eq_mul, Nat.cast_pow, Nat.cast_ofNat]
---   · exact res1 A
---   · exact fun _ ↦ measurableSet_negAtPlus A hA₁ _
+open Classical in
+/-- If a subset `A` of the `mixedSpace` is symmetric at real places, then its volume is
+`2^r₁` times the volume of its `plusPart` where `r₁` is the number of real places. -/
+theorem volume_eq_two_pow_mul_volume_plusPart (hA : ∀ x, x ∈ A ↔ (fun w ↦ |x.1 w|, x.2) ∈ A)
+    (hm : MeasurableSet A) :
+    volume A = 2 ^ NrRealPlaces K * volume (plusPart A) := by
+  simp_rw [← measure_congr (iUnion_negAtPart_ae A hA), measure_iUnion (disjoint_negAtPlusPart A)
+    (fun _ ↦ measurableSet_negAtPlusPart A _ hm), volume_negAtPlusPart _ hm, tsum_fintype,
+    Finset.sum_const, Finset.card_univ, NrRealPlaces, nsmul_eq_mul, Fintype.card_set, Nat.cast_pow,
+    Nat.cast_ofNat]
 
 end plusPart
 
