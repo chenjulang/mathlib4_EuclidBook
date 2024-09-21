@@ -163,6 +163,16 @@ theorem logMap_eq_of_normAtPlace_eq {x y : mixedSpace K}
   ext
   simp_rw [logMap_apply, h, norm_eq_of_normAtPlace_eq h]
 
+variable (K) in
+theorem continuousOn_logMap :
+    ContinuousOn (logMap : (mixedSpace K) → _) {x | mixedEmbedding.norm x ≠ 0} := by
+  refine continuousOn_pi.mpr fun w ↦ continuousOn_const.mul (ContinuousOn.sub ?_ ?_)
+  · exact Real.continuousOn_log.comp''  (continuous_normAtPlace _).continuousOn
+      fun _ hx ↦ mixedEmbedding.norm_ne_zero_iff.mp hx _
+  · exact ContinuousOn.mul
+      (Real.continuousOn_log.comp''  (mixedEmbedding.continuous_norm K).continuousOn
+        fun _ hx ↦ hx) continuousOn_const
+
 end logMap
 
 noncomputable section
