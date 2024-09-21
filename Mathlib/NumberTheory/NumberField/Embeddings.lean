@@ -428,7 +428,6 @@ theorem mult_pos {w : InfinitePlace K} : 0 < mult w := by
 @[simp]
 theorem mult_ne_zero {w : InfinitePlace K} : mult w ≠ 0 := mult_pos.ne'
 
-@[simp]
 theorem mult_coe_ne_zero {w : InfinitePlace K} : (mult w : ℝ) ≠ 0 :=
   Nat.cast_ne_zero.mpr mult_ne_zero
 

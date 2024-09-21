@@ -32,10 +32,12 @@ namespace NumberField.mixedEmbedding
 
 noncomputable section realSpace
 
+/-- DOCSTRING -/
 abbrev realSpace := InfinitePlace K → ℝ
 
 variable {K}
 
+/-- DOCSTRING -/
 def realToMixed : (realSpace K) →L[ℝ] (mixedSpace K) := ContinuousLinearMap.prod
   (ContinuousLinearMap.pi fun w ↦ ContinuousLinearMap.proj w.val)
   (ContinuousLinearMap.pi fun w ↦ Complex.ofRealCLM.comp (ContinuousLinearMap.proj w.val))
@@ -72,6 +74,7 @@ theorem logMap_realToMixed [NumberField K] {x : realSpace K}
   rw [logMap_apply_of_norm_one hx, normAtPlace_realToMixed, Real.norm_eq_abs, Real.log_abs]
 
 open Classical in
+/-- DOCSTRING -/
 def mixedToReal (x : mixedSpace K) : realSpace K :=
     fun w ↦ if hw : IsReal w then x.1 ⟨w, hw⟩ else ‖x.2 ⟨w, not_isReal_iff_isComplex.mp hw⟩‖
 
@@ -116,14 +119,12 @@ theorem mixedToRealToMixed (x : mixedSpace K) :
   · rw [realToMixed_apply_of_isReal, mixedToReal_apply_of_isReal]
   · rw [realToMixed_apply_of_isComplex, mixedToReal_apply_of_isComplex]
 
-@[simp]
 theorem norm_mixedToReal (x : mixedSpace K) (w : InfinitePlace K) :
     ‖mixedToReal x w‖ = normAtPlace w x := by
   obtain hw | hw := isReal_or_isComplex w
   · rw [mixedToReal_apply_of_isReal _ ⟨w, hw⟩, normAtPlace_apply_isReal]
   · rw [mixedToReal_apply_of_isComplex _ ⟨w, hw⟩, normAtPlace_apply_isComplex, norm_norm]
 
-@[simp]
 theorem norm_mixedToRealToMixed [NumberField K] (x : mixedSpace K) :
     mixedEmbedding.norm (realToMixed (mixedToReal x)) = mixedEmbedding.norm x := by
   simp_rw [norm_realToMixed, norm_mixedToReal, mixedEmbedding.norm_apply]
@@ -136,7 +137,6 @@ theorem logMap_mixedToRealToMixed_of_norm_one [NumberField K] {x : mixedSpace K}
     normAtPlace_realToMixed, ← norm_mixedToReal]
 
 open Classical in
-@[simp]
 theorem norm_realToMixed_prod_units_rpow [NumberField K] {ι : Type*} [Fintype ι] (c : ι → ℝ)
     (u : ι → (𝓞 K)ˣ) :
     mixedEmbedding.norm (realToMixed fun w : InfinitePlace K ↦ ∏ i, w (u i) ^ c i) = 1 :=
@@ -161,6 +161,7 @@ open MeasureTheory MeasureTheory.Measure MeasurableEquiv
 open scoped Real
 
 open Classical in
+/-- DOCSTRING -/
 def realProdComplexProdMeasurableEquiv :
     ({w : InfinitePlace K // IsReal w} → ℝ) × ({w : InfinitePlace K // IsComplex w} → ℝ × ℝ) ≃ᵐ
        (realSpace K) × ({w : InfinitePlace K // IsComplex w} → ℝ) :=
@@ -174,6 +175,7 @@ def realProdComplexProdMeasurableEquiv :
           (prodCongr (piEquivPiSubtypeProd (fun _ ↦ ℝ) _).symm (refl _))
 
 open Classical in
+/-- DOCSTRING -/
 def realProdComplexProdEquiv :
     ({w : InfinitePlace K // IsReal w} → ℝ) ×
       ({w : InfinitePlace K // IsComplex w} → ℝ × ℝ) ≃ₜ
@@ -218,6 +220,7 @@ theorem realProdComplexProdEquiv_symm_apply (x : (realSpace K) ×
 
 variable [NumberField K]
 
+/-- DOCSTRING -/
 def polarCoordMixedSpace : PartialHomeomorph
     (mixedSpace K) ((realSpace K) × ({w : InfinitePlace K // IsComplex w} → ℝ)) :=
   ((PartialHomeomorph.refl _).prod
@@ -301,6 +304,7 @@ open FiniteDimensional Finset NumberField.Units.dirichletUnitTheorem
 variable [NumberField K]
 
 open Classical in
+/-- DOCSTRING -/
 -- This cannot be a `PartiaHomeomorph` because the target is not an open set
 def mapToUnitsPow₀_aux :
     PartialEquiv ({w : InfinitePlace K // w ≠ w₀} → ℝ) (realSpace K) where
@@ -351,6 +355,7 @@ theorem continuous_mapToUnitsPow₀_aux :
 
 variable {K}
 
+/-- DOCSTRING -/
 def equivFinRank : Fin (rank K) ≃ {w : InfinitePlace K // w ≠ w₀} := by
   classical
   refine Fintype.equivOfCardEq ?_
@@ -359,6 +364,7 @@ def equivFinRank : Fin (rank K) ≃ {w : InfinitePlace K // w ≠ w₀} := by
 variable (K)
 
 open Classical in
+/-- DOCSTRING -/
 -- This cannot be a `PartiaHomeomorph` because the target is not an open set
 def mapToUnitsPow₀ :
     PartialEquiv ({w : InfinitePlace K // w ≠ w₀} → ℝ) (realSpace K) :=
@@ -442,12 +448,10 @@ theorem continuous_mapToUnitsPow₀ :
   LinearEquiv.continuous_symm _ (continuous_equivFun_basis _)
 
 open Classical in
+/-- DOCSTRING -/
 abbrev mapToUnitsPow_single (c : realSpace K) : InfinitePlace K → (realSpace K) :=
   fun i ↦ if hi : i = w₀ then fun _ ↦ |c w₀| else
     fun w ↦ (w (fundSystem K (equivFinRank.symm ⟨i, hi⟩))) ^ (c i)
-
-theorem mapToUnitsPow_single_w₀ (c : realSpace K) :
-    mapToUnitsPow_single c w₀ = |c w₀| • 1 := sorry
 
 open Classical in
 theorem mapToUnitsPow₀_eq_prod_single (c : realSpace K) (w : InfinitePlace K) :
@@ -467,6 +471,7 @@ theorem prod_mapToUnitsPow_single (c : realSpace K) :
 variable (K)
 
 open Classical in
+/-- DOCSTRING -/
 @[simps source target]
 def mapToUnitsPow : PartialHomeomorph (realSpace K) (realSpace K) where
   toFun c := ∏ i, mapToUnitsPow_single c i
@@ -584,6 +589,7 @@ theorem mapToUnitsPow_zero_iff {c : InfinitePlace K → ℝ} :
 
 open ContinuousLinearMap
 
+/-- DOCSTRING -/
 abbrev mapToUnitsPow_fDeriv_single (c : realSpace K) (i w : InfinitePlace K) :
     (realSpace K) →L[ℝ] ℝ := by
   classical
@@ -602,9 +608,11 @@ theorem hasFDeriv_mapToUnitsPow_single (c : realSpace K) (i w : InfinitePlace K)
   · exact HasFDerivWithinAt.const_rpow (hasFDerivWithinAt_apply i c _) <| pos_iff.mpr (by aesop)
 
 open Classical in
+/-- DOCSTRING -/
 abbrev mapToUnitsPow_jacobianCoeff (w i : InfinitePlace K) : (realSpace K) → ℝ :=
   fun c ↦ if hi : i = w₀ then 1 else |c w₀| * (w (fundSystem K (equivFinRank.symm ⟨i, hi⟩))).log
 
+/-- DOCSTRING -/
 abbrev mapToUnitsPow_jacobian (c : realSpace K) : (realSpace K) →L[ℝ] InfinitePlace K → ℝ :=
   pi fun i ↦ (mapToUnitsPow₀ K (fun w ↦ c w) i •
     ∑ w, (mapToUnitsPow_jacobianCoeff K i w c) • proj w)
@@ -752,6 +760,7 @@ namespace fundamentalCone
 
 variable [NumberField K]
 
+/-- DOCSTRING -/
 abbrev normLessThanOne : Set (mixedSpace K) :=
   {x | x ∈ fundamentalCone K ∧ mixedEmbedding.norm x ≤ 1}
 
