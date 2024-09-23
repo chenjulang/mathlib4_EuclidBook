@@ -147,6 +147,8 @@ instance Equiv.fintype [Fintype α] [Fintype β] : Fintype (α ≃ β) :=
           (equivCongr (Equiv.refl α) (eα.trans (Eq.recOn h eβ.symm)) : α ≃ α ≃ (α ≃ β))
   else ⟨∅, fun x => False.elim (h (Fintype.card_eq.2 ⟨x.symm⟩))⟩
 
+@[deprecated (since := "2024-09-23")] alias equivFintype := Equiv.fintype
+
 @[to_additive]
 instance MulEquiv.fintype
     {α β : Type*} [Mul α] [Mul β] [DecidableEq α] [DecidableEq β] [Fintype α] [Fintype β] :
