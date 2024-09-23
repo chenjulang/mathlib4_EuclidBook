@@ -27,6 +27,9 @@ follow in part the strategy given in [D. Marcus, *Number Fields*][marcus1977numb
 variable (K : Type*) [Field K]
 
 open Bornology NumberField.InfinitePlace NumberField.mixedEmbedding NumberField.Units
+  NumberField.Units.dirichletUnitTheorem
+
+open scoped Real
 
 namespace NumberField.mixedEmbedding
 
@@ -158,8 +161,6 @@ noncomputable section polarCoord
 
 open MeasureTheory MeasureTheory.Measure MeasurableEquiv
 
-open scoped Real
-
 open Classical in
 /-- DOCSTRING -/
 def realProdComplexProdMeasurableEquiv :
@@ -225,6 +226,10 @@ def polarCoordMixedSpace : PartialHomeomorph
     (mixedSpace K) ((realSpace K) × ({w : InfinitePlace K // IsComplex w} → ℝ)) :=
   ((PartialHomeomorph.refl _).prod
     (PartialHomeomorph.pi fun _ ↦ Complex.polarCoord)).transHomeomorph (realProdComplexProdEquiv K)
+
+theorem polarCoordMixedSpace_source :
+    (polarCoordMixedSpace K).source = Set.univ ×ˢ Set.univ.pi fun _ ↦ Complex.slitPlane := by
+  simp [polarCoordMixedSpace, Complex.polarCoord_source]
 
 open Classical in
 theorem polarCoordMixedSpace_target : (polarCoordMixedSpace K).target =
@@ -299,7 +304,7 @@ end polarCoord
 
 noncomputable section mapToUnitsPow
 
-open FiniteDimensional Finset NumberField.Units.dirichletUnitTheorem
+open FiniteDimensional Finset
 
 variable [NumberField K]
 
@@ -580,12 +585,22 @@ theorem mapToUnitsPow_apply' (c : realSpace K) :
     mapToUnitsPow K c = |c w₀| • mapToUnitsPow₀ K (fun w ↦ c w.val) := by
   rw [mapToUnitsPow_apply, prod_mapToUnitsPow_single]
 
-theorem mapToUnitsPow_zero_iff {c : InfinitePlace K → ℝ} :
+theorem mapToUnitsPow_nonneg (c : realSpace K) (w : InfinitePlace K) :
+    0 ≤ mapToUnitsPow K c w := by
+  rw [mapToUnitsPow_apply']
+  exact mul_nonneg (abs_nonneg _) (mapToUnitsPow₀_pos _ _).le
+
+theorem mapToUnitsPow_zero_iff {c : realSpace K} :
     mapToUnitsPow K c = 0 ↔ c w₀ = 0 := by
   rw [mapToUnitsPow_apply', smul_eq_zero, abs_eq_zero, or_iff_left]
   obtain ⟨w⟩ := (inferInstance : Nonempty (InfinitePlace K))
   refine Function.ne_iff.mpr ⟨w, ?_⟩
   convert (mapToUnitsPow₀_pos (fun i ↦ c i) w).ne'
+
+theorem mapToUnitsPow_zero_iff' {c : InfinitePlace K → ℝ} {w : InfinitePlace K} :
+    mapToUnitsPow K c w = 0 ↔ c w₀ = 0 := by
+  rw [mapToUnitsPow_apply', Pi.smul_apply, smul_eq_mul, mul_eq_zero, abs_eq_zero,
+    or_iff_left (ne_of_gt (mapToUnitsPow₀_pos _ _))]
 
 open ContinuousLinearMap
 
@@ -755,6 +770,70 @@ theorem setLIntegral_mapToUnitsPow {s : Set (realSpace K)} (hs₀ : MeasurableSe
       (natCast_ne_top _)
 
 end mapToUnitsPow
+
+noncomputable section mapToUnitsPowComplex
+
+variable [NumberField K]
+
+def mapToUnitsPowComplex : PartialHomeomorph
+    ((realSpace K) × ({w : InfinitePlace K // IsComplex w} → ℝ)) (mixedSpace K) :=
+  PartialHomeomorph.trans
+    (PartialHomeomorph.prod (mapToUnitsPow K) (PartialHomeomorph.refl _))
+    (polarCoordMixedSpace K).symm
+
+theorem mapToUnitsPowComplex_apply (x : (InfinitePlace K → ℝ) × ({w // IsComplex w} → ℝ)) :
+    mapToUnitsPowComplex K x =
+      (fun w ↦ mapToUnitsPow K x.1 w.val,
+        fun w ↦ Complex.polarCoord.symm (mapToUnitsPow K x.1 w.val, x.2 w)) := rfl
+
+theorem mapToUnitsPowComplex_source :
+    (mapToUnitsPowComplex K).source = {x | 0 < x w₀} ×ˢ Set.univ.pi fun _ ↦ Set.Ioo (-π) π := by
+  ext
+  simp_rw [mapToUnitsPowComplex, PartialHomeomorph.trans_source, PartialHomeomorph.prod_source,
+    PartialHomeomorph.refl_source, Set.mem_inter_iff, Set.mem_prod, Set.mem_univ, and_true,
+    Set.mem_preimage, PartialHomeomorph.prod_apply, PartialHomeomorph.refl_apply, id_eq,
+    PartialHomeomorph.symm_source, polarCoordMixedSpace_target, Set.mem_prod, mapToUnitsPow_source]
+  rw [and_congr_right]
+  intro h
+  rw [and_iff_right_iff_imp]
+  intro _
+  simp_rw [Set.mem_univ_pi, Set.mem_ite_univ_left, not_isReal_iff_isComplex]
+  intro w _
+  rw [Set.mem_Ioi, lt_iff_le_and_ne]
+  refine ⟨mapToUnitsPow_nonneg K _ _, ?_⟩
+  rw [ne_comm, ne_eq, mapToUnitsPow_zero_iff']
+  exact ne_of_gt h
+
+theorem mapToUnitsPowComplex_target :
+    (mapToUnitsPowComplex K).target =
+      (Set.univ.pi fun _ ↦ Set.Ioi 0) ×ˢ (Set.univ.pi fun _ ↦ Complex.slitPlane) := by
+  ext
+  simp_rw [mapToUnitsPowComplex, PartialHomeomorph.trans_target, PartialHomeomorph.symm_target,
+    polarCoordMixedSpace_source, PartialHomeomorph.prod_target, PartialHomeomorph.refl_target,
+    Set.mem_inter_iff, Set.mem_preimage, mapToUnitsPow_target, Set.mem_prod, Set.mem_univ,
+    true_and, and_true, and_comm]
+  rw [and_congr_right]
+  intro h
+  simp_rw [PartialHomeomorph.symm_symm, polarCoordMixedSpace_apply, realProdComplexProdEquiv_apply,
+    Set.mem_pi, Set.mem_univ, true_implies]
+  refine ⟨?_, ?_⟩
+  · intro h' w
+    specialize h' w
+    simp_rw [dif_pos w.prop] at h'
+    exact h'
+  · intro h' w
+    by_cases hw : IsReal w
+    · simp_rw [dif_pos hw]
+      exact h' ⟨w, hw⟩
+    · simp_rw [dif_neg hw]
+      rw [Complex.polarCoord_apply]
+      dsimp only
+      rw [Set.mem_pi] at h
+      specialize h ⟨w, not_isReal_iff_isComplex.mp hw⟩ (Set.mem_univ _)
+      rw [AbsoluteValue.pos_iff]
+      exact Complex.slitPlane_ne_zero h
+
+end mapToUnitsPowComplex
 
 namespace fundamentalCone
 
