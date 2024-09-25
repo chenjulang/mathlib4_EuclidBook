@@ -1611,5 +1611,3 @@ theorem volume_frontier_normLessThanOne :
 end NumberField.mixedEmbedding.fundamentalCone
 
 set_option linter.style.longFile 1700
-
-#lint
