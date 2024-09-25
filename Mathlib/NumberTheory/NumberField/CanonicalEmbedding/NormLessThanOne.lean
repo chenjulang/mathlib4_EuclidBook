@@ -238,7 +238,7 @@ theorem polarCoordMixedSpace_source :
 
 open Classical in
 theorem polarCoordMixedSpace_target : (polarCoordMixedSpace K).target =
-  (Set.univ.pi fun w ↦
+    (Set.univ.pi fun w ↦
       if IsReal w then Set.univ else Set.Ioi 0) ×ˢ (Set.univ.pi fun _ ↦ Set.Ioo (-π) π):= by
   rw [polarCoordMixedSpace, PartialHomeomorph.transHomeomorph_target]
   ext
@@ -272,8 +272,8 @@ theorem continuous_polarCoordMixedSpace_symm :
     continuous_pi_iff.mpr fun i ↦ Complex.continuous_polarCoord_symm.comp' (by fun_prop)⟩
 
 theorem realProdComplexProdEquiv_preimage_target :
-  (realProdComplexProdEquiv K) ⁻¹' (polarCoordMixedSpace K).target =
-    Set.univ ×ˢ Set.univ.pi fun _ ↦ polarCoord.target := by
+    (realProdComplexProdEquiv K) ⁻¹' (polarCoordMixedSpace K).target =
+      Set.univ ×ˢ Set.univ.pi fun _ ↦ polarCoord.target := by
   ext
   simp_rw [polarCoordMixedSpace_target, Set.mem_preimage, realProdComplexProdEquiv_apply,
     polarCoord_target, Set.mem_prod, Set.mem_pi, Set.mem_univ, true_implies, true_and,

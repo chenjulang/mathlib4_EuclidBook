@@ -932,7 +932,7 @@ theorem volume_eq_zero (w : {w // IsReal w}) :
 
 open Classical in
 theorem iUnion_negAtPart_ae (hA : ∀ x, x ∈ A ↔ (fun w ↦ |x.1 w|, x.2) ∈ A) :
-  ⋃ s, negAtPlusPart A s =ᵐ[volume] A := by
+    ⋃ s, negAtPlusPart A s =ᵐ[volume] A := by
   nth_rewrite 2 [← iUnion_negAtPlusPart_union A hA]
   refine (MeasureTheory.union_ae_eq_left_of_ae_eq_empty (ae_eq_empty.mpr ?_)).symm
   exact measure_mono_null Set.inter_subset_right

@@ -6,6 +6,11 @@ Authors: Xavier Roblot
 import Mathlib.NumberTheory.NumberField.CanonicalEmbedding.NormLessThanOne
 import Mathlib.NumberTheory.NumberField.Units.Regulator
 
+/-!
+# Docstring
+
+-/
+
 variable (K : Type*) [Field K] [NumberField K]
 
 namespace NumberField
