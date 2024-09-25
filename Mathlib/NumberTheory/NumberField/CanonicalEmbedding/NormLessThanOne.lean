@@ -1321,9 +1321,56 @@ theorem measurableSet_normLessThanOne :
   (measurableSet_fundamentalCone K).inter <|
     measurableSet_le (mixedEmbedding.continuous_norm K).measurable measurable_const
 
+theorem isBounded_normEqOne :
+    IsBounded (normEqOne K) := by
+  classical
+  let B := (basisUnitLattice K).ofZLatticeBasis ℝ
+  obtain ⟨r, hr₁, hr₂⟩ := (ZSpan.fundamentalDomain_isBounded B).subset_closedBall_lt 0 0
+  have h₁ : ∀ ⦃x w⦄, x ∈ normEqOne K → w ≠ w₀ → |mult w * Real.log (normAtPlace w x)| ≤ r := by
+    intro x w hx hw
+    rw [← logMap_apply_of_norm_one hx.2 ⟨w, hw⟩]
+    suffices ‖logMap x‖ ≤ r by exact (pi_norm_le_iff_of_nonneg hr₁.le).mp this ⟨w, hw⟩
+    exact mem_closedBall_zero_iff.mp (hr₂ hx.1.1)
+  have h₂ : ∀ ⦃x⦄, x ∈ normEqOne K → mult (w₀ : InfinitePlace K) * Real.log (normAtPlace w₀ x) ≤
+      (Finset.univ.erase (w₀ : InfinitePlace K)).card • r := by
+    intro x hx
+    suffices mult (w₀ : InfinitePlace K) * Real.log (normAtPlace w₀ x) =
+        - ∑ w ∈ Finset.univ.erase w₀, mult w * Real.log (normAtPlace w x) by
+      rw [this, ← Finset.sum_neg_distrib, ← Finset.sum_const]
+      exact Finset.sum_le_sum fun w hw ↦
+        neg_le_of_neg_le (abs_le.mp (h₁ hx (Finset.mem_erase.mp hw).1)).1
+    simp_rw [← Real.log_pow]
+    rw [← add_eq_zero_iff_eq_neg, Finset.univ.add_sum_erase (fun w ↦
+      ((normAtPlace w x) ^ mult w).log) (Finset.mem_univ w₀), ← Real.log_prod,
+      ← mixedEmbedding.norm_apply, hx.2, Real.log_one]
+    exact fun w _ ↦  pow_ne_zero _ <| ne_of_gt (normAtPlace_pos_of_mem hx.1 w)
+  have h₃ : ∀ ⦃x w c⦄, 0 ≤ c → x ∈ fundamentalCone K →
+      mult w * Real.log (normAtPlace w x) ≤ c → normAtPlace w x ≤ Real.exp c := by
+    intro x w c hc hx
+    rw [← le_div_iff₀' (Nat.cast_pos.mpr mult_pos),
+      Real.log_le_iff_le_exp (normAtPlace_pos_of_mem hx w)]
+    exact fun h ↦ le_trans h <| Real.exp_le_exp.mpr (div_le_self hc one_le_mult)
+  refine (Metric.isBounded_iff_subset_closedBall 0).mpr
+    ⟨max (Real.exp r) (Real.exp ((Finset.univ.erase (w₀ : InfinitePlace K)).card • r)),
+      fun x hx ↦ mem_closedBall_zero_iff.mpr ?_⟩
+  rw [norm_eq_sup'_normAtPlace]
+  refine Finset.sup'_le _ _ fun w _ ↦ ?_
+  by_cases hw : w = w₀
+  · rw [hw]
+    exact (h₃ (nsmul_nonneg (hr₁.le) _) hx.1 (h₂ hx)).trans (le_max_right _ _)
+  · exact le_trans (h₃ hr₁.le hx.1 (abs_le.mp (h₁ hx hw)).2) (le_max_left _ _)
+
 theorem isBounded_normLessThanOne :
     IsBounded (normLessThanOne K) := by
-  sorry
+  classical
+  obtain ⟨r, hr₁, hr₂⟩ := (isBounded_normEqOne K).subset_ball_lt 0 0
+  refine (Metric.isBounded_iff_subset_ball 0).mpr ⟨r, fun x hx ↦ ?_⟩
+  obtain ⟨c, hc₁, _, hc₂⟩ := exists_mem_smul_normEqOne hx
+  suffices x ∈ c • Metric.ball (0 : (mixedSpace K)) r by
+    rw [smul_ball (ne_of_gt hc₁), smul_zero] at this
+    refine Set.mem_of_subset_of_mem (Metric.ball_subset_ball ?_) this
+    rwa [mul_le_iff_le_one_left hr₁, Real.norm_eq_abs, abs_eq_self.mpr hc₁.le]
+  exact (Set.image_subset _ hr₂) hc₂
 
 open MeasureTheory MeasureTheory.Measure
 
@@ -1494,36 +1541,35 @@ open Classical in
 theorem volume_mapToUnitsPowComplex_interior_eq_volume_mapToUnitsPowComplex_closure :
     volume (mapToUnitsPowComplex K '' (interior (box K))) =
       volume (mapToUnitsPowComplex K '' (closure (box K))) := by
-  sorry
-  -- have hm₁ : MeasurableSet
-  --     (mapToUnitsPowComplex K '' (Set.univ.pi fun x ↦ Set.Ioo 0 1) ×ˢ
-  --       Set.univ.pi fun _ ↦ Set.Ioo (-π) π) := by
-  --   rw [← interior_box₁, ← interior_box₂, ← interior_prod_eq]
-  --   exact (isOpen_mapToUnitsPowComplex_interior_box K).measurableSet
-  -- have hm₂ : MeasurableSet
-  --     (mapToUnitsPowComplex K '' Set.Icc 0 1 ×ˢ Set.univ.pi fun _ ↦ Set.Icc (-π) π) := by
-  --   rw [← closure_box₁, ← closure_box₂, ← closure_prod_eq]
-  --   exact (isClosed_mapToUnitsPowComplex_closure_box K).measurableSet
-  -- have h₁ : Set.Icc 0 1 ⊆ {x : InfinitePlace K → ℝ | 0 ≤ x w₀} :=
-  --   fun _ h ↦ (Set.mem_Icc.mp h).1 w₀
-  -- have h₂ : Set.univ.pi (fun _ : InfinitePlace K ↦ Set.Ioo (0 : ℝ) 1) ⊆ {x | 0 ≤ x w₀} :=
-  --   fun _ h ↦ (h w₀ (Set.mem_univ _)).1.le
-  -- have h₃ : MeasurableSet (Set.univ.pi fun _ : InfinitePlace K ↦ Set.Ioo (0 : ℝ) 1) :=
-  --   MeasurableSet.univ_pi fun _ ↦ measurableSet_Ioo
-  -- rw [closure_prod_eq, interior_prod_eq, closure_box₁, closure_box₂, interior_box₁, interior_box₂,
-  --   volume_mapToUnitsPowComplex_set_prod_set K h₃ h₂ (MeasurableSet.univ_pi fun _ ↦
-  --   measurableSet_Ioo) (Set.pi_mono fun _ _ ↦ Set.Ioo_subset_Icc_self) hm₁,
-  --   volume_mapToUnitsPowComplex_set_prod_set K measurableSet_Icc h₁ (MeasurableSet.univ_pi fun _ ↦
-  --   measurableSet_Icc) le_rfl hm₂]
-  -- simp_rw [setLIntegral_mapToUnitsPow K h₃ h₂, setLIntegral_mapToUnitsPow K measurableSet_Icc h₁,
-  --   mul_assoc, ← Set.pi_inter_distrib, Set.inter_self, Set.inter_eq_left.mpr
-  --     Set.Ioo_subset_Icc_self]
-  -- congr 5
-  -- refine Measure.restrict_congr_set ?_
-  -- rw [show (Set.univ.pi fun _ ↦ Set.Ioo (0 : ℝ) 1) = interior (Set.Icc 0 1) by
-  --       simp_rw [← Set.pi_univ_Icc, interior_pi_set Set.finite_univ, Pi.zero_apply, Pi.one_apply,
-  --       interior_Icc]]
-  -- exact interior_ae_eq_of_null_frontier ((convex_Icc 0 1).addHaar_frontier volume)
+  have hm₁ : MeasurableSet
+      (mapToUnitsPowComplex K '' (Set.univ.pi fun x ↦ Set.Ioo 0 1) ×ˢ
+        Set.univ.pi fun _ ↦ Set.Ioo (-π) π) := by
+    rw [← interior_box₁, ← interior_box₂, ← interior_prod_eq]
+    exact (isOpen_mapToUnitsPowComplex_interior K).measurableSet
+  have hm₂ : MeasurableSet
+      (mapToUnitsPowComplex K '' Set.Icc 0 1 ×ˢ Set.univ.pi fun _ ↦ Set.Icc (-π) π) := by
+    rw [← closure_box₁, ← closure_box₂, ← closure_prod_eq]
+    exact (isClosed_mapToUnitsPowComplex_closure K).measurableSet
+  have h₁ : Set.Icc 0 1 ⊆ {x : InfinitePlace K → ℝ | 0 ≤ x w₀} :=
+    fun _ h ↦ (Set.mem_Icc.mp h).1 w₀
+  have h₂ : Set.univ.pi (fun _ : InfinitePlace K ↦ Set.Ioo (0 : ℝ) 1) ⊆ {x | 0 ≤ x w₀} :=
+    fun _ h ↦ (h w₀ (Set.mem_univ _)).1.le
+  have h₃ : MeasurableSet (Set.univ.pi fun _ : InfinitePlace K ↦ Set.Ioo (0 : ℝ) 1) :=
+    MeasurableSet.univ_pi fun _ ↦ measurableSet_Ioo
+  rw [closure_prod_eq, interior_prod_eq, closure_box₁, closure_box₂, interior_box₁, interior_box₂,
+    volume_mapToUnitsPowComplex_set_prod_set h₃ h₂ (MeasurableSet.univ_pi fun _ ↦
+    measurableSet_Ioo) (Set.pi_mono fun _ _ ↦ Set.Ioo_subset_Icc_self) hm₁,
+    volume_mapToUnitsPowComplex_set_prod_set measurableSet_Icc h₁ (MeasurableSet.univ_pi fun _ ↦
+    measurableSet_Icc) le_rfl hm₂]
+  simp_rw [setLIntegral_mapToUnitsPow h₃ h₂, setLIntegral_mapToUnitsPow measurableSet_Icc h₁,
+    mul_assoc, ← Set.pi_inter_distrib, Set.inter_self, Set.inter_eq_left.mpr
+      Set.Ioo_subset_Icc_self]
+  congr 5
+  refine Measure.restrict_congr_set ?_
+  rw [show (Set.univ.pi fun _ ↦ Set.Ioo (0 : ℝ) 1) = interior (Set.Icc 0 1) by
+        simp_rw [← Set.pi_univ_Icc, interior_pi_set Set.finite_univ, Pi.zero_apply, Pi.one_apply,
+        interior_Icc]]
+  exact interior_ae_eq_of_null_frontier ((convex_Icc 0 1).addHaar_frontier volume)
 
 open Classical in
 theorem volume_frontier_plusPart_normLessThanOne :
