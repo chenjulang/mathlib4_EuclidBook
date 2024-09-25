@@ -1146,15 +1146,6 @@ theorem normLessThanOne_eq_union_smul_normEqOne :
   exact ⟨fun hx ↦ exists_mem_smul_normEqOne hx,
     fun ⟨_, h₁, h₂, hx⟩ ↦ smul_normEqOne_subset h₁ h₂ hx⟩
 
-theorem measurableSet_normLessThanOne :
-    MeasurableSet (normLessThanOne K) :=
-  -- MeasurableSet.inter (measurableSet K) <|
-  --   measurableSet_le (mixedEmbedding.continuous_norm K).measurable measurable_const
-  sorry
-
-theorem isBounded_normLessThanOne :
-    IsBounded (normLessThanOne K) := by
-  sorry
 
 variable (K) in
 open Classical in
@@ -1224,6 +1215,8 @@ private theorem mixedToReal_normLessThanOne_aux₁ {c : ℝ} (hc : 0 < c) :
   · rintro ⟨_, ⟨x, hx, rfl⟩, rfl⟩
     exact ⟨c • x, Set.smul_mem_smul_set hx, by rw [mixedToReal_smul _ hc.le]⟩
 
+variable (K)
+
 theorem mixedToReal_normLessThanOne :
     mixedToReal '' (normLessThanOne K ∩ {x | ∀ w, 0 < x.1 w}) = mapToUnitsPow K '' (box₁ K) := by
   classical
@@ -1250,6 +1243,16 @@ theorem mixedToReal_normLessThanOne :
     refine ⟨c w₀, mem_Ioc_of_mem_box₁ hc, mapToUnitsPow₀ K fun w ↦ c w, ⟨fun w ↦ c w,
       fun w _ ↦ mem_Ico_of_mem_box₁ hc w.prop, rfl⟩, ?_⟩
     rw [mapToUnitsPow_apply', abs_of_pos (mem_Ioc_of_mem_box₁ hc).1]
+
+theorem measurableSet_normLessThanOne :
+    MeasurableSet (normLessThanOne K) :=
+  -- MeasurableSet.inter (measurableSet K) <|
+  --   measurableSet_le (mixedEmbedding.continuous_norm K).measurable measurable_const
+  sorry
+
+theorem isBounded_normLessThanOne :
+    IsBounded (normLessThanOne K) := by
+  sorry
 
 open MeasureTheory
 
