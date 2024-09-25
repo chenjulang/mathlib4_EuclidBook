@@ -5,7 +5,6 @@ Authors: Sébastien Gouëzel
 -/
 import Mathlib.MeasureTheory.Function.Jacobian
 import Mathlib.MeasureTheory.Measure.Lebesgue.Complex
-import Mathlib.Analysis.SpecialFunctions.Trigonometric.Complex
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Deriv
 
 /-!

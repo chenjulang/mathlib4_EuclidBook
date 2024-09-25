@@ -4,7 +4,6 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Xavier Roblot
 -/
 import Mathlib.NumberTheory.NumberField.CanonicalEmbedding.FundamentalCone
-import Mathlib.NumberTheory.NumberField.Discriminant
 import Mathlib.NumberTheory.NumberField.Units.Regulator
 
 /-!
@@ -19,8 +18,6 @@ follow mainly the strategy given in [D. Marcus, *Number Fields*][marcus1977numbe
 ## Strategy of proof
 
 * `polarCoordMixedSpace` and `lintegral_eq_lintegral_polarCoordMixedSpace_symm`
-
-
 
 -/
 
