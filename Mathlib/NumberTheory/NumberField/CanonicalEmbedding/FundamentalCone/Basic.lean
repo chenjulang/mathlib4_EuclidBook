@@ -163,7 +163,14 @@ theorem logMap_eq_of_normAtPlace_eq {x y : mixedSpace K}
   ext
   simp_rw [logMap_apply, h, norm_eq_of_normAtPlace_eq h]
 
-variable (K) in
+variable (K)
+
+theorem measurable_logMap :
+    Measurable (logMap : (mixedSpace K) → _) :=
+  measurable_pi_iff.mpr fun _ ↦
+    measurable_const.mul <| (continuous_normAtPlace _).measurable.log.sub
+      <| (mixedEmbedding.continuous_norm K).measurable.log.mul measurable_const
+
 theorem continuousOn_logMap :
     ContinuousOn (logMap : (mixedSpace K) → _) {x | mixedEmbedding.norm x ≠ 0} := by
   refine continuousOn_pi.mpr fun w ↦ continuousOn_const.mul (ContinuousOn.sub ?_ ?_)

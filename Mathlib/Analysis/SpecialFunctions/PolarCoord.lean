@@ -5,6 +5,7 @@ Authors: Sébastien Gouëzel
 -/
 import Mathlib.MeasureTheory.Function.Jacobian
 import Mathlib.MeasureTheory.Measure.Lebesgue.Complex
+import Mathlib.Analysis.SpecialFunctions.Trigonometric.Complex
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Deriv
 
 /-!
@@ -207,6 +208,30 @@ protected theorem polarCoord_symm_apply (p : ℝ × ℝ) :
 
 theorem polarCoord_symm_abs (p : ℝ × ℝ) :
     Complex.abs (Complex.polarCoord.symm p) = |p.1| := by simp
+
+open scoped ComplexOrder
+
+theorem polarCoord_symm_mem_polarCoord_source (x : ℝ × ℝ) :
+    Complex.polarCoord.symm x ∈ Complex.polarCoord.source ↔
+        x.1 ≠ 0 ∧ (x.1 > 0 → ∀ k : ℤ, π + k * (2 * π) ≠ x.2) ∧
+          (x.1 < 0 →  ∀ k : ℤ, k * (2 * π) ≠ x.2) := by
+  simp_rw (config := {singlePass := true}) [← not_iff_not, Complex.polarCoord_symm_apply,
+    Complex.polarCoord_source, mem_slitPlane_iff_arg, not_and_or, ne_eq, not_not, mul_eq_zero,
+    not_and_or, Classical.not_imp, not_forall, not_not, ofReal_eq_zero, ofReal_cos, ofReal_sin,
+    cos_add_sin_I, exp_ne_zero, or_false]
+  obtain hx | hx | hx := lt_trichotomy x.1 0
+  · simp_rw [hx, hx.ne, not_lt_of_gt hx, false_and, false_or, true_and, or_false]
+    have : (x.1 * cexp (x.2 * I)).arg = π ↔ (cexp (x.2 * I)).arg = 0 := by
+      simp_rw [arg_eq_pi_iff_lt_zero, arg_eq_zero_iff_zero_le, ofReal_mul_neg_iff, hx,
+        not_lt_of_gt hx, true_and, false_and, or_false, lt_iff_le_and_ne, ne_eq, eq_comm,
+        exp_ne_zero, not_false_eq_true, and_true]
+    simp_rw [this, arg_exp_mul_I, toIocMod_eq_iff, zero_add, zsmul_eq_mul, eq_comm,
+      and_iff_right_iff_imp]
+    exact fun _ ↦ ⟨neg_neg_iff_pos.mpr Real.pi_pos, by ring_nf; positivity⟩
+  · simp_rw [hx, true_or, or_true]
+  · simp_rw [hx, hx.ne', not_lt_of_gt hx, false_and, or_false, true_and, false_or, arg_real_mul _
+      hx, arg_exp_mul_I, toIocMod_eq_iff, zsmul_eq_mul, eq_comm, and_iff_right_iff_imp]
+    exact fun _ ↦ ⟨Left.neg_lt_self Real.pi_pos, by linarith⟩
 
 @[deprecated (since := "2024-07-15")] alias polardCoord_symm_abs := polarCoord_symm_abs
 
