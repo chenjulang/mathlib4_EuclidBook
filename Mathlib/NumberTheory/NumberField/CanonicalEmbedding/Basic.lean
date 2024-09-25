@@ -938,6 +938,7 @@ theorem iUnion_negAtPart_ae (hA : ∀ x, x ∈ A ↔ (fun w ↦ |x.1 w|, x.2) �
   exact measure_mono_null Set.inter_subset_right
     (measure_iUnion_null_iff.mpr fun _ ↦ volume_eq_zero _)
 
+variable {A} in
 theorem measurableSet_plusPart (hm : MeasurableSet A) :
     MeasurableSet (plusPart A) := by
   convert_to MeasurableSet (A ∩ (⋂ w, {x | 0 < x.1 w}))
@@ -949,13 +950,13 @@ theorem measurableSet_negAtPlusPart (s : Set {w : InfinitePlace K // IsReal w})
     (hm : MeasurableSet A) :
     MeasurableSet (negAtPlusPart A s) := by
   rw [negAtPlusPart, ← negAt_preimage]
-  exact (measurableSet_plusPart A hm).preimage (negAt s).continuous.measurable
+  exact (measurableSet_plusPart hm).preimage (negAt s).continuous.measurable
 
 open Classical in
 theorem volume_negAtPlusPart (hm : MeasurableSet A) (s : Set {w // IsReal w}) :
     volume (negAtPlusPart A s) = volume (plusPart A) := by
   rw [negAtPlusPart, ← negAt_symm, ContinuousLinearEquiv.image_symm_eq_preimage,
-    (volume_preserving_negAt s).measure_preimage (measurableSet_plusPart A hm).nullMeasurableSet]
+    (volume_preserving_negAt s).measure_preimage (measurableSet_plusPart hm).nullMeasurableSet]
 
 open Classical in
 /-- If a subset `A` of the `mixedSpace` is symmetric at real places, then its volume is

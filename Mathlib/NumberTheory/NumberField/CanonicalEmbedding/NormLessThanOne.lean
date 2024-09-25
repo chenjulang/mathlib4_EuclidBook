@@ -3,7 +3,7 @@ Copyright (c) 2024 Xavier Roblot. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Xavier Roblot
 -/
-import Mathlib.NumberTheory.NumberField.CanonicalEmbedding.FundamentalCone.Basic
+import Mathlib.NumberTheory.NumberField.CanonicalEmbedding.FundamentalCone
 import Mathlib.NumberTheory.NumberField.Discriminant
 import Mathlib.NumberTheory.NumberField.Units.Regulator
 
@@ -11,10 +11,10 @@ import Mathlib.NumberTheory.NumberField.Units.Regulator
 # Fundamental Cone
 
 In this file, we study the subset `NormLessThanOne` of the `fundamentalCone` defined as the
-subset of elements `x` in the `fundamentalCone` such that `mixedEmbedding.norm x ≤ 1`.
+subset of elements `x` such that `mixedEmbedding.norm x ≤ 1`.
 
 Mainly, we want to prove that its frontier has volume zero and compute its volume. For this, we
-follow in part the strategy given in [D. Marcus, *Number Fields*][marcus1977number].
+follow mainly the strategy given in [D. Marcus, *Number Fields*][marcus1977number].
 
 ## Strategy of proof
 
@@ -492,7 +492,8 @@ theorem prod_mapToUnitsPow_single (c : realSpace K) :
   rw [Pi.smul_apply, mapToUnitsPow₀_eq_prod_single, ← Finset.univ.mul_prod_erase _
     (Finset.mem_univ w₀), mapToUnitsPow_single, dif_pos rfl, smul_eq_mul, Pi.mul_apply, prod_apply]
 
-variable (K) in
+variable (K)
+
 open Classical in
 /-- DOCSTRING -/
 @[simps source target]
@@ -596,7 +597,6 @@ def mapToUnitsPow : PartialHomeomorph (realSpace K) (realSpace K) where
       refine ne_of_gt ?_
       exact pos_norm_realToMixed (fun w ↦ (hx w).ne')
 
-variable (K) in
 theorem measurable_mapToUnitsPow_symm :
     Measurable (mapToUnitsPow K).symm := by
   classical
@@ -610,12 +610,21 @@ theorem measurable_mapToUnitsPow_symm :
         (basisUnitLattice K)).reindex equivFinRank)).measurable.comp'
         ((measurable_logMap _).comp' realToMixed.measurable)
 
+variable {K}
+
 theorem mapToUnitsPow_apply (c : realSpace K) :
     mapToUnitsPow K c = ∏ i, mapToUnitsPow_single c i := rfl
 
 theorem mapToUnitsPow_apply' (c : realSpace K) :
     mapToUnitsPow K c = |c w₀| • mapToUnitsPow₀ K (fun w ↦ c w.val) := by
   rw [mapToUnitsPow_apply, prod_mapToUnitsPow_single]
+
+variable (K) in
+theorem continuous_mapToUnitsPow :
+    Continuous (mapToUnitsPow K) := by
+  change Continuous (fun c ↦ mapToUnitsPow K c)
+  simp_rw [mapToUnitsPow_apply']
+  exact Continuous.smul (by fun_prop) ((continuous_mapToUnitsPow₀ K).comp' (by fun_prop))
 
 theorem mapToUnitsPow_nonneg (c : realSpace K) (w : InfinitePlace K) :
     0 ≤ mapToUnitsPow K c w := by
@@ -811,6 +820,7 @@ noncomputable section mapToUnitsPowComplex
 
 variable [NumberField K]
 
+/-- DOCSTRING. -/
 def mapToUnitsPowComplex : PartialHomeomorph
     ((realSpace K) × ({w : InfinitePlace K // IsComplex w} → ℝ)) (mixedSpace K) :=
   PartialHomeomorph.trans
@@ -863,6 +873,15 @@ theorem mapToUnitsPowComplex_target :
       specialize h ⟨w, not_isReal_iff_isComplex.mp hw⟩ (Set.mem_univ _)
       rw [AbsoluteValue.pos_iff]
       exact Complex.slitPlane_ne_zero h
+
+theorem continuous_mapToUnitsPowComplex :
+    Continuous (mapToUnitsPowComplex K) := by
+  simp [mapToUnitsPowComplex]
+  refine Continuous.comp ?_ ?_
+  · exact continuous_polarCoordMixedSpace_symm K
+  · rw [continuous_prod_mk]
+    refine ⟨?_, continuous_snd⟩
+    · exact (continuous_mapToUnitsPow K).comp' continuous_fst
 
 variable {K}
 
@@ -1105,12 +1124,22 @@ abbrev normEqOne : Set (mixedSpace K) := {x | x ∈ fundamentalCone K ∧ mixedE
 
 variable {K}
 
-theorem mem_normEqOne_of_normAtPlace_eq {x y : mixedSpace K} (hx : x ∈ normEqOne K)
+theorem mem_normLessThanOne_of_normAtPlace_eq {x y : mixedSpace K} (hx : x ∈ normLessThanOne K)
     (hy : ∀ w, normAtPlace w y = normAtPlace w x) :
-    y ∈ normEqOne K := by
+    y ∈ normLessThanOne K := by
   have h₁ : mixedEmbedding.norm y = mixedEmbedding.norm x := by
     simp_rw [mixedEmbedding.norm_apply, hy]
   exact ⟨mem_of_normAtPlace_eq hx.1 hy, h₁ ▸ hx.2⟩
+
+theorem mem_normLessThanOne_iff (x : mixedSpace K) :
+    x ∈ normLessThanOne K ↔ (fun w ↦ |x.1 w|, x.2) ∈ normLessThanOne K := by
+  have h_eq : ∀ w, normAtPlace w x = normAtPlace w (fun w ↦ |x.1 w|, x.2) := by
+    intro w
+    obtain hw | hw := isReal_or_isComplex w
+    · simp_rw [normAtPlace_apply_isReal hw, Real.norm_eq_abs, abs_abs]
+    · simp_rw [normAtPlace_apply_isComplex hw]
+  exact ⟨fun h ↦ mem_normLessThanOne_of_normAtPlace_eq h (fun w ↦ (h_eq w).symm),
+    fun h ↦ mem_normLessThanOne_of_normAtPlace_eq h h_eq⟩
 
 theorem smul_normEqOne {c : ℝ} (hc : 0 < c) :
     c • normEqOne K = {x | x ∈ fundamentalCone K ∧ mixedEmbedding.norm x = c ^ finrank ℚ K} := by
@@ -1146,11 +1175,23 @@ theorem normLessThanOne_eq_union_smul_normEqOne :
   exact ⟨fun hx ↦ exists_mem_smul_normEqOne hx,
     fun ⟨_, h₁, h₂, hx⟩ ↦ smul_normEqOne_subset h₁ h₂ hx⟩
 
-
 variable (K) in
 open Classical in
+/-- DOCSTRING. -/
 abbrev box₁ : Set (realSpace K) :=
   Set.univ.pi fun w ↦ if w = w₀ then Set.Ioc 0 1 else Set.Ico 0 1
+
+variable (K) in
+theorem measurableSet_box₁ :
+    MeasurableSet (box₁ K) :=
+  MeasurableSet.univ_pi fun _ ↦
+    MeasurableSet.ite' (fun _ ↦ measurableSet_Ioc) (fun _ ↦ measurableSet_Ico)
+
+theorem pos_of_mem_box₁ {x : InfinitePlace K → ℝ}  (hx : x ∈ box₁ K) :
+    0 < x w₀ := by
+  have := hx w₀ (Set.mem_univ w₀)
+  simp_rw [if_true] at this
+  exact this.1
 
 theorem mem_Ioc_of_mem_box₁ {c : realSpace K} (hc : c ∈ box₁ K) :
     c w₀ ∈ Set.Ioc 0 1 := by
@@ -1165,8 +1206,8 @@ theorem mem_Ico_of_mem_box₁ {c : realSpace K} (hc : c ∈ box₁ K) {w : Infin
   simp_rw [if_neg hw] at this
   exact this
 
-theorem mixedToReal_normEqOne :
-    mixedToReal '' (normEqOne K ∩ {x | ∀ w, 0 < x.1 w}) =
+theorem mixedToReal_plusPart_normEqOne :
+    mixedToReal '' plusPart (normEqOne K) =
       mapToUnitsPow₀ K '' (Set.univ.pi fun _ ↦ Set.Ico 0 1) := by
   classical
   ext
@@ -1203,7 +1244,7 @@ private theorem mixedToReal_normLessThanOne_aux₀ {c : ℝ} (hc : 0 < c) :
 
 private theorem mixedToReal_normLessThanOne_aux₁ {c : ℝ} (hc : 0 < c) :
     mixedToReal '' (c • normEqOne K ∩ {x | ∀ w, 0 < x.1 w}) =
-      c • mixedToReal '' (normEqOne K ∩ {x | ∀ w, 0 < x.1 w}) := by
+      c • mixedToReal '' plusPart (normEqOne K) := by
   nth_rewrite 1 [mixedToReal_normLessThanOne_aux₀ hc, ← Set.smul_set_inter₀ hc.ne']
   ext
   constructor
@@ -1217,12 +1258,12 @@ private theorem mixedToReal_normLessThanOne_aux₁ {c : ℝ} (hc : 0 < c) :
 
 variable (K)
 
-theorem mixedToReal_normLessThanOne :
-    mixedToReal '' (normLessThanOne K ∩ {x | ∀ w, 0 < x.1 w}) = mapToUnitsPow K '' (box₁ K) := by
+theorem mixedToReal_plusPart_normLessThanOne :
+    mixedToReal '' plusPart (normLessThanOne K) = mapToUnitsPow K '' (box₁ K) := by
   classical
-  rw [normLessThanOne_eq_union_smul_normEqOne, Set.iUnion₂_inter, Set.image_iUnion₂,
+  rw [normLessThanOne_eq_union_smul_normEqOne, plusPart, Set.iUnion₂_inter, Set.image_iUnion₂,
     Set.iUnion₂_congr (fun _ h ↦ by rw [mixedToReal_normLessThanOne_aux₁ h.1]),
-    mixedToReal_normEqOne]
+    mixedToReal_plusPart_normEqOne]
   ext
   simp_rw [Set.mem_iUnion, Set.mem_image, exists_prop', nonempty_prop, Set.mem_smul_set]
   constructor
@@ -1244,28 +1285,285 @@ theorem mixedToReal_normLessThanOne :
       fun w _ ↦ mem_Ico_of_mem_box₁ hc w.prop, rfl⟩, ?_⟩
     rw [mapToUnitsPow_apply', abs_of_pos (mem_Ioc_of_mem_box₁ hc).1]
 
+/-- DOCSTRING. -/
+abbrev box₂ : Set ({w : InfinitePlace K // IsComplex w} → ℝ) :=
+  Set.univ.pi fun _ ↦ Set.Ioc (-π) π
+
+theorem measurableSet_box₂ :
+    MeasurableSet (box₂ K) := MeasurableSet.univ_pi fun _ ↦ measurableSet_Ioc
+
+/-- DOCSTRING. -/
+abbrev box := (box₁ K) ×ˢ (box₂ K)
+
+theorem plusPart_normLessThanOne :
+    plusPart (normLessThanOne K) = mapToUnitsPowComplex K '' (box K) := by
+  have : plusPart (normLessThanOne K) =
+      mixedToReal⁻¹' (mixedToReal '' plusPart (normLessThanOne K)) := by
+    refine subset_antisymm (Set.subset_preimage_image mixedToReal _)
+      fun x ⟨y, ⟨hy₁, hy₂⟩, h⟩ ↦ ⟨mem_normLessThanOne_of_normAtPlace_eq hy₁ fun w ↦ ?_, fun w ↦ ?_⟩
+    · rw [← norm_mixedToReal, ← congr_fun h w, norm_mixedToReal]
+    · rw [← mixedToReal_apply_of_isReal _ w, ← congr_fun h w, mixedToReal_apply_of_isReal _ w]
+      exact hy₂ w
+  rw [this, mixedToReal_plusPart_normLessThanOne]
+  ext x
+  refine ⟨fun ⟨c, hc₁, hc₂⟩ ↦ ⟨⟨c, fun w ↦ (x.2 w).arg⟩, ⟨hc₁, fun w _ ↦ (x.2 w).arg_mem_Ioc⟩, ?_⟩,
+    ?_⟩
+  · simp_rw [mapToUnitsPowComplex_apply, Complex.polarCoord_symm_apply, hc₂]
+    ext w
+    · simp_rw [mixedToReal_apply_of_isReal]
+    · simp_rw [mixedToReal_apply_of_isComplex, Complex.norm_eq_abs, Complex.ofReal_cos,
+        Complex.ofReal_sin, Complex.abs_mul_cos_add_sin_mul_I]
+  · rintro ⟨c, hc, rfl⟩
+    exact ⟨c.1, hc.1, by rw [mixedToReal_mapToUnitsPowComplex]⟩
+
 theorem measurableSet_normLessThanOne :
     MeasurableSet (normLessThanOne K) :=
-  -- MeasurableSet.inter (measurableSet K) <|
-  --   measurableSet_le (mixedEmbedding.continuous_norm K).measurable measurable_const
-  sorry
+  (measurableSet_fundamentalCone K).inter <|
+    measurableSet_le (mixedEmbedding.continuous_norm K).measurable measurable_const
 
 theorem isBounded_normLessThanOne :
     IsBounded (normLessThanOne K) := by
   sorry
 
-open MeasureTheory
+open MeasureTheory MeasureTheory.Measure
+
+theorem volume_normLessThanOnePlus_aux (n : ℕ) :
+    ∫⁻ x in box₁ K, ENNReal.ofReal |x w₀| ^ n = (n + 1 : ENNReal)⁻¹ := by
+  classical
+  rw [volume_pi, box₁, restrict_pi_pi, lintegral_eq_lmarginal_univ 0,
+    lmarginal_erase' _ ?_ (Finset.mem_univ w₀)]
+  simp_rw [if_true, Function.update_same]
+  have : ∫⁻ (xᵢ : ℝ) in Set.Ioc 0 1, ENNReal.ofReal |xᵢ| ^ n = (n + 1 : ENNReal)⁻¹ := by
+    convert congr_arg ENNReal.ofReal (integral_pow (a := 0) (b := 1) n)
+    · rw [intervalIntegral.integral_of_le zero_le_one]
+      rw [ofReal_integral_eq_lintegral_ofReal]
+      · refine setLIntegral_congr_fun measurableSet_Ioc ?_
+        filter_upwards with _ h using by rw [abs_of_pos h.1, ENNReal.ofReal_pow h.1.le]
+      · refine IntegrableOn.integrable ?_
+        rw [← Set.uIoc_of_le zero_le_one, ← intervalIntegrable_iff]
+        exact intervalIntegral.intervalIntegrable_pow n
+      · exact ae_restrict_of_forall_mem measurableSet_Ioc fun _ h ↦ pow_nonneg h.1.le _
+    · rw [one_pow, zero_pow (by linarith), sub_zero, ENNReal.ofReal_div_of_pos (by positivity),
+        ENNReal.ofReal_add (by positivity) zero_le_one, ENNReal.ofReal_one, ENNReal.ofReal_natCast,
+        one_div]
+  rw [this]
+  rw [lmarginal]
+  rw [lintegral_const]
+  rw [pi_univ]
+  rw [Finset.prod_congr rfl (g := fun _ ↦ 1) (fun x _ ↦ by rw [if_neg (by aesop), restrict_apply
+    MeasurableSet.univ, Set.univ_inter, Real.volume_Ico, sub_zero, ENNReal.ofReal_one])]
+  rw [Finset.prod_const_one, mul_one]
+  fun_prop
+
+open Classical in
+theorem volume_plusPart_normLessThanOne : volume (plusPart (normLessThanOne K)) =
+    NNReal.pi ^ NrComplexPlaces K * (regulator K).toNNReal := by
+  rw [plusPart_normLessThanOne, volume_mapToUnitsPowComplex_set_prod_set
+    (measurableSet_box₁ K) (fun _ h ↦ le_of_lt (pos_of_mem_box₁ h)) (measurableSet_box₂ K)
+    (Set.pi_mono fun _ _ ↦ Set.Ioc_subset_Icc_self)
+    (by rw [← plusPart_normLessThanOne]; exact
+      measurableSet_plusPart (measurableSet_normLessThanOne K)),
+    setLIntegral_mapToUnitsPow (measurableSet_box₁ K) (fun _ h ↦ ((if_pos rfl) ▸
+      Set.mem_univ_pi.mp h w₀).1.le), Set.inter_eq_left.mpr (Set.pi_mono fun _ _ ↦
+      Set.Ioo_subset_Ioc_self), volume_pi_pi]
+  simp_rw [Real.volume_Ioo, sub_neg_eq_add, ← two_mul, Finset.prod_const, ENNReal.ofReal_mul
+    zero_le_two, ENNReal.ofReal_ofNat, mul_pow]
+  have h₁ : ∀ x : InfinitePlace K → ℝ,
+      0 < ∏ i : {w // IsComplex w}, (mapToUnitsPow₀ K) (fun w ↦ x w) i.val :=
+    fun _ ↦ Finset.prod_pos fun _ _ ↦ mapToUnitsPow₀_pos _ _
+  have h₂ : rank K + NrComplexPlaces K + 1 = finrank ℚ K := by
+    rw [rank, add_comm _ 1, ← add_assoc, add_tsub_cancel_of_le NeZero.one_le,
+      card_eq_nrRealPlaces_add_nrComplexPlaces,  ← card_add_two_mul_card_eq_rank]
+    ring
+  calc
+    _ = (NNReal.pi : ENNReal) ^ NrComplexPlaces K * (regulator K).toNNReal * (finrank ℚ K) *
+          ∫⁻ x in box₁ K, ENNReal.ofReal |x w₀| ^ (rank K + NrComplexPlaces K) := by
+      simp_rw [← mul_assoc]
+      congr
+      · rw [mul_comm, ← mul_assoc, NrComplexPlaces, Finset.card_univ, ← mul_pow,
+          ENNReal.inv_mul_cancel two_ne_zero ENNReal.two_ne_top, one_pow, one_mul,
+          ← ENNReal.ofReal_coe_nnreal, NNReal.coe_real_pi]
+      · ext x
+        simp_rw [mapToUnitsPow_apply', Pi.smul_apply, smul_eq_mul, Real.toNNReal_mul (abs_nonneg _),
+          ENNReal.coe_mul, ENNReal.ofNNReal_toNNReal]
+        rw [Finset.prod_mul_distrib, Finset.prod_const, mul_mul_mul_comm,
+          ← ENNReal.ofReal_prod_of_nonneg (fun _ _ ↦ (mapToUnitsPow₀_pos _ _).le),
+          ENNReal.ofReal_inv_of_pos (h₁ x), ENNReal.inv_mul_cancel
+          (ENNReal.ofReal_ne_zero_iff.mpr (h₁ x)) ENNReal.ofReal_ne_top, mul_one, pow_add,
+          NrComplexPlaces, Finset.card_univ]
+    _ = NNReal.pi ^ NrComplexPlaces K * (regulator K).toNNReal := by
+      rw [volume_normLessThanOnePlus_aux, ← Nat.cast_add_one, h₂, mul_assoc, ENNReal.mul_inv_cancel,
+        mul_one]
+      · rw [Nat.cast_ne_zero]
+        refine ne_of_gt ?_
+        exact finrank_pos
+      · exact ENNReal.natCast_ne_top _
 
 open Classical in
 theorem volume_normLessThanOne :
     volume (normLessThanOne K) =
       2 ^ NrRealPlaces K * NNReal.pi ^ NrComplexPlaces K * (regulator K).toNNReal := by
+  rw [volume_eq_two_pow_mul_volume_plusPart (normLessThanOne K) mem_normLessThanOne_iff
+    (measurableSet_normLessThanOne K), volume_plusPart_normLessThanOne, mul_assoc]
+
+theorem isBounded_box₁ : Bornology.IsBounded (box₁ K) := by
+  refine Bornology.IsBounded.pi ?_
+  intro i
+  by_cases hi : i = w₀
+  · rw [hi, if_pos rfl]
+    exact Metric.isBounded_Ioc 0 1
+  · rw [if_neg hi]
+    exact Metric.isBounded_Ico 0 1
+
+omit [NumberField K] in
+theorem isBounded_box₂ : Bornology.IsBounded (box₂ K) := by
+  refine Bornology.IsBounded.pi ?_
+  intro _
+  exact Metric.isBounded_Ioc _ _
+
+theorem closure_box₁ :
+    closure (box₁ K) = Set.Icc 0 1 := by
+  rw [closure_pi_set]
+  simp_rw [← Set.pi_univ_Icc, Pi.zero_apply, Pi.one_apply]
+  refine Set.pi_congr rfl ?_
+  intro i _
+  by_cases hi : i = w₀
+  · rw [hi, if_pos rfl]
+    exact closure_Ioc zero_ne_one
+  · rw [if_neg hi]
+    exact closure_Ico zero_ne_one
+
+omit [NumberField K] in
+theorem closure_box₂ :
+    closure (box₂ K) = Set.univ.pi fun _ ↦ Set.Icc (-π) π := by
+  rw [closure_pi_set]
+  refine Set.pi_congr rfl ?_
+  intro _ _
+  refine closure_Ioc ?_
+  rw [ne_eq, CharZero.neg_eq_self_iff]
+  exact Real.pi_ne_zero
+
+theorem interior_box₁ :
+    interior (box₁ K) = Set.univ.pi fun _ ↦ Set.Ioo 0 1 := by
+  rw [interior_pi_set Set.finite_univ]
+  refine Set.pi_congr rfl ?_
+  intro i _
+  by_cases hi : i = w₀
+  · rw [hi, if_pos rfl]
+    exact interior_Ioc
+  · rw [if_neg hi]
+    exact interior_Ico
+
+theorem interior_box₂ :
+    interior (box₂ K) = Set.univ.pi fun _ ↦ Set.Ioo (-π) π := by
+  rw [interior_pi_set Set.finite_univ]
+  refine Set.pi_congr rfl ?_
+  intro _ _
+  exact interior_Ioc
+
+theorem isClosed_mapToUnitsPowComplex_closure :
+    IsClosed (mapToUnitsPowComplex K '' (closure (box K))) := by
+  classical
+  refine (IsCompact.image_of_continuousOn ?_ ?_).isClosed
+  · exact Metric.isCompact_iff_isClosed_bounded.mpr
+      ⟨isClosed_closure,
+        Metric.isBounded_closure_iff.mpr ((isBounded_box₁ K).prod (isBounded_box₂ K))⟩
+  · exact (continuous_mapToUnitsPowComplex K).continuousOn
+
+theorem closure_subset_mapToUnitsPowComplex_closure :
+    closure (plusPart (normLessThanOne K)) ⊆ mapToUnitsPowComplex K '' (closure (box K)) := by
+  rw [plusPart_normLessThanOne]
+  exact closure_minimal (Set.image_mono subset_closure) (isClosed_mapToUnitsPowComplex_closure K)
+
+theorem interior_subset_mapToUnitsPowComplex_source :
+    interior (box K) ⊆ (mapToUnitsPowComplex K).source := by
+  rw [interior_prod_eq, interior_box₁, interior_box₂, mapToUnitsPowComplex_source]
+  exact Set.prod_mono (fun _ h ↦ (h w₀ (Set.mem_univ _)).1) subset_rfl
+
+theorem isOpen_mapToUnitsPowComplex_interior :
+    IsOpen (mapToUnitsPowComplex K '' (interior (box K))) :=
+  (mapToUnitsPowComplex K).isOpen_image_of_subset_source isOpen_interior
+    (interior_subset_mapToUnitsPowComplex_source K)
+
+theorem mapToUnitsPowComplex_interior_subset_interior :
+    mapToUnitsPowComplex K '' (interior (box K)) ⊆ interior (plusPart (normLessThanOne K)) := by
+  rw [plusPart_normLessThanOne]
+  exact interior_maximal (Set.image_mono interior_subset) (isOpen_mapToUnitsPowComplex_interior K)
+
+open Classical in
+theorem volume_mapToUnitsPowComplex_interior_eq_volume_mapToUnitsPowComplex_closure :
+    volume (mapToUnitsPowComplex K '' (interior (box K))) =
+      volume (mapToUnitsPowComplex K '' (closure (box K))) := by
   sorry
+  -- have hm₁ : MeasurableSet
+  --     (mapToUnitsPowComplex K '' (Set.univ.pi fun x ↦ Set.Ioo 0 1) ×ˢ
+  --       Set.univ.pi fun _ ↦ Set.Ioo (-π) π) := by
+  --   rw [← interior_box₁, ← interior_box₂, ← interior_prod_eq]
+  --   exact (isOpen_mapToUnitsPowComplex_interior_box K).measurableSet
+  -- have hm₂ : MeasurableSet
+  --     (mapToUnitsPowComplex K '' Set.Icc 0 1 ×ˢ Set.univ.pi fun _ ↦ Set.Icc (-π) π) := by
+  --   rw [← closure_box₁, ← closure_box₂, ← closure_prod_eq]
+  --   exact (isClosed_mapToUnitsPowComplex_closure_box K).measurableSet
+  -- have h₁ : Set.Icc 0 1 ⊆ {x : InfinitePlace K → ℝ | 0 ≤ x w₀} :=
+  --   fun _ h ↦ (Set.mem_Icc.mp h).1 w₀
+  -- have h₂ : Set.univ.pi (fun _ : InfinitePlace K ↦ Set.Ioo (0 : ℝ) 1) ⊆ {x | 0 ≤ x w₀} :=
+  --   fun _ h ↦ (h w₀ (Set.mem_univ _)).1.le
+  -- have h₃ : MeasurableSet (Set.univ.pi fun _ : InfinitePlace K ↦ Set.Ioo (0 : ℝ) 1) :=
+  --   MeasurableSet.univ_pi fun _ ↦ measurableSet_Ioo
+  -- rw [closure_prod_eq, interior_prod_eq, closure_box₁, closure_box₂, interior_box₁, interior_box₂,
+  --   volume_mapToUnitsPowComplex_set_prod_set K h₃ h₂ (MeasurableSet.univ_pi fun _ ↦
+  --   measurableSet_Ioo) (Set.pi_mono fun _ _ ↦ Set.Ioo_subset_Icc_self) hm₁,
+  --   volume_mapToUnitsPowComplex_set_prod_set K measurableSet_Icc h₁ (MeasurableSet.univ_pi fun _ ↦
+  --   measurableSet_Icc) le_rfl hm₂]
+  -- simp_rw [setLIntegral_mapToUnitsPow K h₃ h₂, setLIntegral_mapToUnitsPow K measurableSet_Icc h₁,
+  --   mul_assoc, ← Set.pi_inter_distrib, Set.inter_self, Set.inter_eq_left.mpr
+  --     Set.Ioo_subset_Icc_self]
+  -- congr 5
+  -- refine Measure.restrict_congr_set ?_
+  -- rw [show (Set.univ.pi fun _ ↦ Set.Ioo (0 : ℝ) 1) = interior (Set.Icc 0 1) by
+  --       simp_rw [← Set.pi_univ_Icc, interior_pi_set Set.finite_univ, Pi.zero_apply, Pi.one_apply,
+  --       interior_Icc]]
+  -- exact interior_ae_eq_of_null_frontier ((convex_Icc 0 1).addHaar_frontier volume)
+
+open Classical in
+theorem volume_frontier_plusPart_normLessThanOne :
+    volume (frontier (plusPart (normLessThanOne K))) = 0 := by
+  rw [frontier, measure_diff]
+  have : volume (closure (plusPart (normLessThanOne K))) =
+      volume (interior (plusPart (normLessThanOne K))) := by
+    refine le_antisymm ?_ (measure_mono interior_subset_closure)
+    refine le_trans ?_ (measure_mono (mapToUnitsPowComplex_interior_subset_interior K))
+    rw [volume_mapToUnitsPowComplex_interior_eq_volume_mapToUnitsPowComplex_closure]
+    exact measure_mono (closure_subset_mapToUnitsPowComplex_closure K)
+  refine tsub_eq_zero_iff_le.mpr (le_of_eq this)
+  · exact interior_subset_closure
+  · exact measurableSet_interior.nullMeasurableSet
+  · rw [← lt_top_iff_ne_top]
+    refine lt_of_le_of_lt (measure_mono interior_subset) ?_
+    rw [volume_plusPart_normLessThanOne]
+    exact Batteries.compareOfLessAndEq_eq_lt.mp rfl
 
 open Classical in
 theorem volume_frontier_normLessThanOne :
     volume (frontier (normLessThanOne K)) = 0 := by
-  sorry
-
+  have h : normLessThanOne K ∩ ⋃ w, {x | x.1 w = 0} = ∅ := by
+    refine (Set.disjoint_left.mpr fun x hx₁ hx₂ ↦ ?_).inter_eq
+    obtain ⟨w, hw⟩ :=  Set.mem_iUnion.mp hx₂
+    have := hx₁.1.2
+    refine this ?_
+    simp_rw [mixedEmbedding.norm_eq_zero_iff]
+    use w
+    rw [normAtPlace_apply_isReal, hw, norm_zero]
+  rw [← iUnion_negAtPlusPart_union (normLessThanOne K) mem_normLessThanOne_iff, h, Set.union_empty]
+  refine measure_mono_null (frontier_iUnion _) (measure_iUnion_null_iff.mpr fun s ↦ ?_)
+  rw [negAtPlusPart, ← negAt_preimage]
+  rw [← ContinuousLinearEquiv.coe_toHomeomorph, ← Homeomorph.preimage_frontier,
+    ContinuousLinearEquiv.coe_toHomeomorph, (volume_preserving_negAt s).measure_preimage
+    measurableSet_frontier.nullMeasurableSet]
+  exact volume_frontier_plusPart_normLessThanOne K
 
 end NumberField.mixedEmbedding.fundamentalCone
+
+set_option linter.style.longFile 1700
+
+#lint
