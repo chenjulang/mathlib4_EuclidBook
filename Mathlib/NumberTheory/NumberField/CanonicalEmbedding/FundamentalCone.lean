@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Xavier Roblot
 -/
 import Mathlib.RingTheory.Ideal.IsPrincipal
+import Mathlib.RingTheory.ClassGroup
 import Mathlib.NumberTheory.NumberField.Units.DirichletTheorem
 
 /-!
@@ -287,6 +288,15 @@ theorem mem_integralPoint {a : mixedSpace K} :
   simp only [integralPoint, Set.mem_inter_iff, SetLike.mem_coe, LinearMap.mem_range,
     AlgHom.toLinearMap_apply, RingHom.toIntAlgHom_coe, RingHom.coe_comp, Function.comp_apply]
 
+-- theorem mem_idealPoint {a : mixedSpace K} :
+--     a ∈ idealPoint K J ↔
+--       a ∈ fundamentalCone K ∧ ∃ x : (𝓞 K), x ∈ (J : Set (𝓞 K)) ∧ mixedEmbedding K x = a:= by
+--   sorry
+  -- simp [idealPoint, Set.mem_inter_iff, SetLike.mem_coe, LinearMap.mem_range,
+  --   LinearMap.coe_comp, LinearMap.coe_restrictScalars, Submodule.coeSubtype, Function.comp_apply,
+  --   AlgHom.toLinearMap_apply, RingHom.toIntAlgHom_coe, Subtype.exists, FractionalIdeal.mem_coe,
+  --   exists_prop', nonempty_prop]
+
 /-- If `a` is an integral point, then there is a *unique* algebraic integer in `𝓞 K` such
 that `mixedEmbedding K x = a`. -/
 theorem exists_unique_preimage_of_integralPoint {a : mixedSpace K} (ha : a ∈ integralPoint K) :
@@ -295,17 +305,38 @@ theorem exists_unique_preimage_of_integralPoint {a : mixedSpace K} (ha : a ∈ i
   refine Function.Injective.exists_unique_of_mem_range ?_ (Set.mem_range_self x)
   exact (mixedEmbedding_injective K).comp RingOfIntegers.coe_injective
 
+-- /-- If `a` is an ideal point, then there is a *unique* algebraic number in `I` such
+-- that `mixedEmbedding K x = a`. -/
+-- theorem exists_unique_preimage_of_idealPoint {a : mixedSpace K} (ha : a ∈ idealPoint K I) :
+--     ∃! x : (𝓞 K), x ∈ (I : Set (𝓞 K)) ∧ mixedEmbedding K x = a := by
+--   sorry
+--  obtain ⟨_, ⟨x, hx, rfl⟩⟩ := mem_idealPoint.mp ha
+--  exact ⟨x, ⟨hx, rfl⟩, fun y ⟨_, hy⟩ ↦ (mixedEmbedding_injective K) hy⟩
+
 theorem integralPoint_ne_zero (a : integralPoint K) :
     (a : mixedSpace K) ≠ 0 := by
   by_contra!
   exact a.prop.1.2 (this.symm ▸ mixedEmbedding.norm.map_zero')
 
-/-- For `a : fundamentalCone K`, the unique non-zero algebraic integer which image by
+-- theorem idealPoint_ne_zero (a : idealPoint K I) :
+--     (a : mixedSpace K) ≠ 0 := by
+--   by_contra!
+--   exact a.prop.1.2 (this.symm ▸ mixedEmbedding.norm.map_zero')
+
+/-- For `a : integralPoint K`, the unique non-zero algebraic integer which image by
 `mixedEmbedding` is equal to `a`. -/
 def preimageOfIntegralPoint (a : integralPoint K) : (𝓞 K)⁰ := by
   refine ⟨(mem_integralPoint.mp a.prop).2.choose, mem_nonZeroDivisors_of_ne_zero ?_⟩
   simp_rw [ne_eq, ← RingOfIntegers.coe_injective.eq_iff, ← (mixedEmbedding_injective K).eq_iff,
     map_zero, (mem_integralPoint.mp a.prop).2.choose_spec, integralPoint_ne_zero, not_false_eq_true]
+
+-- /-- For `a : idealPoint K`, the unique non-zero algebraic number which image by
+-- `mixedEmbedding` is equal to `a`. -/
+-- def preimageOfIdealPoint (a : idealPoint K I) : (𝓞 K)⁰ := by
+--   sorry
+  -- refine Units.mk0 (mem_idealPoint.mp a.prop).2.choose ?_
+  -- simp_rw [ne_eq, ← (mixedEmbedding_injective K).eq_iff, map_zero,
+  --   (mem_idealPoint.mp a.prop).2.choose_spec.2, idealPoint_ne_zero, not_false_eq_true]
 
 @[simp]
 theorem mixedEmbedding_preimageOfIntegralPoint (a : integralPoint K) :
@@ -318,6 +349,34 @@ theorem preimageOfIntegralPoint_mixedEmbedding {x : (𝓞 K)⁰}
   simp_rw [Subtype.ext_iff, RingOfIntegers.ext_iff, ← (mixedEmbedding_injective K).eq_iff,
     mixedEmbedding_preimageOfIntegralPoint]
 
+variable {J : (Ideal (𝓞 K))⁰}
+
+variable (K J) in
+def idealPoint : Set (mixedSpace K) :=
+  fundamentalCone K ∩ (mixedEmbedding.idealLattice K (FractionalIdeal.mk0 K J))
+
+variable (K J) in
+def idealPointEquiv : idealPoint K J ≃
+    {a : integralPoint K | (preimageOfIntegralPoint a : 𝓞 K) ∈ (J : Set (𝓞 K))} := by
+  sorry
+
+theorem idealPointEquiv_apply (a : idealPoint K J) :
+    (idealPointEquiv K J a : mixedSpace K) = a := by
+  sorry
+
+-- @[simp]
+-- theorem mixedEmbedding_preimageOfIdealPoint (a : idealPoint K I) :
+--     mixedEmbedding K (preimageOfIdealPoint a : 𝓞 K) = (a : mixedSpace K) := by
+--   sorry
+--  rw [preimageOfIdealPoint, Units.val_mk0]
+--  simp only [SetLike.mem_coe, Units.val_mk0, (mem_idealPoint.mp a.prop).2.choose_spec.2]
+
+-- theorem preimageOfIdealPoint_mixedEmbedding {x : (𝓞 K)⁰}
+--     (hx : mixedEmbedding K (x : (𝓞 K)) ∈ idealPoint K I) :
+--     preimageOfIdealPoint (⟨mixedEmbedding K (x : (𝓞 K)), hx⟩) = x := by
+--   sorry
+--  simp_rw [← (mixedEmbedding_injective K).eq_iff, mixedEmbedding_preimageOfIdealPoint]
+
 /-- If `x : mixedSpace K` is nonzero and the image of an algebraic integer, then there exists a
 unit such that `u • x ∈ integralPoint K`. -/
 theorem exists_unitSMul_mem_integralPoint {x : mixedSpace K} (hx : x ≠ 0)
@@ -329,12 +388,34 @@ theorem exists_unitSMul_mem_integralPoint {x : mixedSpace K} (hx : x ≠ 0)
   obtain ⟨_, ⟨⟨x, rfl⟩, ⟨_, rfl⟩⟩⟩ := hx'
   exact ⟨u, mem_integralPoint.mpr ⟨hu, ⟨u * x, by simp_rw [unitSMul_smul, ← map_mul]⟩⟩⟩
 
+-- /-- If `x : mixedSpace K` is nonzero and the image of an element of `I`, then there exists a
+-- unit such that `u • x ∈ idealPoint K I`. -/
+-- theorem exists_unitSMul_mem_idealPoint {x : mixedSpace K} (hx : x ≠ 0)
+--     (hx' : x ∈ mixedEmbedding K ∘ (algebraMap (𝓞 K) K) '' (I : Set (𝓞 K))) :
+--     ∃ u : (𝓞 K)ˣ, u • x ∈ idealPoint K I := by
+--   sorry
+  -- replace hx₁ : mixedEmbedding.norm x ≠ 0 :=
+  --     (norm_eq_zero_iff' (Set.mem_range_of_mem_image (mixedEmbedding K) _ hx₂)).not.mpr hx₁
+  -- obtain ⟨u, hu⟩ := exists_unit_smul_mem hx₁
+  -- obtain ⟨x, hx₃, rfl⟩ := hx₂
+  -- exact ⟨u, mem_idealPoint.mpr ⟨hu, u • x, Submodule.smul_mem _ _ hx₃,
+  --   by rw [unitSMul_smul, ← map_mul]; rfl⟩⟩
+
 /-- The set `integralPoint K` is stable under the action of the torsion. -/
 theorem torsion_unitSMul_mem_integralPoint {x : mixedSpace K} {ζ : (𝓞 K)ˣ} (hζ : ζ ∈ torsion K)
     (hx : x ∈ integralPoint K) :
     ζ • x ∈ integralPoint K := by
   obtain ⟨a, ⟨_, rfl⟩, rfl⟩ := (mem_integralPoint.mp hx).2
-  refine mem_integralPoint.mpr ⟨torsion_smul_mem_of_mem hx.1 hζ, ⟨ζ * a, by simp⟩⟩
+  exact mem_integralPoint.mpr ⟨torsion_smul_mem_of_mem hx.1 hζ, ⟨ζ * a, by simp⟩⟩
+
+-- /-- The set `idealPoint K I` is stable under the action of the torsion. -/
+-- theorem torsion_unitSMul_mem_idealPoint {x : mixedSpace K} {ζ : (𝓞 K)ˣ} (hζ : ζ ∈ torsion K)
+--     (hx : x ∈ idealPoint K I) :
+--     ζ • x ∈ idealPoint K I := by
+--   sorry
+--  obtain ⟨a, ha, rfl⟩ := (mem_idealPoint.mp hx).2
+--  exact mem_idealPoint.mpr ⟨torsion_smul_mem_of_mem hx.1 hζ,
+--    ⟨ζ * a, Submodule.smul_mem _ _ ha, by rw [unitSMul_smul, ← map_mul]⟩⟩
 
 /-- The action of `torsion K` on `integralPoint K`. -/
 @[simps]
@@ -348,14 +429,36 @@ instance : MulAction (torsion K) (integralPoint K) where
     rw [Subtype.mk_eq_mk]
     simp_rw [integralPoint_torsionSMul_smul_coe, Subgroup.coe_mul, mul_smul]
 
+-- /-- The action of `torsion K` on `idealPoint K I`. -/
+-- @[simps]
+-- instance idealPoint_torsionSMul: SMul (torsion K) (idealPoint K I) where
+--   smul := fun ⟨ζ, hζ⟩ ⟨x, hx⟩ ↦ ⟨ζ • x, torsion_unitSMul_mem_idealPoint hζ hx⟩
+
+-- instance : MulAction (torsion K) (idealPoint K I) where
+--   one_smul := fun _ ↦ by
+--     rw [Subtype.mk_eq_mk, idealPoint_torsionSMul_smul_coe, OneMemClass.coe_one, one_smul]
+--   mul_smul := fun _ _ _ ↦ by
+--     rw [Subtype.mk_eq_mk]
+--     simp_rw [idealPoint_torsionSMul_smul_coe, Subgroup.coe_mul, mul_smul]
+
 /-- The `mixedEmbedding.norm` of `a : integralPoint K` as a natural integer, see `intNorm_coe` . -/
 def intNorm (a : integralPoint K) : ℕ := (Algebra.norm ℤ (preimageOfIntegralPoint a : 𝓞 K)).natAbs
+
+-- /-- The `mixedEmbedding.norm` of `a : idealPoint K` as a rational number, see `intNorm_coe` . -/
+-- def idealPointNorm (a : idealPoint K I) : ℕ :=
+--   (Algebra.norm ℤ (preimageOfIdealPoint a : 𝓞 K)).natAbs
 
 @[simp]
 theorem intNorm_coe (a : integralPoint K) :
     (intNorm a : ℝ) = mixedEmbedding.norm (a : mixedSpace K) := by
   rw [intNorm, Int.cast_natAbs, ← Rat.cast_intCast, Int.cast_abs, Algebra.coe_norm_int,
     ← norm_eq_norm, mixedEmbedding_preimageOfIntegralPoint]
+
+-- @[simp]
+-- theorem idealPointNorm_coe (a : idealPoint K I) :
+--     (idealPointNorm a : ℝ) = mixedEmbedding.norm (a : mixedSpace K) := by
+--   sorry
+--  rw [idealPointNorm, ← norm_eq_norm, mixedEmbedding_preimageOfIdealPoint]
 
 /-- The norm `intNorm` lifts to a function on `integralPoint K` modulo `torsion K`. -/
 def quotIntNorm :
@@ -364,8 +467,19 @@ def quotIntNorm :
     rw [← Nat.cast_inj (R := ℝ), intNorm_coe, intNorm_coe, ← hu, integralPoint_torsionSMul_smul_coe,
       norm_unit_smul]
 
+-- /-- The norm `idealPointNorm` lifts to a function on `idealPoint K I` modulo `torsion K`. -/
+-- def quotIdealPointNorm :
+--     Quotient (MulAction.orbitRel (torsion K) (idealPoint K I)) → ℕ :=
+--   Quotient.lift (fun x ↦ idealPointNorm x) fun a b ⟨u, hu⟩ ↦ by
+--     rw [← Nat.cast_inj (R := ℝ), idealPointNorm_coe, idealPointNorm_coe, ← hu,
+--       idealPoint_torsionSMul_smul_coe, norm_unit_smul]
+
 @[simp]
 theorem quotIntNorm_apply (a : integralPoint K) : quotIntNorm ⟦a⟧ = intNorm a := rfl
+
+-- @[simp]
+-- theorem quotIdealPointNorm_apply (a : idealPoint K I) :
+--     quotIdealPointNorm ⟦a⟧ = idealPointNorm a := rfl
 
 variable (K) in
 /-- The map that sends an element of `a : integralPoint K` to the associates class
@@ -377,6 +491,10 @@ def integralPointToAssociates (a : integralPoint K) : Associates (𝓞 K)⁰ :=
 @[simp]
 theorem integralPointToAssociates_apply (a : integralPoint K) :
     integralPointToAssociates K a = ⟦preimageOfIntegralPoint a⟧ := rfl
+
+-- @[simp]
+-- theorem idealPointToAssociates_apply (a : idealPoint K I) :
+--     idealPointToAssociates K a = ⟦preimageOfIdealPoint a⟧ := rfl
 
 variable (K) in
 theorem integralPointToAssociates_surjective :
@@ -453,6 +571,20 @@ theorem integralPointEquiv_apply_fst (a : integralPoint K) :
     ← integralPointQuotEquivAssociates_apply]
   rfl
 
+example :
+    idealPoint K J ≃
+      {I : (Ideal (𝓞 K))⁰ // (J : Ideal (𝓞 K)) ∣ I ∧ IsPrincipal I.val} × torsion K := by
+  refine Equiv.trans (idealPointEquiv K J) ?_
+  let e :
+      {I : (Ideal (𝓞 K))⁰ // (J : Ideal (𝓞 K)) ∣ I ∧ IsPrincipal I.val} × torsion K
+        ≃ {C : {I : (Ideal (𝓞 K))⁰ // IsPrincipal I.val} × torsion K //
+        (J : Ideal (𝓞 K)) ∣ C.1 } := by
+    sorry
+  refine Equiv.trans ?_ e.symm
+  refine Equiv.subtypeEquiv (integralPointEquiv K) ?_
+  intro a
+  simp [SetLike.mem_coe, Set.mem_setOf_eq]
+
 variable (K) in
 /-- For an integer `n`, The equivalence between the `integralPoint K` of norm `n` and the product
 of the set of nonzero principal ideals of `K` of norm `n` and the torsion of `K`. -/
@@ -497,9 +629,9 @@ order of the torsion of `K` is equal to the number of `integralPoint K` of norm 
 theorem card_isPrincipal_norm_le (s : ℝ) :
     Nat.card {I : (Ideal (𝓞 K))⁰ | IsPrincipal (I : Ideal (𝓞 K)) ∧
       absNorm (I : Ideal (𝓞 K)) ≤ s} * torsionOrder K =
-        Nat.card {a : integralPoint K | intNorm a ≤ s} := by
+        Nat.card {a : integralPoint K | mixedEmbedding.norm (a : mixedSpace K) ≤ s} := by
   obtain hs | hs := le_or_gt 0 s
-  · simp_rw [← Nat.le_floor_iff hs]
+  · simp_rw [← intNorm_coe, ← Nat.le_floor_iff hs]
     rw [torsionOrder, PNat.mk_coe, ← Nat.card_eq_fintype_card, ← Nat.card_prod]
     refine Nat.card_congr <| @Equiv.ofFiberEquiv _ (γ := Finset.Iic _) _
       (fun I ↦ ⟨absNorm (I.1 : Ideal (𝓞 K)), Finset.mem_Iic.mpr I.1.2.2⟩)
@@ -520,8 +652,19 @@ theorem card_isPrincipal_norm_le (s : ℝ) :
     _ ≃ {a : integralPoint K // intNorm a = i} := (integralPointEquivNorm K i).symm
     _ ≃ {a : {a : integralPoint K // intNorm a ≤ _} // intNorm a.1 = i} :=
       (Equiv.subtypeSubtypeEquivSubtype fun h ↦ Finset.mem_Iic.mp (h ▸ hi)).symm
-  · simp_rw [lt_iff_not_le.mp (lt_of_lt_of_le hs (Nat.cast_nonneg _)), and_false, Set.setOf_false,
+  · simp_rw [lt_iff_not_le.mp (lt_of_lt_of_le hs (Nat.cast_nonneg _)), lt_iff_not_le.mp
+      (lt_of_lt_of_le hs (mixedEmbedding.norm_nonneg _)), and_false, Set.setOf_false,
       Nat.card_eq_fintype_card, Fintype.card_ofIsEmpty, zero_mul]
+
+variable (J) in
+/-- For `s : ℝ`, the number of principal nonzero ideals in `𝓞 K` divisible par `J` of norm `≤ s`
+multiplied by the order of the torsion of `K` is equal to the number of `idealPoint K J`
+of norm `≤ s`. -/
+theorem card_isPrincipal_div_norm_le (s : ℝ) :
+    Nat.card {I : (Ideal (𝓞 K))⁰ | (J : Ideal (𝓞 K)) ∣ I ∧ IsPrincipal (I : Ideal (𝓞 K)) ∧
+      absNorm (I : Ideal (𝓞 K)) ≤ s} * torsionOrder K =
+        Nat.card {a : idealPoint K J | mixedEmbedding.norm (a : mixedSpace K) ≤ s} := by
+  sorry
 
 end fundamentalCone
 

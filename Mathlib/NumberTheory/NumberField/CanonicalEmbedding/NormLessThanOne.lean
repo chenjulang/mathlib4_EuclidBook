@@ -750,14 +750,14 @@ theorem mapToUnitsPow_jacobian_det {c : realSpace K} (hc : 0 ≤ c w₀) :
 
 open MeasureTheory
 
-private theorem setLIntegral_mapToUnitsPow_aux₀ {s : Set (realSpace K)} (hs : s ⊆ {x | 0 ≤ x w₀}) :
+private theorem setLIntegral_mapToUnitsPow_aux₁ {s : Set (realSpace K)} (hs : s ⊆ {x | 0 ≤ x w₀}) :
     s \ (s ∩ {x | 0 < x w₀}) ⊆ {x | x w₀ = 0} := by
   refine fun _ h ↦ eq_of_ge_of_not_gt (hs h.1) ?_
   have := h.2
   simp_rw [Set.mem_inter_iff, not_and, h.1, true_implies] at this
   exact this
 
-private theorem setLIntegral_mapToUnitsPow_aux₁ :
+private theorem setLIntegral_mapToUnitsPow_aux₂ :
     volume {x : realSpace K | x w₀ = 0} = 0 := by
   let A : AffineSubspace ℝ (realSpace K) :=
     Submodule.toAffineSubspace (Submodule.mk ⟨⟨{x | x w₀ = 0}, by aesop⟩, rfl⟩ (by aesop))
@@ -765,7 +765,7 @@ private theorem setLIntegral_mapToUnitsPow_aux₁ :
   have : 1 ∈ A := h ▸ Set.mem_univ _
   simp [A] at this
 
-private theorem setLIntegral_mapToUnitsPow_aux₂ {s : Set (realSpace K)} (hs : s ⊆ {x | 0 ≤ x w₀}) :
+private theorem setLIntegral_mapToUnitsPow_aux₃ {s : Set (realSpace K)} (hs : s ⊆ {x | 0 ≤ x w₀}) :
     (mapToUnitsPow K) '' s =ᵐ[volume] (mapToUnitsPow K) '' (s ∩ {x | 0 < x w₀}) := by
   refine measure_symmDiff_eq_zero_iff.mp ?_
   rw [symmDiff_of_ge (Set.image_mono Set.inter_subset_left)]
@@ -785,12 +785,12 @@ theorem setLIntegral_mapToUnitsPow {s : Set (realSpace K)} (hs₀ : MeasurableSe
       ∫⁻ x in s, ENNReal.ofReal |x w₀| ^ rank K *
         ENNReal.ofReal (∏ i : {w : InfinitePlace K // IsComplex w},
           (mapToUnitsPow₀ K (fun w ↦ x w) i))⁻¹ * f (mapToUnitsPow K x) := by
-  rw [setLIntegral_congr (setLIntegral_mapToUnitsPow_aux₂ hs₁)]
+  rw [setLIntegral_congr (setLIntegral_mapToUnitsPow_aux₃ hs₁)]
   have : s =ᵐ[volume] (s ∩ {x | 0 < x w₀} : Set (realSpace K)) := by
     refine measure_symmDiff_eq_zero_iff.mp <|
-      measure_mono_null ?_ setLIntegral_mapToUnitsPow_aux₁
+      measure_mono_null ?_ setLIntegral_mapToUnitsPow_aux₂
     rw [symmDiff_of_ge Set.inter_subset_left]
-    exact setLIntegral_mapToUnitsPow_aux₀ hs₁
+    exact setLIntegral_mapToUnitsPow_aux₁ hs₁
   rw [setLIntegral_congr this]
   have h : MeasurableSet (s ∩ {x | 0 < x w₀}) :=
     hs₀.inter (measurableSet_lt measurable_const (measurable_pi_apply w₀))
@@ -1026,7 +1026,7 @@ theorem volume_mapToUnitsPowComplex_set_prod_set {s : Set (InfinitePlace K → �
   rw [← setLIntegral_one, ← lintegral_indicator _ hm,
     lintegral_eq_lintegral_polarCoordMixedSpace_symm K _
     ((measurable_indicator_const_iff 1).mpr hm),
-    setLIntegral_congr (setLIntegral_mapToUnitsPow_aux₂ hs')]
+    setLIntegral_congr (setLIntegral_mapToUnitsPow_aux₃ hs')]
   calc
     _ = ∫⁻ x in Set.univ.pi fun w ↦ if IsReal w then Set.univ else Set.Ioi 0,
           ∫⁻ y in Set.univ.pi fun _ ↦ Set.Ioo (-π) π,
@@ -1079,7 +1079,7 @@ theorem volume_mapToUnitsPowComplex_set_prod_set {s : Set (InfinitePlace K → �
       · exact Filter.EventuallyEq.rfl
       · refine indicator_ae_eq_of_ae_eq_set ?_
         refine Filter.EventuallyEq.restrict ?_
-        exact setLIntegral_mapToUnitsPow_aux₂ hs'
+        exact setLIntegral_mapToUnitsPow_aux₃ hs'
     _ = volume ((Set.univ.pi fun _ ↦ Set.Ioo (-π) π) ∩ t) *
           ∫⁻ x in mapToUnitsPow K '' (s ∩ {x | 0 < x w₀}),
             ∏ w : {w // IsComplex w}, (x w.val).toNNReal := by
@@ -1231,7 +1231,7 @@ theorem mixedToReal_plusPart_normEqOne :
       exact one_ne_zero
 
 omit [NumberField K] in
-private theorem mixedToReal_normLessThanOne_aux₀ {c : ℝ} (hc : 0 < c) :
+private theorem mixedToReal_normLessThanOne_aux₁ {c : ℝ} (hc : 0 < c) :
     {x : mixedSpace K | ∀ w, 0 < x.1 w} = c •  {x | ∀ w, 0 < x.1 w} := by
   ext x
   refine ⟨fun hx ↦
@@ -1239,10 +1239,10 @@ private theorem mixedToReal_normLessThanOne_aux₀ {c : ℝ} (hc : 0 < c) :
   rintro ⟨y, hy, rfl⟩
   exact fun w ↦ mul_pos hc (hy w)
 
-private theorem mixedToReal_normLessThanOne_aux₁ {c : ℝ} (hc : 0 < c) :
+private theorem mixedToReal_normLessThanOne_aux₂ {c : ℝ} (hc : 0 < c) :
     mixedToReal '' (c • normEqOne K ∩ {x | ∀ w, 0 < x.1 w}) =
       c • mixedToReal '' plusPart (normEqOne K) := by
-  nth_rewrite 1 [mixedToReal_normLessThanOne_aux₀ hc, ← Set.smul_set_inter₀ hc.ne']
+  nth_rewrite 1 [mixedToReal_normLessThanOne_aux₁ hc, ← Set.smul_set_inter₀ hc.ne']
   ext
   constructor
   · rintro ⟨x, ⟨hx, rfl⟩⟩
@@ -1259,7 +1259,7 @@ theorem mixedToReal_plusPart_normLessThanOne :
     mixedToReal '' plusPart (normLessThanOne K) = mapToUnitsPow K '' (box₁ K) := by
   classical
   rw [normLessThanOne_eq_union_smul_normEqOne, plusPart, Set.iUnion₂_inter, Set.image_iUnion₂,
-    Set.iUnion₂_congr (fun _ h ↦ by rw [mixedToReal_normLessThanOne_aux₁ h.1]),
+    Set.iUnion₂_congr (fun _ h ↦ by rw [mixedToReal_normLessThanOne_aux₂ h.1]),
     mixedToReal_plusPart_normEqOne]
   ext
   simp_rw [Set.mem_iUnion, Set.mem_image, exists_prop', nonempty_prop, Set.mem_smul_set]
