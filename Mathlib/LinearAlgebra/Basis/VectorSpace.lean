@@ -253,7 +253,7 @@ theorem quotient_prod_linearEquiv (p : Submodule K V) : Nonempty (((V ⧸ p) × 
 end DivisionRing
 
 namespace Submodule
-variable {B F R : Type*} [DivisionRing R] [AddCommGroup B] [AddCommGroup F] 
+variable {B F R : Type*} [DivisionRing R] [AddCommGroup B] [AddCommGroup F]
   [Module R B] [Module R F]
 
 open LinearMap
