@@ -395,8 +395,15 @@ theorem absNorm_ne_zero_iff_mem_nonZeroDivisors {I : Ideal S} :
     absNorm I ≠ 0 ↔ I ∈ (Ideal S)⁰ := by
   simp_rw [ne_eq, Ideal.absNorm_eq_zero_iff, mem_nonZeroDivisors_iff_ne_zero, Submodule.zero_eq_bot]
 
-theorem absNorm_ne_zero_of_nonZeroDivisors (I : (Ideal S)⁰) : Ideal.absNorm (I : Ideal S) ≠ 0 :=
+theorem absNorm_pos_iff_mem_nonZeroDivisors {I : Ideal S} :
+    0 < absNorm I ↔ I ∈ (Ideal S)⁰ := by
+  rw [← absNorm_ne_zero_iff_mem_nonZeroDivisors, Nat.pos_iff_ne_zero]
+
+theorem absNorm_ne_zero_of_nonZeroDivisors (I : (Ideal S)⁰) : absNorm (I : Ideal S) ≠ 0 :=
   absNorm_ne_zero_iff_mem_nonZeroDivisors.mpr (SetLike.coe_mem I)
+
+theorem absNorm_pos_of_nonZeroDivisors (I : (Ideal S)⁰) : 0 < absNorm (I : Ideal S) :=
+  absNorm_pos_iff_mem_nonZeroDivisors.mpr (SetLike.coe_mem I)
 
 theorem finite_setOf_absNorm_eq [CharZero S] (n : ℕ) :
     {I : Ideal S | Ideal.absNorm I = n}.Finite := by

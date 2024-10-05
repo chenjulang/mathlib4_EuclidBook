@@ -1163,7 +1163,7 @@ theorem smul_normEqOne_subset {c : ℝ} (hc₁ : 0 < c) (hc₂ : c ≤ 1) :
   rw [smul_normEqOne hc₁]
   refine fun x hx ↦ ⟨hx.1, ?_⟩
   rw [hx.2]
-  exact pow_le_one _ hc₁.le hc₂
+  exact pow_le_one₀ hc₁.le hc₂
 
 theorem normLessThanOne_eq_union_smul_normEqOne :
     normLessThanOne K = ⋃ c ∈ Set.Ioc (0 : ℝ) 1, c • normEqOne K := by
