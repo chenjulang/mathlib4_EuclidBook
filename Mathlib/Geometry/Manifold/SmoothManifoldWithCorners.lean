@@ -132,24 +132,43 @@ scoped[Manifold] notation "∞" => (⊤ : ℕ∞)
 /-- A structure containing information on the way a space `H` embeds in a
 model vector space `E` over the field `𝕜`. This is all what is needed to
 define a smooth manifold with model space `H`, and model vector space `E`.
+
+We demand that `H` is homeomorphic to a "quadrant" in `E`, the common set of non-negativity
+of a (finite) collection of linear functionals on `E`.
+XXX: is finiteness required?
 -/
+-- TODO: what if 𝕜 doesn't have a LE instance? ℚ and ℝ have one, what about ℂ?
+-- what would a complex manifold with boundary even mean? need to think harder!!
 @[ext] -- Porting note(#5171): was nolint has_nonempty_instance
-structure ModelWithCorners (𝕜 : Type*) [NontriviallyNormedField 𝕜] (E : Type*)
+structure ModelWithCorners (𝕜 : Type*) [NontriviallyNormedField 𝕜] [LE 𝕜] (E : Type*)
     [NormedAddCommGroup E] [NormedSpace 𝕜 E] (H : Type*) [TopologicalSpace H] extends
     PartialEquiv H E where
+  -- TODO: find a better name!
+  -- xxx: should the index type and `foos` be part of the data? well, let's try...
+  ι : Type*
+  foos : ι → E →L[𝕜] 𝕜
   source_eq : source = univ
-  uniqueDiffOn' : UniqueDiffOn 𝕜 toPartialEquiv.target
+  target_eq : toPartialEquiv.target = { x | ∀ i, 0 ≤ (foos i) x }
   continuous_toFun : Continuous toFun := by continuity
   continuous_invFun : Continuous invFun := by continuity
 
 attribute [simp, mfld_simps] ModelWithCorners.source_eq
 
 /-- A vector space is a model with corners. -/
-def modelWithCornersSelf (𝕜 : Type*) [NontriviallyNormedField 𝕜] (E : Type*)
+def modelWithCornersSelf (𝕜 : Type*) [NontriviallyNormedField 𝕜] [LE 𝕜] (E : Type*)
     [NormedAddCommGroup E] [NormedSpace 𝕜 E] : ModelWithCorners 𝕜 E E where
   toPartialEquiv := PartialEquiv.refl E
+  ι := Empty
+  foos x := nomatch x
   source_eq := rfl
-  uniqueDiffOn' := uniqueDiffOn_univ
+  target_eq := by
+    ext x
+    constructor
+    · intro _h
+      refine mem_setOf.mpr fun i ↦ ?_
+      have : False := nomatch i
+      simp_all only [PartialEquiv.refl_target, mem_univ]
+    · exact fun _ ↦ trivial
   continuous_toFun := continuous_id
   continuous_invFun := continuous_id
 
@@ -161,10 +180,14 @@ scoped[Manifold] notation "𝓘(" 𝕜 ")" => modelWithCornersSelf 𝕜 𝕜
 section
 
 variable {𝕜 : Type*} [NontriviallyNormedField 𝕜] {E : Type*} [NormedAddCommGroup E]
-  [NormedSpace 𝕜 E] {H : Type*} [TopologicalSpace H] (I : ModelWithCorners 𝕜 E H)
+  [NormedSpace 𝕜 E] [LE 𝕜] {H : Type*} [TopologicalSpace H] (I : ModelWithCorners 𝕜 E H)
 
 namespace ModelWithCorners
 
+-- TODO: this should be an easy lemma...
+lemma uniqueDiffOn' (I : ModelWithCorners 𝕜 E H) : UniqueDiffOn 𝕜 I.toPartialEquiv.target := sorry
+
+#exit
 /-- Coercion of a model with corners to a function. We don't use `e.toFun` because it is actually
 `e.toPartialEquiv.toFun`, so `simp` will apply lemmas about `toPartialEquiv`. While we may want to
 switch to this behavior later, doing it mid-port will break a lot of proofs. -/
