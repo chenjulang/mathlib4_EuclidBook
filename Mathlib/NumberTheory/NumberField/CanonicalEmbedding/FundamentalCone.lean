@@ -88,7 +88,7 @@ end UnitSMul
 
 noncomputable section logMap
 
-open NumberField.Units NumberField.Units.dirichletUnitTheorem FiniteDimensional
+open NumberField.Units NumberField.Units.dirichletUnitTheorem Module
 
 variable [NumberField K] {K}
 
