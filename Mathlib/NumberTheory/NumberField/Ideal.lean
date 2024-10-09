@@ -136,4 +136,8 @@ theorem ideal.tendsto_norm_le_div_atop :
   simp_rw [← Nat.le_floor_iff hs]
   rw [Ideal.card_norm_le_eq_card_norm_le_add_one, Nat.cast_add, Nat.cast_one, add_div, one_div]
 
+#exit
+
+example :
+    (fun n ↦ Nat.card {I : Ideal (𝓞 K) // absNorm I ≤ n}) =ᶠ[atTop] 1 := sorry
 end NumberField
