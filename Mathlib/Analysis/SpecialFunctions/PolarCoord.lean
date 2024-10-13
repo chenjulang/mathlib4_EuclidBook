@@ -149,7 +149,7 @@ theorem integral_comp_polarCoord_symm {E : Type*} [NormedAddCommGroup E] [Normed
       simp_rw [FDerivAt_polarCoord_symm_det]
     _ = ∫ p in polarCoord.target, p.1 • f (polarCoord.symm p) := by
       apply setIntegral_congr_fun polarCoord.open_target.measurableSet fun x hx => ?_
-      rw [B_det, abs_of_pos]
+      rw [abs_of_pos]
       exact hx.1
 
 theorem lintegral_comp_polarCoord_symm (f : ℝ × ℝ → ENNReal) :
