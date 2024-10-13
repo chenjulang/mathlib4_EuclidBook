@@ -306,7 +306,7 @@ end polarCoord
 
 noncomputable section mapToUnitsPow
 
-open FiniteDimensional Finset
+open Module Finset
 
 variable [NumberField K]
 
@@ -1108,7 +1108,7 @@ end mapToUnitsPowComplex
 
 namespace fundamentalCone
 
-open Pointwise FiniteDimensional
+open Pointwise Module
 
 variable [NumberField K]
 

@@ -504,7 +504,7 @@ theorem mem_idealPoint :
     x ∈ idealPoint K J ↔ x ∈ fundamentalCone K ∧ ∃ a : (𝓞 K), (a : 𝓞 K) ∈ (J : Set (𝓞 K)) ∧
       mixedEmbedding K (a : 𝓞 K) = x := by
   simp_rw [idealPoint, Set.mem_inter_iff, idealLattice, SetLike.mem_coe, FractionalIdeal.coe_mk0,
-    LinearMap.mem_range, LinearMap.coe_comp, LinearMap.coe_restrictScalars, coeSubtype,
+    LinearMap.mem_range, LinearMap.coe_comp, LinearMap.coe_restrictScalars, coe_subtype,
     Function.comp_apply, AlgHom.toLinearMap_apply, RingHom.toIntAlgHom_coe, Subtype.exists,
     FractionalIdeal.mem_coe, FractionalIdeal.mem_coeIdeal, exists_prop', nonempty_prop,
     exists_exists_and_eq_and]

@@ -1034,7 +1034,7 @@ def toMixed : (euclidean.mixedSpace K) ≃L[ℝ] (mixedSpace K) :=
 instance : Nontrivial (euclidean.mixedSpace K) := (toMixed K).toEquiv.nontrivial
 
 protected theorem finrank :
-    FiniteDimensional.finrank ℝ (euclidean.mixedSpace K) = FiniteDimensional.finrank ℚ K := by
+    finrank ℝ (euclidean.mixedSpace K) = finrank ℚ K := by
   rw [LinearEquiv.finrank_eq (toMixed K).toLinearEquiv, mixedEmbedding.finrank]
 
 open Classical in
