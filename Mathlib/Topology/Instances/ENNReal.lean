@@ -582,7 +582,7 @@ protected theorem hasSum_coe {f : α → ℝ≥0} {r : ℝ≥0} :
 protected theorem tsum_coe_eq {f : α → ℝ≥0} (h : HasSum f r) : (∑' a, (f a : ℝ≥0∞)) = r :=
   (ENNReal.hasSum_coe.2 h).tsum_eq
 
-protected theorem coe_tsum {f : α → ℝ≥0} : Summable f → ↑(tsum f) = ∑' a, (f a : ℝ≥0∞)
+protected theorem coe_tsum {f : α → ℝ≥0} : Summable f → ↑(∑' a, f a) = ∑' a, (f a : ℝ≥0∞)
   | ⟨r, hr⟩ => by rw [hr.tsum_eq, ENNReal.tsum_coe_eq hr]
 
 protected theorem hasSum : HasSum f (⨆ s : Finset α, ∑ a ∈ s, f a) :=

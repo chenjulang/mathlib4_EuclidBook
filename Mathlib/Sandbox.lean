@@ -2,6 +2,50 @@ import Mathlib
 
 open Filter Topology
 
+section LSeries
+
+theorem LSeries_term_eq_coe (f : ℕ → ℝ) (s : ℝ) (n : ℕ) :
+    LSeries.term (fun n ↦ f n) s n = if n = 0 then 0 else f n / ↑n ^ s := by
+  rw [LSeries.term_def, apply_ite Complex.ofReal', Complex.ofReal_zero, Complex.ofReal_div,
+    Complex.ofReal_cpow (Nat.cast_nonneg _), Complex.ofReal_natCast]
+
+end LSeries
+
+section tsum
+
+open ENNReal NNReal
+
+theorem tsum_card_smul_eq_tsum {α β γ : Type*} {u : α → β} (hu : ∀ n, {k | u k = n}.Finite)
+    [AddCommGroup γ] [UniformSpace γ] [UniformAddGroup γ] [CompleteSpace γ] [T2Space γ]
+    (f : β → γ) (hf : Summable (fun n ↦ f (u n))) :
+    ∑' n, Nat.card {k | u k = n} • f n = ∑' n, f (u n) := by
+  apply HasSum.tsum_eq
+  convert (HasSum.tsum_fiberwise hf.hasSum u) with n
+  have : Fintype {k | u k = n} := (hu n).fintype
+  rw [← Equiv.tsum_eq (Equiv.setCongr (by rfl :{k | u k = n} = u ⁻¹' {n})), tsum_fintype,
+    Finset.sum_congr rfl (fun x _ ↦ by rw [Equiv.setCongr_apply, x.prop]), Finset.sum_const,
+    Nat.card_eq_fintype_card, Finset.card_univ]
+
+end tsum
+
+section Complex
+
+open Complex
+
+theorem Complex.dist_induced (x y : ℝ) :
+    dist (x : ℂ) (y : ℂ) = dist x y := by
+  rw [Complex.dist_of_im_eq (by rfl), Complex.ofReal_re, Complex.ofReal_re]
+
+theorem Complex.ofReal_uniformEmbedding : IsUniformEmbedding (Complex.ofReal) := by
+  simp_rw [Metric.isUniformEmbedding_iff', Complex.ofReal_eq_coe, Complex.dist_induced, and_self]
+  exact fun ε hε ↦ ⟨ε, hε, fun h ↦ h⟩
+
+theorem Filter.tendsto_ofReal_iff {α : Type*} {l : Filter α} {f : α → ℝ} {x : ℝ} :
+    Tendsto (fun x ↦ (f x : ℂ)) l (𝓝 (x : ℂ)) ↔ Tendsto f l (𝓝 x) :=
+  Complex.ofReal_uniformEmbedding.toClosedEmbedding.tendsto_nhds_iff.symm
+
+end Complex
+
 noncomputable section
 
 variable {a : ℕ → ℕ} {l : ℝ} (hl : 0 < l)
@@ -129,12 +173,13 @@ theorem lemma3 : Tendsto (fun n : ℕ ↦ (n : ℝ) / (u a n)) atTop (𝓝 l) :=
     · exact Nat.cast_nonneg _
 
 include hl hA₁ in
-theorem lemma4 {ε s : ℝ} (hε₁ : 0 < ε) (hε₂ : ε ≤ l) (hs : 0 < s) :
-    ∀ᶠ n : ℕ in atTop, (l - ε) ^ s * (n : ℝ) ^ (- s) < u a n ^ (- s) ∧
+theorem lemma4 {ε : ℝ} (hε₁ : 0 < ε) (hε₂ : ε ≤ l) :
+    ∀ᶠ n : ℕ in atTop, ∀ s : ℝ, 0 < s → (l - ε) ^ s * (n : ℝ) ^ (- s) < u a n ^ (- s) ∧
       u a n ^ (- s) < (l + ε) ^ s * (n : ℝ) ^ (- s) := by
   rw [← sub_nonneg] at hε₂ -- To help positivity
   filter_upwards [eventually_gt_atTop 0, Metric.tendsto_nhds.mp (lemma3 hl hA₁) ε hε₁] with _ _ h
   simp_rw [Real.rpow_neg (Nat.cast_nonneg _), ← Real.inv_rpow (Nat.cast_nonneg _)]
+  intro s hs
   rw [← Real.mul_rpow, ← Real.mul_rpow, Real.rpow_lt_rpow_iff, Real.rpow_lt_rpow_iff,
     mul_inv_lt_iff₀, lt_mul_inv_iff₀, ← neg_add_lt_iff_lt_add, sub_eq_add_neg,
     ← lt_neg_add_iff_add_lt (a := l), neg_add_eq_sub, ← abs_lt, mul_comm]
@@ -150,22 +195,46 @@ theorem lemma5 {s : ℝ} (hs : 1 < s) :
     exact neg_lt_neg_iff.mpr hs
   refine summable_of_isBigO this ?_
   rw [Nat.cofinite_eq_atTop]
-  have := lemma4 (ε := l) (s := s) hl hA₁ hl le_rfl (zero_lt_one.trans hs)
+  have := lemma4 (ε := l) hl hA₁ hl le_rfl
   refine Eventually.isBigO ?_
   filter_upwards [this] with n hn
   rw [Real.norm_eq_abs, abs_of_nonneg]
-  exact hn.2.le
+  exact (hn s (lt_trans zero_lt_one hs)).2.le
   refine Real.rpow_nonneg ?_ _
   exact Nat.cast_nonneg _
 
-theorem lemma6 {ε s : ℝ} (hε₁ : 0 < ε) (hε₂ : ε ≤ l) (hs : 1 < s) :
-  ∃ T : Finset ℕ,
-    (l - ε) ^ s * (s - 1) * ∑' n : ↑((T : Set ℕ)ᶜ), (n : ℝ) ^ (- s) +
-      (s - 1) * ∑' n : T, (u a n : ℝ) ^ (- s) ≤
-      (s - 1) * ∑' n, (u a n : ℝ) ^ (-s) ∧
-      (s - 1) * ∑' n, (u a n : ℝ) ^ (-s) ≤
-    (l + ε) ^ s * (s - 1) * ∑' n : ↑((T : Set ℕ)ᶜ), (n : ℝ) ^ (- s) +
-      (s - 1) * ∑' n : T, (u a n : ℝ) ^ (- s) := sorry
+include hl hA₁ in
+theorem lemma6 {ε : ℝ} (hε₁ : 0 < ε) (hε₂ : ε ≤ l) :
+    ∃ T : Finset ℕ, ∀ s, 1 < s →
+      (s - 1) * ∑ n ∈ T, (u a n : ℝ) ^ (- s) +
+        (l - ε) ^ s * (s - 1) * ∑' n : ↑((T : Set ℕ)ᶜ), (n : ℝ) ^ (- s) <
+          (s - 1) * ∑' n, (u a n : ℝ) ^ (-s) ∧
+      (s - 1) * ∑' n, (u a n : ℝ) ^ (-s) <
+        (s - 1) * ∑ n ∈ T, (u a n : ℝ) ^ (- s) +
+          (l + ε) ^ s * (s - 1) * ∑' n : ↑((T : Set ℕ)ᶜ), (n : ℝ) ^ (- s) := by
+  obtain ⟨N, hN⟩ := eventually_atTop.mp <| lemma4 hl hA₁ hε₁ hε₂
+  refine ⟨Finset.range N, fun s hs ↦ ?_⟩
+  simp_rw [← sum_add_tsum_compl (s := Finset.range N) (lemma5 hl hA₁ hs), mul_add,
+    add_lt_add_iff_left, mul_assoc, mul_left_comm _ (s- 1), mul_lt_mul_left (sub_pos.mpr hs),
+    ← tsum_mul_left]
+  have h₁ : ∀ (S : Set ℕ) (c : ℝ), Summable fun n : S ↦ c * (n : ℝ) ^ (-s) := fun S c ↦ by
+    have : Summable fun n : ℕ ↦ c * (n : ℝ) ^ (- s) := by
+        refine Summable.mul_left _ ?_
+        rw [Real.summable_nat_rpow]
+        rwa [neg_lt_neg_iff]
+    exact (summable_subtype_and_compl.mpr this).1
+  have h₂ : ∀ (S : Set ℕ), Summable fun n : S ↦ (u a n : ℝ) ^ (-s) :=
+    fun S ↦ (summable_subtype_and_compl.mpr (lemma5 hl hA₁ hs)).1
+  refine ⟨tsum_lt_tsum (i := ⟨N+1, by simp⟩) ?_ ?_ (h₁ _ ((l - ε) ^ s)) (h₂ _),
+    tsum_lt_tsum (i := ⟨N+1, by simp⟩) ?_ ?_ (h₂ _) (h₁ _ ((l + ε) ^ s))⟩
+  · rintro ⟨i, hi⟩
+    simp only [Finset.coe_range, Set.compl_Iio, Set.mem_Ici] at hi
+    exact (hN i hi s (zero_lt_one.trans hs)).1.le
+  · exact (hN (N + 1) (Nat.le_add_right N 1) s (zero_lt_one.trans hs)).1
+  · rintro ⟨i, hi⟩
+    simp only [Finset.coe_range, Set.compl_Iio, Set.mem_Ici] at hi
+    exact (hN i hi s (zero_lt_one.trans hs)).2.le
+  · exact (hN (N + 1) (Nat.le_add_right N 1) s (zero_lt_one.trans hs)).2
 
 theorem lemma7 (T : Finset ℕ) (v : ℕ → ℕ) :
     Tendsto (fun s ↦ (s - 1) * ∑ n ∈ T, (v n : ℝ) ^ (- s)) (𝓝[>] 1) (𝓝 0) := by
@@ -202,47 +271,29 @@ theorem lemma7 (T : Finset ℕ) (v : ℕ → ℕ) :
   simp_rw [← Finset.mul_sum, Finset.sum_const_zero] at this
   exact this
 
-theorem lemmaZ0 :
-    Tendsto (fun s : ℂ ↦ (s - 1) * ∑' (n : ℕ), 1 / (n : ℂ) ^ s)
-      (𝓝[{s | 1 < s.re}] 1) (𝓝 1) := by
-  have : Tendsto (fun s : ℂ ↦ (s - 1) * riemannZeta s) (𝓝[{s | 1 < s.re}] 1) (𝓝 1) := by
-    refine Filter.Tendsto.mono_left riemannZeta_residue_one ?_
-    refine nhdsWithin_mono _ ?_
-    aesop
-  refine Tendsto.congr' ?_ this
-  rw [eventuallyEq_nhdsWithin_iff]
-  refine Eventually.of_forall (fun s hs ↦ ?_)
-  exact congr_arg ((s - 1) * ·) (zeta_eq_tsum_one_div_nat_cpow hs)
+-- theorem lemmaZ0 :
+--     Tendsto (fun s : ℂ ↦ (s - 1) * ∑' (n : ℕ), 1 / (n : ℂ) ^ s)
+--       (𝓝[{s | 1 < s.re}] 1) (𝓝 1) := by
+--   have : Tendsto (fun s : ℂ ↦ (s - 1) * riemannZeta s) (𝓝[{s | 1 < s.re}] 1) (𝓝 1) := by
+--     refine Filter.Tendsto.mono_left riemannZeta_residue_one ?_
+--     refine nhdsWithin_mono _ ?_
+--     aesop
+--   refine Tendsto.congr' ?_ this
+--   rw [eventuallyEq_nhdsWithin_iff]
+--   refine Eventually.of_forall (fun s hs ↦ ?_)
+--   exact congr_arg ((s - 1) * ·) (zeta_eq_tsum_one_div_nat_cpow hs)
 
 theorem lemmaZ1 :
     Tendsto (fun s : ℝ ↦ (s - 1) * ∑' (n : ℕ), 1 / (n : ℝ) ^ s)
       (𝓝[>] 1) (𝓝 1) := by
-  have t₀ : Tendsto Complex.ofReal' (𝓝[≠] 1) (𝓝[≠] 1) := by
-    refine tendsto_nhdsWithin_of_tendsto_nhds_of_eventually_within _ ?_ ?_
-    exact tendsto_nhdsWithin_of_tendsto_nhds (Complex.continuous_ofReal.tendsto 1)
-    filter_upwards [eventually_mem_nhdsWithin] with x hx
-    rwa [Set.mem_compl_singleton_iff, ne_eq, ← Complex.ofReal_inj, Complex.ofReal_one] at hx
-  have t₁ := riemannZeta_residue_one
-  have := t₁.comp t₀
-  simp [Function.comp_def] at this
-  have t₁ := Complex.one_re ▸ Complex.continuous_re.tendsto 1
-  have := t₁.comp this
-  simp [Function.comp_def] at this
-  refine Tendsto.congr' ?_ (Filter.Tendsto.mono_left this ?_)
-  · filter_upwards [eventually_mem_nhdsWithin] with s hs
-    rw [zeta_eq_tsum_one_div_nat_cpow]
-    rw [show (∑' (n : ℕ), 1 / (n : ℂ) ^ (s : ℂ)).re =
-      Complex.reCLM (∑' (n : ℕ), 1 / (n : ℂ) ^ (s : ℂ)) by rfl]
-    simp_rw [← Complex.ofReal_natCast, ← Complex.ofReal_cpow sorry, one_div, ← Complex.ofReal_inv]
-    rw [Complex.reCLM.map_tsum]
-    simp_rw [Complex.reCLM_apply, Complex.ofReal_re]
-    rw [Complex.summable_ofReal]
-    rw [Real.summable_nat_rpow_inv]
-    exact hs
-    simp
-    exact hs
-  · refine nhdsWithin_mono _ ?_
-    aesop
+  rw [← tendsto_ofReal_iff, Complex.ofReal_one]
+  have : Tendsto (fun s : ℝ ↦ (s : ℂ)) (𝓝[>] 1) (𝓝[≠] 1) :=
+    Complex.continuous_ofReal.continuousWithinAt.tendsto_nhdsWithin (fun _ _ ↦ by aesop)
+  refine Tendsto.congr' ?_ (riemannZeta_residue_one.comp this)
+  filter_upwards [eventually_mem_nhdsWithin] with s hs
+  simp_rw [Function.comp_apply, zeta_eq_tsum_one_div_nat_cpow (by rwa [Complex.ofReal_re]),
+    Complex.ofReal_mul, Complex.ofReal_tsum, Complex.ofReal_sub, Complex.ofReal_one, one_div,
+    Complex.ofReal_inv, Complex.ofReal_cpow ( Nat.cast_nonneg _), Complex.ofReal_natCast]
 
 theorem lemma8 {c : ℝ} (hc : 0 < c) (T : Finset ℕ) :
     Tendsto (fun s ↦ c ^ s * (s - 1) * ∑' n : ↑((T : Set ℕ)ᶜ),
@@ -277,203 +328,73 @@ theorem lemma8 {c : ℝ} (hc : 0 < c) (T : Finset ℕ) :
     · rw [eq_sub_iff_add_eq']
     · rw [sub_zero]
 
-#exit
-
-  have t₁ : Tendsto (fun s ↦ c ^ s)  (𝓝[>] 1) (𝓝 c) := sorry
-  have t₂ : Tendsto (fun s : ℝ ↦ ∑' n, (n : ℝ) ^ (- s)) (𝓝[>] 1) (𝓝 1) := sorry
-  have : ∀ s : ℝ, Summable (fun n ↦ (n : ℝ) ^ (- s)) := sorry
-  have := fun s : ℝ ↦
-    (sum_add_tsum_compl (β := ℕ) (α := ℝ) (s := T) (f := fun n ↦ (n : ℝ) ^ (- s)) sorry).symm
-
-
-  sorry
-
-
-
-
-
-
-
-#exit
-
-
-  have h₁ : Tendsto (fun n ↦ (A a (u a n) : ℝ)/ (u a n)) atTop (𝓝 l) := hA₁.comp (lemma21 ha)
-  have h₂ : Tendsto (fun n : ℕ ↦ (A a (u a (n + 1)) : ℝ) / (u a (n + 1)) * ((n + 1 : ℝ) / n))
-      atTop (𝓝 l) := sorry
-  refine tendsto_of_tendsto_of_tendsto_of_le_of_le' h₁ h₂ ?_ ?_
-  · filter_upwards with n
-    refine div_le_div_of_nonneg_right ?_ ?_
-    · rw [Nat.cast_le]
-      exact lemma11 ha n
-    · exact Nat.cast_nonneg _
-  ·
-    filter_upwards [eventually_gt_atTop 0] with n hn
-    rw [← inv_mul_le_iff₀', inv_div, mul_comm, ← mul_div_assoc]
-    refine div_le_div_of_nonneg_right ?_ ?_
-    · rw [Nat.cast_le]
-      exact (lemma12 u n).le
-    · exact Nat.cast_nonneg _
-    · rw [Nat.cast_ne_zero]
-      exact Nat.not_eq_zero_of_lt hn
-    · refine div_pos ?_ ?_
-      · rw [Nat.cast_pos]
-        have := lemma22 u (Nat.le_succ n)
-        exact lt_of_lt_of_le hn this
-      · rw [Nat.cast_pos]
-        exact hn
-
-#exit
-
-local instance (n : ℕ) : Fintype {k : ℕ | A a (k - 1) ≤ n} := sorry -- hu₂ n
-
-include ha in
-theorem lemma01 (n : ℕ) : {k : ℕ | A a (k - 1) ≤ n}.toFinset.Nonempty := ⟨0, by simp [A, ha]⟩
-
--- def u (n : ℕ) : ℕ := Finset.max' {k : ℕ | A a (k - 1) ≤ n}.toFinset (lemma01 ha n)
-
-theorem lemma11 (n : ℕ) : A a ((u ha n) - 1) ≤ n := by
-  have := Finset.max'_mem {k : ℕ | A a (k - 1) ≤ n}.toFinset (lemma01 ha _)
-  rwa [Set.mem_toFinset, Set.mem_setOf_eq] at this
-
-theorem lemma12 (n : ℕ) : n < A a (u ha n) := by
-  by_contra! h
-  have := Finset.le_max' {k : ℕ | A a (k - 1) ≤ n}.toFinset (u ha n + 1) ?_
-  · simp [u] at this
-  · rwa [Set.mem_toFinset, Set.mem_setOf_eq, add_tsub_cancel_right]
-
-set_option maxHeartbeats 0
+include hl hA₁ in
+theorem main :
+    Tendsto (fun s ↦ (s - 1) * ∑' n, (u a n : ℝ) ^ (- s)) (𝓝[>] 1) (𝓝 l) := by
+  rw [Metric.tendsto_nhdsWithin_nhds]
+  intro ε' hε'
+  let ε := min l ε'
+  have h₀ : 0 < ε := by
+    aesop
+  have h₁ : 0 < ε / 3 := by positivity
+  have h₂ : ε / 3 < l := by
+    refine lt_of_lt_of_le ?_ (min_le_left l ε')
+    refine div_lt_self ?_ (by norm_num)
+    exact h₀
+  have h₃ : 0 < l - ε / 3 := by
+    exact sub_pos.mpr h₂
+  have h₄ : 0 < l + ε / 3 := by
+    positivity
+  obtain ⟨T, hT⟩ := lemma6 hl hA₁ h₁ h₂.le
+  obtain ⟨δ₁, hδ₁, hδ₁'⟩ := Metric.tendsto_nhdsWithin_nhds.mp (lemma7 T (u a)) (ε / 3) h₁
+  obtain ⟨δ₂, hδ₂, hδ₂'⟩ := Metric.tendsto_nhdsWithin_nhds.mp (lemma8 h₃ T) (ε / 3) h₁
+  obtain ⟨δ₃, hδ₃, hδ₃'⟩ := Metric.tendsto_nhdsWithin_nhds.mp (lemma8 h₄ T) (ε / 3) h₁
+  let δ := min δ₁ (min δ₂ δ₃)
+  refine ⟨δ, ?_, ?_⟩
+  · simp_all only [gt_iff_lt, lt_min_iff, and_self, div_pos_iff_of_pos_left, Nat.ofNat_pos, sub_pos,
+    Set.mem_Ioi, dist_zero_right, norm_mul, Real.norm_eq_abs, dist_sub_eq_dist_add_right, ε, δ]
+  · intro s hs hsδ
+    specialize hδ₁' hs (lt_of_lt_of_le hsδ (by simp [δ]))
+    specialize hδ₂' hs (lt_of_lt_of_le hsδ (by simp [δ]))
+    specialize hδ₃' hs (lt_of_lt_of_le hsδ (by simp [δ]))
+    simp_rw [Real.dist_eq, abs_lt] at hδ₂' hδ₃' ⊢
+    rw [Real.dist_0_eq_abs, abs_lt] at hδ₁'
+    refine ⟨?_, ?_⟩
+    · refine lt_of_le_of_lt ?_ (sub_lt_sub_right (hT s hs).1 l)
+      have := add_lt_add hδ₁'.1 hδ₂'.1
+      rw [← add_sub_assoc, ← sub_add, ← sub_lt_iff_lt_add] at this
+      refine le_trans ?_ this.le
+      rw [sub_eq_add_neg, ← neg_div, add_thirds, neg_le_neg_iff]
+      exact min_le_right l ε'
+    · refine lt_of_lt_of_le (sub_lt_sub_right (hT s hs).2 l) ?_
+      have := add_lt_add hδ₁'.2 hδ₃'.2
+      rw [← add_sub_assoc, ← sub_sub, sub_lt_iff_lt_add] at this
+      refine le_trans this.le ?_
+      rw [add_thirds]
+      exact min_le_right l ε'
 
 include hl hA₁ in
-theorem lemma2 : Tendsto (A a) atTop atTop := by
-  have : Tendsto (fun n ↦ (A a n : ℝ)) atTop atTop := by
-    have : Tendsto (fun n : ℕ ↦ l * (n : ℝ)) atTop atTop := by
-      refine Tendsto.const_mul_atTop hl tendsto_natCast_atTop_atTop
-    refine Asymptotics.IsEquivalent.tendsto_atTop ?_ this
-    rw [Asymptotics.isEquivalent_comm, Asymptotics.isEquivalent_iff_tendsto_one]
-    convert Tendsto.mul hA₁ (tendsto_const_nhds (x := l⁻¹))
-    · dsimp
-      ring
-    · rw [mul_inv_cancel₀ hl.ne']
-    · filter_upwards [eventually_ne_atTop 0] with n hn
-      refine mul_ne_zero hl.ne' (Nat.cast_ne_zero.mpr hn)
-  exact tendsto_natCast_atTop_iff.mp this
-
-include ha in
-theorem lemma_main (n : ℕ) : Nat.card {k | u ha k = n} = a n := by
+theorem main₂ :
+    Tendsto (fun s : ℝ ↦ (s - 1) * LSeries (fun n ↦ a n) s) (𝓝[>] 1) (𝓝 l) := by
+  have : ∀ (n : ℕ), {k | u a k = n}.Finite := by
+    intro n
+    have := lemma21 hl hA₁
+    rw [← Nat.cofinite_eq_atTop, tendsto_def] at this
+    have := this {n}ᶜ (by simp only [mem_cofinite, compl_compl, Set.finite_singleton])
+    rwa [Set.preimage_compl, mem_cofinite, compl_compl] at this
+  have t₀ := fun s (hs : s ∈ Set.Ioi (1 : ℝ)) ↦
+    tsum_card_smul_eq_tsum this (fun n : ℕ ↦ (n : ℝ) ^ (- s)) (lemma5 hl hA₁ hs)
+  simp_rw [nsmul_eq_mul] at t₀
+  have t₁ := main hl hA₁
+  simp_rw [LSeries, ← Complex.ofReal_natCast, LSeries_term_eq_coe, ← Complex.ofReal_tsum,
+    ← Complex.ofReal_one, ← Complex.ofReal_sub, ← Complex.ofReal_mul]
+  rw [Filter.tendsto_ofReal_iff]
+  refine Tendsto.congr' ?_ t₁
+  filter_upwards [eventually_mem_nhdsWithin] with s hs
+  simp_rw [← t₀ s hs]
+  congr with n
   obtain hn | hn := Nat.eq_zero_or_pos n
-  · rw [hn, ha]
-    sorry
-  · have : {k | u ha k = n} = Finset.Ico (A a (n - 1)) (A a n) := by
-      ext x
-      rw [Set.mem_setOf_eq, Finset.coe_Ico, Set.mem_Ico]
-      refine ⟨?_, ?_⟩
-      · intro h
-        rw [← h]
-        refine ⟨lemma11 ha x, lemma12 ha x⟩
-      · intro h
-        refine le_antisymm ?_ ?_
-        · sorry
-        · sorry
-    simp_rw [this, Nat.card_eq_card_toFinset, Finset.coe_Ico, Set.toFinset_Ico, Nat.card_Ico]
-    simp_rw [A]
-    rw [Finset.sum_range_succ]
-    rw [Nat.sub_add_eq_max]
-    have : max n 1 = n := sorry
-    rw [this, Nat.add_sub_cancel_left]
-
-theorem lemma22 : Monotone (u ha) := by
-  intro n m h
-  rw [u, Finset.max'_le_iff]
-  intro k hk
-  refine Finset.le_max' _ _ ?_
-  rw [Set.mem_toFinset, Set.mem_setOf_eq] at hk ⊢
-  exact le_trans hk h
-
-theorem lemma21 : Tendsto (u ha) atTop atTop := by
-  refine Monotone.tendsto_atTop_atTop (lemma22 ha) ?_
-  sorry
-
-
-
--- theorem lemma22 : Monotone (s u) := sorry
-
-include hA₁ in
-theorem lemma3 : Tendsto (fun n : ℕ ↦ (n : ℝ) / (u ha n)) atTop (𝓝 l) := by
-  have h₁ : Tendsto (fun n ↦ (A a (u ha n) : ℝ)/ (u ha n)) atTop (𝓝 l) := hA₁.comp (lemma21 ha)
-  have h₂ : Tendsto (fun n : ℕ ↦ (A a (u ha (n + 1)) : ℝ) / (u ha (n + 1)) * ((n + 1 : ℝ) / n))
-      atTop (𝓝 l) := sorry
-  refine tendsto_of_tendsto_of_tendsto_of_le_of_le' h₁ h₂ ?_ ?_
-  · filter_upwards with n
-    refine div_le_div_of_nonneg_right ?_ ?_
-    · rw [Nat.cast_le]
-      exact lemma11 ha n
-    · exact Nat.cast_nonneg _
-  ·
-    filter_upwards [eventually_gt_atTop 0] with n hn
-    rw [← inv_mul_le_iff₀', inv_div, mul_comm, ← mul_div_assoc]
-    refine div_le_div_of_nonneg_right ?_ ?_
-    · rw [Nat.cast_le]
-      exact (lemma12 u n).le
-    · exact Nat.cast_nonneg _
-    · rw [Nat.cast_ne_zero]
-      exact Nat.not_eq_zero_of_lt hn
-    · refine div_pos ?_ ?_
-      · rw [Nat.cast_pos]
-        have := lemma22 u (Nat.le_succ n)
-        exact lt_of_lt_of_le hn this
-      · rw [Nat.cast_pos]
-        exact hn
-
-
-
-
-
-
-
-#exit
-
-
-theorem main {u : ℕ → ℝ} {l : ℝ} (h : Tendsto (fun n ↦ (u n)/ n) atTop (𝓝 l)) :
-    Tendsto (fun s ↦ (s - 1) * ∑' n, (u n) ^ (- s)) (𝓝[>] 1) (𝓝 l) := by
-  rw [Metric.tendsto_nhdsWithin_nhds]
-  intro ε hε
-  rw [NormedAddCommGroup.tendsto_atTop] at h
-  specialize h ε hε
-  obtain ⟨N₀, hN⟩ := h
-  simp_rw [Real.norm_eq_abs, abs_lt, ← neg_add_eq_sub, lt_neg_add_iff_add_lt,
-    neg_add_lt_iff_lt_add, ← sub_eq_add_neg] at hN
-  have h₀ : ∀ s : ℝ, (l - ε) * ∑' n : ↑(Finset.range N₀ : Set ℕ)ᶜ, (n : ℝ) ^ (- s) ≤
-       ∑' n : ↑(Finset.range N₀ : Set ℕ)ᶜ, (u n) ^ (- s) := sorry
-  have h₁ : ∀ s : ℝ, ∑' n : ↑(Finset.range N₀ : Set ℕ)ᶜ, (u n) ^ (- s) ≤
-      (l + ε) * ∑' n : ↑(Finset.range N₀ : Set ℕ)ᶜ, (n : ℝ) ^ (- s) := sorry
-  have h₃ : Tendsto (fun s ↦ (s - 1) *  ∑' n : ↑(Finset.range N₀ : Set ℕ)ᶜ, (n : ℝ) ^ (- s))
-      (𝓝[>] 1) (𝓝 1) := sorry
-
-  simp_rw [Real.norm_eq_abs, abs_lt, ← neg_add_eq_sub, lt_neg_add_iff_add_lt,
-    neg_add_lt_iff_lt_add, ← sub_eq_add_neg, div_lt_iff₀ sorry, lt_div_iff₀ sorry] at hN
-
-  refine tendsto_of_le_liminf_of_limsup_le ?_ ?_ ?_ ?_
-  · refine le_of_frequently_sub_le (Eventually.frequently ?_)
-    sorry
-  · sorry
-
-
-
-
-#exit
-
-
-example (a : ℕ → ℝ) (c : ℝ) (ha : Tendsto (fun n ↦ (∑ i ∈ Finset.range n, a i) /n) atTop (𝓝 c)) :
-    Tendsto (fun s : ℝ ↦ ∑' n, (a n) * (n : ℝ) ^ (-s)) (𝓝[<] 1) (𝓝 c) := by
-  let A : ℕ → ℝ := fun n ↦ ∑ i ∈ Finset.range n, a i
-  have h0 : Tendsto (fun n ↦ (A n) / n) atTop (𝓝 c) := sorry
-  have h1 : ∀ n, 1 ≤ n → a n = A n - A (n - 1) := sorry
-  have h2 : ∀ s : ℝ, ∑' n, (a n) * (n : ℝ) ^ (-s) = ∑' n, (A n) * (n : ℝ) ^ (-s) -
-      ∑' n, (A (n - 1)) * (n : ℝ) ^ (-s) := sorry
-  have h3 : ∀ s : ℝ,  ∑' n, (a n) * (n : ℝ) ^ (-s) = ∑' n, (A n) * (n : ℝ) ^ (-s) -
-      ∑' n, (A n) * (n + 1 : ℝ) ^ (-s) := sorry
-  simp_rw [h3]
-  simp_rw [← tsum_sub sorry sorry]
-  simp_rw [← mul_sub]
-
-  sorry
+  · rw [hn, Nat.cast_zero, if_pos rfl, Real.zero_rpow, mul_zero]
+    rw [neg_ne_zero]
+    exact (zero_lt_one.trans hs).ne'
+  · rw [lemma_main hl hA₁ hn, if_neg hn.ne', Real.rpow_neg (Nat.cast_nonneg _), ← div_eq_mul_inv]
