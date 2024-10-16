@@ -12,23 +12,14 @@ import Mathlib.NumberTheory.LSeries.RiemannZeta
 
 open Filter Topology
 
-section LSeries
-
-theorem LSeries_term_eq_coe (f : ℕ → ℝ) (s : ℝ) (n : ℕ) :
-    LSeries.term (fun n ↦ f n) s n = if n = 0 then 0 else f n / ↑n ^ s := by
-  rw [LSeries.term_def, apply_ite Complex.ofReal, Complex.ofReal_zero, Complex.ofReal_div,
-    Complex.ofReal_cpow (Nat.cast_nonneg _), Complex.ofReal_natCast]
-
-end LSeries
-
 noncomputable section
 
 variable {a : ℕ → ℕ} {l : ℝ} (hl : 0 < l)
 
 variable (a) in
-def A (n : ℕ) : ℕ := ∑ i ∈ Finset.range (n + 1), a i
+abbrev A (n : ℕ) : ℕ := ∑ i ∈ Finset.range (n + 1), a i
 
-variable (hA₁ : Tendsto (fun x ↦ (A a x : ℝ) / x) atTop (𝓝 l))
+variable (hA₁ : Tendsto (fun n ↦ (∑ i ∈ Finset.range (n + 1), a i : ℝ) / n) atTop (𝓝 l))
 
 include hl hA₁ in
 theorem lemmaA1 : Tendsto (A a) atTop atTop := by
@@ -38,7 +29,7 @@ theorem lemmaA1 : Tendsto (A a) atTop atTop := by
     refine Asymptotics.IsEquivalent.tendsto_atTop ?_ this
     rw [Asymptotics.isEquivalent_comm, Asymptotics.isEquivalent_iff_tendsto_one]
     convert Tendsto.mul hA₁ (tendsto_const_nhds (x := l⁻¹))
-    · dsimp
+    · simp
       ring
     · rw [mul_inv_cancel₀ hl.ne']
     · filter_upwards [eventually_ne_atTop 0] with n hn
@@ -109,7 +100,9 @@ theorem lemma21 : Tendsto (u a) atTop atTop := by
 
 include hl hA₁ in
 theorem lemma3 : Tendsto (fun n : ℕ ↦ (n : ℝ) / (u a n)) atTop (𝓝 l) := by
-  have h₁ : Tendsto (fun n ↦ (A a (u a n) : ℝ)/ (u a n)) atTop (𝓝 l) := hA₁.comp (lemma21 hl hA₁)
+  have h₁ : Tendsto (fun n ↦ (A a (u a n) : ℝ)/ (u a n)) atTop (𝓝 l) := by
+    convert hA₁.comp (lemma21 hl hA₁)
+    simp
   have h₂ : Tendsto (fun n ↦ ((A a (u a n - 1) : ℝ) / (u a n - 1 : ℕ)) * ((u a n - 1) / u a n))
       atTop (𝓝 l) := by
     have : Tendsto (fun n ↦ n - 1) atTop atTop := by exact tendsto_sub_atTop_nat 1
@@ -117,6 +110,7 @@ theorem lemma3 : Tendsto (fun n : ℕ ↦ (n : ℝ) / (u a n)) atTop (𝓝 l) :=
     have := this.comp (lemma21 hl hA₁)
     simp [Function.comp_def] at this
     rw [show 𝓝 l = 𝓝 (l * 1) by ring_nf]
+    simp_rw [← Nat.cast_sum] at this
     refine Tendsto.mul this ?_
     have : Tendsto (fun n : ℕ ↦ (n - 1 : ℝ) / n) atTop (𝓝 1) := by
       have : Tendsto (fun n : ℕ ↦ (n : ℝ) / (n + 1)) atTop (𝓝 1) := tendsto_natCast_div_add_atTop 1
@@ -349,7 +343,7 @@ theorem main₂ :
     tsum_card_nsmul_eq_tsum this (fun n : ℕ ↦ (n : ℝ) ^ (- s)) (lemma5 hl hA₁ hs)
   simp_rw [nsmul_eq_mul] at t₀
   have t₁ := main hl hA₁
-  simp_rw [LSeries, ← Complex.ofReal_natCast, LSeries_term_eq_coe, ← Complex.ofReal_tsum,
+  simp_rw [LSeries, ← Complex.ofReal_natCast, LSeries.term_eq_coe, ← Complex.ofReal_tsum,
     ← Complex.ofReal_one, ← Complex.ofReal_sub, ← Complex.ofReal_mul]
   rw [Filter.tendsto_ofReal_iff]
   refine Tendsto.congr' ?_ t₁
