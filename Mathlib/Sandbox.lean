@@ -11,41 +11,6 @@ theorem LSeries_term_eq_coe (f : ℕ → ℝ) (s : ℝ) (n : ℕ) :
 
 end LSeries
 
-section tsum
-
-open ENNReal NNReal
-
-theorem tsum_card_smul_eq_tsum {α β γ : Type*} {u : α → β} (hu : ∀ n, {k | u k = n}.Finite)
-    [AddCommGroup γ] [UniformSpace γ] [UniformAddGroup γ] [CompleteSpace γ] [T2Space γ]
-    (f : β → γ) (hf : Summable (fun n ↦ f (u n))) :
-    ∑' n, Nat.card {k | u k = n} • f n = ∑' n, f (u n) := by
-  apply HasSum.tsum_eq
-  convert (HasSum.tsum_fiberwise hf.hasSum u) with n
-  have : Fintype {k | u k = n} := (hu n).fintype
-  rw [← Equiv.tsum_eq (Equiv.setCongr (by rfl :{k | u k = n} = u ⁻¹' {n})), tsum_fintype,
-    Finset.sum_congr rfl (fun x _ ↦ by rw [Equiv.setCongr_apply, x.prop]), Finset.sum_const,
-    Nat.card_eq_fintype_card, Finset.card_univ]
-
-end tsum
-
-section Complex
-
-open Complex
-
-theorem Complex.dist_induced (x y : ℝ) :
-    dist (x : ℂ) (y : ℂ) = dist x y := by
-  rw [Complex.dist_of_im_eq (by rfl), Complex.ofReal_re, Complex.ofReal_re]
-
-theorem Complex.ofReal_uniformEmbedding : IsUniformEmbedding (Complex.ofReal) := by
-  simp_rw [Metric.isUniformEmbedding_iff', Complex.ofReal_eq_coe, Complex.dist_induced, and_self]
-  exact fun ε hε ↦ ⟨ε, hε, fun h ↦ h⟩
-
-theorem Filter.tendsto_ofReal_iff {α : Type*} {l : Filter α} {f : α → ℝ} {x : ℝ} :
-    Tendsto (fun x ↦ (f x : ℂ)) l (𝓝 (x : ℂ)) ↔ Tendsto f l (𝓝 x) :=
-  Complex.ofReal_uniformEmbedding.toClosedEmbedding.tendsto_nhds_iff.symm
-
-end Complex
-
 noncomputable section
 
 variable {a : ℕ → ℕ} {l : ℝ} (hl : 0 < l)
@@ -271,18 +236,6 @@ theorem lemma7 (T : Finset ℕ) (v : ℕ → ℕ) :
   simp_rw [← Finset.mul_sum, Finset.sum_const_zero] at this
   exact this
 
--- theorem lemmaZ0 :
---     Tendsto (fun s : ℂ ↦ (s - 1) * ∑' (n : ℕ), 1 / (n : ℂ) ^ s)
---       (𝓝[{s | 1 < s.re}] 1) (𝓝 1) := by
---   have : Tendsto (fun s : ℂ ↦ (s - 1) * riemannZeta s) (𝓝[{s | 1 < s.re}] 1) (𝓝 1) := by
---     refine Filter.Tendsto.mono_left riemannZeta_residue_one ?_
---     refine nhdsWithin_mono _ ?_
---     aesop
---   refine Tendsto.congr' ?_ this
---   rw [eventuallyEq_nhdsWithin_iff]
---   refine Eventually.of_forall (fun s hs ↦ ?_)
---   exact congr_arg ((s - 1) * ·) (zeta_eq_tsum_one_div_nat_cpow hs)
-
 theorem lemmaZ1 :
     Tendsto (fun s : ℝ ↦ (s - 1) * ∑' (n : ℕ), 1 / (n : ℝ) ^ s)
       (𝓝[>] 1) (𝓝 1) := by
@@ -383,7 +336,7 @@ theorem main₂ :
     have := this {n}ᶜ (by simp only [mem_cofinite, compl_compl, Set.finite_singleton])
     rwa [Set.preimage_compl, mem_cofinite, compl_compl] at this
   have t₀ := fun s (hs : s ∈ Set.Ioi (1 : ℝ)) ↦
-    tsum_card_smul_eq_tsum this (fun n : ℕ ↦ (n : ℝ) ^ (- s)) (lemma5 hl hA₁ hs)
+    tsum_card_nsmul_eq_tsum this (fun n : ℕ ↦ (n : ℝ) ^ (- s)) (lemma5 hl hA₁ hs)
   simp_rw [nsmul_eq_mul] at t₀
   have t₁ := main hl hA₁
   simp_rw [LSeries, ← Complex.ofReal_natCast, LSeries_term_eq_coe, ← Complex.ofReal_tsum,
