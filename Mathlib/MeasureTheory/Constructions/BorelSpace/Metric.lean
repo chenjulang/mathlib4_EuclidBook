@@ -6,6 +6,7 @@ Authors: Johannes Hölzl, Yury Kudryashov
 import Mathlib.Analysis.Normed.Group.Basic
 import Mathlib.MeasureTheory.Constructions.BorelSpace.Real
 import Mathlib.Topology.MetricSpace.Thickening
+import Mathlib.Topology.Separation.Lindelof
 
 /-!
 # Borel sigma algebras on (pseudo-)metric spaces
