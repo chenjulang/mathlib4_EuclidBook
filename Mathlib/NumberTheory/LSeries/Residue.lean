@@ -1,4 +1,14 @@
+/-
+Copyright (c) 2024 Xavier Roblot. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Xavier Roblot
+-/
 import Mathlib.NumberTheory.LSeries.RiemannZeta
+
+/-!
+# Docstring
+
+-/
 
 open Filter Topology
 
@@ -6,7 +16,7 @@ section LSeries
 
 theorem LSeries_term_eq_coe (f : ℕ → ℝ) (s : ℝ) (n : ℕ) :
     LSeries.term (fun n ↦ f n) s n = if n = 0 then 0 else f n / ↑n ^ s := by
-  rw [LSeries.term_def, apply_ite Complex.ofReal', Complex.ofReal_zero, Complex.ofReal_div,
+  rw [LSeries.term_def, apply_ite Complex.ofReal, Complex.ofReal_zero, Complex.ofReal_div,
     Complex.ofReal_cpow (Nat.cast_nonneg _), Complex.ofReal_natCast]
 
 end LSeries
