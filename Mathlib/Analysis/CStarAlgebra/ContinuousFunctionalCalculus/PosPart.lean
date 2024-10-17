@@ -1,45 +1,6 @@
 --import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.NonUnital
 import Mathlib
 
-namespace StarAlgebra
-
-@[elab_as_elim]
-theorem StarAlgebra.adjoin_induction'' {R A : Type*} [CommSemiring R] [StarRing R] [Semiring A]
-    [Algebra R A] [StarRing A] [StarModule R A] {s : Set A} {p : A → Prop}
-    (mem : ∀ x ∈ s, p x) (algebraMap : ∀ (r : R), p ((_root_.algebraMap R A) r)) (add : ∀ (x y : A), p x → p y → p (x + y)) (mul : ∀ (x y : A), p x → p y → p (x * y)) (star : ∀ (x : A), p x → p (Star.star x)) :
-
-    {a : A} (h : a ∈ StarAlgebra.adjoin R s) : p a
-p a
-
-end StarAlgebra
-
-namespace ContinuousMap
-
-variable {𝕜 : Type*} [RCLike 𝕜]
-
-
-open StarSubalgebra in
-@[elab_as_elim]
-lemma induction_on {s : Set 𝕜} [CompactSpace s] {P : C(s, 𝕜) → Prop}
-    (algebraMap : ∀ k, P (algebraMap 𝕜 C(s, 𝕜) k)) (add : ∀ f g, P f → P g → P (f + g))
-    (mul : ∀ f g, P f → P g → P (f * g)) (star : ∀ f, P f → P (star f))
-    (closure : ∀ s : Set C(s, 𝕜), (∀ f ∈ s, P f) → ∀ f ∈ closure s, P f) (f : C(s, 𝕜)) :
-    P f := by
-  have hf : f ∈ (polynomialFunctions s).starClosure.topologicalClosure :=
-    polynomialFunctions.starClosure_topologicalClosure s ▸ StarSubalgebra.mem_top
-  rw [← SetLike.mem_coe, topologicalClosure_coe] at hf
-  refine closure (polynomialFunctions s).starClosure (fun f hf ↦ ?_) f hf
-  rw [SetLike.mem_coe, polynomialFunctions.starClosure_eq_adjoin_X] at hf
-
-
-
-
-
-  sorry
-
-end ContinuousMap
-
-#exit
 
 section superset
 
@@ -182,7 +143,6 @@ lemma posPart_negPart_unique {a b c : A} (habc : a = b - c) (hbc : b * c = 0)
   have hb_spec := UniqueNonUnitalContinuousFunctionalCalculus.compactSpace_quasispectrum b (R := ℝ)
   have hc_spec := UniqueNonUnitalContinuousFunctionalCalculus.compactSpace_quasispectrum c (R := ℝ)
   have hc'_spec : CompactSpace (σₙ ℝ (-c)) := by
-
     sorry
   sorry
   #exit
