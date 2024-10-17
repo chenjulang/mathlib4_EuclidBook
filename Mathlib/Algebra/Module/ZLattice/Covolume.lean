@@ -137,6 +137,7 @@ theorem volume_image_eq_volume_div_covolume {ι : Type*} [Fintype ι] [Decidable
     covolume_eq_det_inv L b, ENNReal.div_eq_inv_mul, ENNReal.ofReal_inv_of_pos
     (abs_pos.mpr (LinearEquiv.det _).ne_zero), inv_inv, LinearEquiv.coe_det]
 
+/-- Docstring. -/
 theorem volume_image_eq_volume_div_covolume' {E : Type*} [NormedAddCommGroup E]
     [InnerProductSpace ℝ E] [FiniteDimensional ℝ E] [MeasurableSpace E] [BorelSpace E]
     (L : Submodule ℤ E) [DiscreteTopology L] [IsZLattice ℝ L] {ι : Type*} [Fintype ι]
@@ -168,6 +169,7 @@ variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
 variable {L : Submodule ℤ E} [DiscreteTopology L] [IsZLattice ℝ L]
 variable {ι : Type*} [Fintype ι] (b : Basis ι ℤ L)
 
+/-- Docstring. -/
 theorem tendsto_card_div_pow'' [FiniteDimensional ℝ E] [MeasurableSpace E] [BorelSpace E]
     {s : Set E} (hs₁ : IsBounded s) (hs₂ : MeasurableSet s)
     (hs₃ : volume (frontier ((b.ofZLatticeBasis ℝ).equivFun '' s)) = 0):
@@ -195,6 +197,7 @@ private theorem tendsto_card_le_div''_aux {X : Set E} (hX : ∀ ⦃x⦄ ⦃r:ℝ
     (inv_pos_of_pos hc).le, inv_pow, inv_mul_le_iff₀ (pow_pos hc _), mul_one, and_congr_left_iff]
   exact fun _ ↦ ⟨fun h ↦ (smul_inv_smul₀ hc.ne' x) ▸ hX h hc, fun h ↦ hX h (inv_pos_of_pos hc)⟩
 
+/-- Docstring. -/
 theorem tendsto_card_le_div'' [FiniteDimensional ℝ E] [MeasurableSpace E] [BorelSpace E]
     [Nonempty ι] {X : Set E} (hX : ∀ ⦃x⦄ ⦃r : ℝ⦄, x ∈ X → 0 < r → r • x ∈ X)
     {F : E → ℝ} (h₁ : ∀ x ⦃r : ℝ⦄, 0 ≤ r →  F (r • x) = r ^ card ι * (F x))
@@ -284,6 +287,7 @@ variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E] [FiniteDim
   [MeasurableSpace E] [BorelSpace E]
 variable (L : Submodule ℤ E) [DiscreteTopology L] [IsZLattice ℝ L]
 
+/-- Docstring. -/
 theorem tendsto_card_div_pow' {s : Set E} (hs₁ : IsBounded s) (hs₂ : MeasurableSet s)
     (hs₃ : volume (frontier s) = 0) :
     Tendsto (fun n : ℕ ↦ (Nat.card (s ∩ (n : ℝ)⁻¹ • L : Set E) : ℝ) / n ^ finrank ℝ E)
@@ -296,6 +300,7 @@ theorem tendsto_card_div_pow' {s : Set E} (hs₁ : IsBounded s) (hs₂ : Measura
   · rw [frontier_equivFun, volume_image_eq_volume_div_covolume', hs₃, ENNReal.zero_div]
     exact NullMeasurableSet.of_null hs₃
 
+/-- Docstring. -/
 theorem tendsto_card_le_div' [Nontrivial E] {X : Set E} {F : E → ℝ}
     (hX : ∀ ⦃x⦄ ⦃r : ℝ⦄, x ∈ X → 0 < r → r • x ∈ X)
     (h₁ : ∀ x ⦃r : ℝ⦄, 0 ≤ r →  F (r • x) = r ^ finrank ℝ E * (F x))

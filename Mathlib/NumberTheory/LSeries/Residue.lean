@@ -21,6 +21,7 @@ noncomputable section
 variable {a : ℕ → ℕ} {l : ℝ}
 
 variable (a) in
+/-- Docstring. -/
 abbrev A (n : ℕ) : ℕ := ∑ i ∈ Finset.range (n + 1), a i
 
 variable (a) in
@@ -30,6 +31,7 @@ theorem monotone_A : Monotone (A a) := by
   exact Nat.le_add_right _ _
 
 variable (a) in
+/-- Docstring. -/
 def u (n : ℕ) : ℕ := sInf {k : ℕ | n ≤ A a k}
 
 theorem A_u_lt {n : ℕ} (hn : 0 < u a n) : A a ((u a n) - 1) < n := by

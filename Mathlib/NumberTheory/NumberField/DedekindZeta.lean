@@ -21,9 +21,11 @@ open Filter Ideal NumberField.InfinitePlace NumberField.Units Topology NumberThe
 
 open scoped Real
 
+/-- Docstring. -/
 def dedekindZeta (s : ℂ) :=
   LSeries (fun n ↦ Nat.card {I : Ideal (𝓞 K) // absNorm I = n}) s
 
+/-- Docstring. -/
 def residue : ℝ :=
   (2 ^ NrRealPlaces K * (2 * π) ^ NrComplexPlaces K * regulator K * classNumber K) /
     (torsionOrder K *  Real.sqrt |discr K|)

@@ -112,7 +112,7 @@ variable {n} in
 theorem mem_box_iff' {ν : ι → ℤ} {x : ι → ℝ} :
     x ∈ box n ν ↔ ∀ i, ν i < n * x i ∧ n * x i ≤ ν i + 1 := by
   have h_npos : 0 < (n:ℝ) := Nat.cast_pos.mpr <| PNat.pos n
-  simp_rw [mem_box_iff, ← _root_.le_div_iff₀' h_npos, ← div_lt_iff' h_npos, add_div]
+  simp_rw [mem_box_iff, ← _root_.le_div_iff₀' h_npos, ← div_lt_iff₀' h_npos, add_div]
 
 /-- The tag of a `unitPartition.Box`. -/
 abbrev tag (ν : ι → ℤ) : ι → ℝ := fun i ↦ (ν i + 1) / n
@@ -395,7 +395,7 @@ theorem tendsto_tsum_div_pow (hF : Continuous F) (hs₁ : Bornology.IsBounded s)
   refine hr₂ 0 _ ⟨?_, fun _ ↦ ?_, fun h ↦ ?_, fun h ↦ ?_⟩ (prepartition_isPartition _ hB)
   · rw [show r 0 = fun _ ↦ r 0 0 from Function.funext_iff.mpr (hr₁ 0 rfl)]
     apply prepartition_isSubordinate n B
-    rw [one_div, inv_le (Nat.cast_pos.mpr <| PNat.pos n) (by convert (r 0 0).prop)]
+    rw [one_div, inv_le_comm₀ (Nat.cast_pos.mpr <| PNat.pos n) (by convert (r 0 0).prop)]
     exact le_trans (Nat.le_ceil _) (Nat.cast_le.mpr hn)
   · exact prepartition_isHenstock n B
   · simp only [IntegrationParams.Riemann, Bool.false_eq_true] at h

@@ -635,6 +635,7 @@ theorem frontier_union_subset (s t : Set X) :
     frontier (s ∪ t) ⊆ frontier s ∩ closure tᶜ ∪ closure sᶜ ∩ frontier t := by
   simpa only [frontier_compl, ← compl_union] using frontier_inter_subset sᶜ tᶜ
 
+/-- See `frontier_union_subset` for a stronger version. -/
 theorem frontier_union_subset' (s t : Set X) :
     frontier (s ∪ t) ⊆ frontier s ∪ frontier t :=
   (frontier_union_subset s t).trans <| union_subset_union inter_subset_left inter_subset_right
