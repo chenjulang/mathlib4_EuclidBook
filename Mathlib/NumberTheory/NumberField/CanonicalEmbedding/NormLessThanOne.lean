@@ -1023,7 +1023,7 @@ theorem volume_mapToUnitsPowComplex_set_prod_set {s : Set (InfinitePlace K → �
     volume (mapToUnitsPowComplex K '' (s ×ˢ t)) =
       volume ((Set.univ.pi fun _ ↦ Set.Ioo (-π) π) ∩ t) * ∫⁻ x in mapToUnitsPow K '' s,
         ∏ w : {w : InfinitePlace K // IsComplex w}, (x w).toNNReal := by
-  rw [← setLIntegral_one, ← lintegral_indicator _ hm,
+  rw [← setLIntegral_one, ← lintegral_indicator hm,
     lintegral_eq_lintegral_polarCoordMixedSpace_symm K _
     ((measurable_indicator_const_iff 1).mpr hm),
     setLIntegral_congr (setLIntegral_mapToUnitsPow_aux₃ hs')]
@@ -1060,7 +1060,7 @@ theorem volume_mapToUnitsPowComplex_set_prod_set {s : Set (InfinitePlace K → �
             rw [Set.indicator_apply]
             split_ifs
             exacts [ENNReal.one_ne_top, ENNReal.zero_ne_top])]
-        rw [← lintegral_indicator _ (MeasurableSet.univ_pi fun _ ↦ measurableSet_Ioo),
+        rw [← lintegral_indicator (MeasurableSet.univ_pi fun _ ↦ measurableSet_Ioo),
           Set.indicator_indicator, lintegral_indicator_one ((MeasurableSet.univ_pi
           fun _ ↦ measurableSet_Ioo).inter ht)]
       rw [← lintegral_const_mul']
