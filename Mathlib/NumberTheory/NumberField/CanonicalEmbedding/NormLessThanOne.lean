@@ -612,6 +612,7 @@ variable {K}
 theorem mapToUnitsPow_apply (c : realSpace K) :
     mapToUnitsPow K c = ∏ i, mapToUnitsPow_single c i := rfl
 
+/-- Docstring. -/
 theorem mapToUnitsPow_apply' (c : realSpace K) :
     mapToUnitsPow K c = |c w₀| • mapToUnitsPow₀ K (fun w ↦ c w.val) := by
   rw [mapToUnitsPow_apply, prod_mapToUnitsPow_single]
@@ -635,6 +636,7 @@ theorem mapToUnitsPow_zero_iff {c : realSpace K} :
   refine Function.ne_iff.mpr ⟨w, ?_⟩
   convert (mapToUnitsPow₀_pos (fun i ↦ c i) w).ne'
 
+/-- Docstring. -/
 theorem mapToUnitsPow_zero_iff' {c : InfinitePlace K → ℝ} {w : InfinitePlace K} :
     mapToUnitsPow K c w = 0 ↔ c w₀ = 0 := by
   rw [mapToUnitsPow_apply', Pi.smul_apply, smul_eq_mul, mul_eq_zero, abs_eq_zero,
