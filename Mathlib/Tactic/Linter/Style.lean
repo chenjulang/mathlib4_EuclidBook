@@ -92,23 +92,24 @@ def contains_double_underscore (name : Name) : Bool :=
     let exceptions := ["___unexpand", "___macroRules", "___elabRules", "With_weak_namespace__"]
     -- Check for exceptions
     if exceptions.any (fun exception => 1 < (string.splitOn exception).length) then
-      False
+      false
     else
       -- Check for double underscore
       1 < (string.splitOn "__").length
   else
-    False
+    false
 
 @[inherit_doc linter.style.nameCheck]
 def doubleUnderscore: Linter where run := withSetOptionIn fun stx => do
     unless Linter.getLinterValue linter.style.nameCheck (← getOptions) do
       return
-    if (← MonadState.get).messages.hasErrors then
+    if (← get).messages.hasErrors then
       return
     let mut aliases := #[]
     if let some exp := stx.find? (·.isOfKind `Lean.Parser.Command.export) then
       aliases ← getAliasSyntax exp
     for id in (← getNamesFrom (stx.getPos?.getD default)) ++ aliases do
+      if id.getPos? == some default then continue
       let declName := id.getId
       if id.getKind == `ident then
         if contains_double_underscore declName then
