@@ -295,7 +295,6 @@ lemma iIndepFun.cond [Finite ι] (hY : ∀ i, Measurable (Y i))
     (hindep : iIndepFun (fun _ ↦ mα.prod mβ) (fun i ω ↦ (X i ω, Y i ω)) μ)
     (hy : ∀ i, μ (Y i ⁻¹' t i) ≠ 0) (ht : ∀ i, MeasurableSet (t i)) :
     iIndepFun (fun _ ↦ mα) X μ[|⋂ i, Y i ⁻¹' t i] := by
-  have : IsProbabilityMeasure μ := hindep.isProbabilityMeasure
   rw [iIndepFun_iff]
   intro s f hf
   convert cond_iInter hY hindep hf hy ht using 2 with i hi
