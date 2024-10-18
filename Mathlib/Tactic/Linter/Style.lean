@@ -5,7 +5,7 @@ Authors: Michael Rothgang
 -/
 
 import Lean.Elab.Command
-import Mathlib.Tactic.Linter.Common
+import Mathlib.Tactic.DeclarationNames
 
 /-!
 ## Style linters
@@ -96,7 +96,10 @@ def doubleUnderscore: Linter where run := withSetOptionIn fun stx => do
       return
     if (← MonadState.get).messages.hasErrors then
       return
-    for name in (← getNames stx) do
+    let mut aliases := #[]
+    if let some exp := stx.find? (·.isOfKind `Lean.Parser.Command.export) then
+      aliases ← getAliasSyntax exp
+    for name in (← getNamesFrom (stx.getPos?.getD default)) ++ aliases do
       if contains_double_underscore name then
         Linter.logLint linter.style.nameCheck name
           m!"The declaration '{name}' contains '__', which does not follow the mathlib naming \
