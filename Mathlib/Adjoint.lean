@@ -18,7 +18,7 @@ variable [CompleteSpace E] [CompleteSpace F]
 -- set_option trace.profiler true in
 /-- The adjoint of a bounded operator from a Hilbert space `E` to a Hilbert space `F`. -/
 noncomputable def ContinuousLinearMap.adjoint : (E →L[ℂ] F) →ₗᵢ⋆[ℂ] F →L[ℂ] E :=
-  ((InnerProductSpace.toDual ℂ E).symm.toLinearIsometry.compSL F _).comp <|
+  ((InnerProductSpace.toDual E).symm.toLinearIsometry.compSL F _).comp <|
     (ContinuousLinearMap.flipₗᵢ'' E F ℂ conj (RingHom.id ℂ)).toLinearIsometry.comp <|
     ((Complex.conjSLIE.toLinearIsometry.compSL F _).comp
-      (InnerProductSpace.toDual ℂ F).toLinearIsometry).compSL E _
+      (InnerProductSpace.toDual F).toLinearIsometry).compSL E _

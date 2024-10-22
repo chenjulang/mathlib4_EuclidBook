@@ -9,7 +9,7 @@ import Mathlib.Analysis.Normed.Module.Dual
 /-!
 # The Fréchet-Riesz representation theorem
 
-We consider an inner product space `E` over `𝕜`, which is either `ℝ` or `ℂ`. We define
+We consider an inner product space `E` over `ℂ`. We define
 `toDualMap`, a conjugate-linear isometric embedding of `E` into its dual, which maps an element
 `x` of the space to `fun y => ⟪x, y⟫`.
 
@@ -18,9 +18,9 @@ conjugate-linear isometric *equivalence* of `E` onto its dual; that is, we estab
 surjectivity of `toDualMap`.  This is the Fréchet-Riesz representation theorem: every element of
 the dual of a Hilbert space `E` has the form `fun u => ⟪x, u⟫` for some `x : E`.
 
-For a bounded sesquilinear form `B : E →L⋆[𝕜] E →L[𝕜] 𝕜`,
-we define a map `InnerProductSpace.continuousLinearMapOfBilin B : E →L[𝕜] E`,
-given by substituting `E →L[𝕜] 𝕜` with `E` using `toDual`.
+For a bounded sesquilinear form `B : E →L⋆[ℂ] E →L[ℂ] ℂ`,
+we define a map `InnerProductSpace.continuousLinearMapOfBilin B : E →L[ℂ] E`,
+given by substituting `E →L[ℂ] ℂ` with `E` using `toDual`.
 
 
 ## References
@@ -45,36 +45,33 @@ namespace InnerProductSpace
 
 open RCLike ContinuousLinearMap
 
-variable (𝕜 : Type*)
-variable (E : Type*) [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
+variable (E : Type*) [NormedAddCommGroup E] [InnerProductSpace ℂ E]
 
-local notation "⟪" x ", " y "⟫" => @inner 𝕜 E _ x y
+local notation "⟪" x ", " y "⟫" => @inner ℂ E _ x y
 
 local postfix:90 "†" => starRingEnd _
 
-/-- An element `x` of an inner product space `E` induces an element of the dual space `Dual 𝕜 E`,
+/-- An element `x` of an inner product space `E` induces an element of the dual space `Dual ℂ E`,
 the map `fun y => ⟪x, y⟫`; moreover this operation is a conjugate-linear isometric embedding of `E`
-into `Dual 𝕜 E`.
+into `Dual ℂ E`.
 If `E` is complete, this operation is surjective, hence a conjugate-linear isometric equivalence;
 see `toDual`.
 -/
-def toDualMap : E →ₗᵢ⋆[𝕜] NormedSpace.Dual 𝕜 E :=
-  { innerSL 𝕜 with norm_map' := innerSL_apply_norm _ }
+def toDualMap : E →ₗᵢ⋆[ℂ] NormedSpace.Dual ℂ E :=
+  { innerSL ℂ with norm_map' := innerSL_apply_norm _ }
 
 variable {E}
 
 @[simp]
-theorem toDualMap_apply {x y : E} : toDualMap 𝕜 E x y = ⟪x, y⟫ :=
+theorem toDualMap_apply {x y : E} : toDualMap E x y = ⟪x, y⟫ :=
   rfl
 
-theorem innerSL_norm [Nontrivial E] : ‖(innerSL 𝕜 : E →L⋆[𝕜] E →L[𝕜] 𝕜)‖ = 1 :=
-  show ‖(toDualMap 𝕜 E).toContinuousLinearMap‖ = 1 from LinearIsometry.norm_toContinuousLinearMap _
+theorem innerSL_norm [Nontrivial E] : ‖(innerSL ℂ : E →L⋆[ℂ] E →L[ℂ] ℂ)‖ = 1 :=
+  show ‖(toDualMap E).toContinuousLinearMap‖ = 1 from LinearIsometry.norm_toContinuousLinearMap _
 
-variable {𝕜}
-
-theorem ext_inner_left_basis {ι : Type*} {x y : E} (b : Basis ι 𝕜 E)
+theorem ext_inner_left_basis {ι : Type*} {x y : E} (b : Basis ι ℂ E)
     (h : ∀ i : ι, ⟪b i, x⟫ = ⟪b i, y⟫) : x = y := by
-  apply (toDualMap 𝕜 E).map_eq_iff.mp
+  apply (toDualMap E).map_eq_iff.mp
   refine (Function.Injective.eq_iff ContinuousLinearMap.coe_injective).mp (Basis.ext b ?_)
   intro i
   simp only [ContinuousLinearMap.coe_coe]
@@ -83,21 +80,21 @@ theorem ext_inner_left_basis {ι : Type*} {x y : E} (b : Basis ι 𝕜 E)
   conv_rhs => rw [← inner_conj_symm]
   exact congr_arg conj (h i)
 
-theorem ext_inner_right_basis {ι : Type*} {x y : E} (b : Basis ι 𝕜 E)
+theorem ext_inner_right_basis {ι : Type*} {x y : E} (b : Basis ι ℂ E)
     (h : ∀ i : ι, ⟪x, b i⟫ = ⟪y, b i⟫) : x = y := by
   refine ext_inner_left_basis b fun i => ?_
   rw [← inner_conj_symm]
   conv_rhs => rw [← inner_conj_symm]
   exact congr_arg conj (h i)
 
-variable (𝕜) (E)
+variable (E)
 variable [CompleteSpace E]
 
 /-- Fréchet-Riesz representation: any `ℓ` in the dual of a Hilbert space `E` is of the form
 `fun u => ⟪y, u⟫` for some `y : E`, i.e. `toDualMap` is surjective.
 -/
-def toDual : E ≃ₗᵢ⋆[𝕜] NormedSpace.Dual 𝕜 E :=
-  LinearIsometryEquiv.ofSurjective (toDualMap 𝕜 E)
+def toDual : E ≃ₗᵢ⋆[ℂ] NormedSpace.Dual ℂ E :=
+  LinearIsometryEquiv.ofSurjective (toDualMap E)
     (by
       intro ℓ
       set Y := LinearMap.ker ℓ
@@ -112,7 +109,7 @@ def toDual : E ≃ₗᵢ⋆[𝕜] NormedSpace.Dual 𝕜 E :=
         change Yᗮ ≠ ⊥ at htriv
         rw [Submodule.ne_bot_iff] at htriv
         obtain ⟨z : E, hz : z ∈ Yᗮ, z_ne_0 : z ≠ 0⟩ := htriv
-        refine ⟨(starRingEnd (R := 𝕜) (ℓ z) / ⟪z, z⟫) • z, ?_⟩
+        refine ⟨(starRingEnd (R := ℂ) (ℓ z) / ⟪z, z⟫) • z, ?_⟩
         apply ContinuousLinearMap.ext
         intro x
         have h₁ : ℓ z • x - ℓ x • z ∈ Y := by
@@ -136,27 +133,27 @@ def toDual : E ≃ₗᵢ⋆[𝕜] NormedSpace.Dual 𝕜 E :=
             _ = ℓ x := by field_simp [inner_self_ne_zero.2 z_ne_0]
         exact h₄)
 
-variable {𝕜} {E}
+variable {E}
 
 @[simp]
-theorem toDual_apply {x y : E} : toDual 𝕜 E x y = ⟪x, y⟫ :=
+theorem toDual_apply {x y : E} : toDual E x y = ⟪x, y⟫ :=
   rfl
 
 @[simp]
-theorem toDual_symm_apply {x : E} {y : NormedSpace.Dual 𝕜 E} : ⟪(toDual 𝕜 E).symm y, x⟫ = y x := by
+theorem toDual_symm_apply {x : E} {y : NormedSpace.Dual ℂ E} : ⟪(toDual E).symm y, x⟫ = y x := by
   rw [← toDual_apply]
   simp only [LinearIsometryEquiv.apply_symm_apply]
 
 /-- Maps a bounded sesquilinear form to its continuous linear map,
-given by interpreting the form as a map `B : E →L⋆[𝕜] NormedSpace.Dual 𝕜 E`
+given by interpreting the form as a map `B : E →L⋆[ℂ] NormedSpace.Dual ℂ E`
 and dualizing the result using `toDual`.
 -/
-def continuousLinearMapOfBilin (B : E →L⋆[𝕜] E →L[𝕜] 𝕜) : E →L[𝕜] E :=
-  comp (toDual 𝕜 E).symm.toContinuousLinearEquiv.toContinuousLinearMap B
+def continuousLinearMapOfBilin (B : E →L⋆[ℂ] E →L[ℂ] ℂ) : E →L[ℂ] E :=
+  comp (toDual E).symm.toContinuousLinearEquiv.toContinuousLinearMap B
 
 local postfix:1024 "♯" => continuousLinearMapOfBilin
 
-variable (B : E →L⋆[𝕜] E →L[𝕜] 𝕜)
+variable (B : E →L⋆[ℂ] E →L[ℂ] ℂ)
 
 @[simp]
 theorem continuousLinearMapOfBilin_apply (v w : E) : ⟪B♯ v, w⟫ = B v w := by
@@ -165,7 +162,7 @@ theorem continuousLinearMapOfBilin_apply (v w : E) : ⟪B♯ v, w⟫ = B v w := 
 
 theorem unique_continuousLinearMapOfBilin {v f : E} (is_lax_milgram : ∀ w, ⟪f, w⟫ = B v w) :
     f = B♯ v := by
-  refine ext_inner_right 𝕜 ?_
+  refine ext_inner_right ℂ ?_
   intro w
   rw [continuousLinearMapOfBilin_apply]
   exact is_lax_milgram w
