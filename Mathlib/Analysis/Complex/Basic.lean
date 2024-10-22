@@ -441,6 +441,9 @@ def _root_.RCLike.complexLinearIsometryEquiv {𝕜 : Type*} [RCLike 𝕜]
     simp [normSq_add]
   __ := RCLike.complexRingEquiv h
 
+instance : RingHomIsometric (starRingEnd ℂ) where
+  is_iso := RCLike.norm_conj _
+
 section ComplexOrder
 
 open ComplexOrder

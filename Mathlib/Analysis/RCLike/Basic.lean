@@ -5,9 +5,12 @@ Authors: Frédéric Dupuis
 -/
 import Mathlib.Algebra.Algebra.Field
 import Mathlib.Algebra.Order.Star.Basic
-import Mathlib.Analysis.CStarAlgebra.Basic
+import Mathlib.Analysis.Normed.Group.Hom
+import Mathlib.Analysis.Normed.Module.Basic
+import Mathlib.Analysis.Normed.Operator.LinearIsometry
 import Mathlib.Analysis.Normed.Operator.ContinuousLinearMap
 import Mathlib.Data.Real.Sqrt
+import Mathlib.Topology.Algebra.Module.Star
 
 /-!
 # `RCLike`: a typeclass for ℝ or ℂ
@@ -504,9 +507,6 @@ theorem normSq_div (z w : K) : normSq (z / w) = normSq z / normSq w :=
 theorem norm_conj (z : K) : ‖conj z‖ = ‖z‖ := by simp only [← sqrt_normSq_eq_norm, normSq_conj]
 
 @[simp, rclike_simps] lemma nnnorm_conj (z : K) : ‖conj z‖₊ = ‖z‖₊ := by simp [nnnorm]
-
-instance (priority := 100) : CStarRing K where
-  norm_mul_self_le x := le_of_eq <| ((norm_mul _ _).trans <| congr_arg (· * ‖x‖) (norm_conj _)).symm
 
 /-! ### Cast lemmas -/
 
