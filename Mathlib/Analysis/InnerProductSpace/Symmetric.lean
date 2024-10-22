@@ -39,12 +39,12 @@ open ComplexConjugate
 section Seminormed
 
 variable {E E' F G : Type*}
-variable [SeminormedAddCommGroup E] [InnerProductSpace ℂ E]
-variable [SeminormedAddCommGroup F] [InnerProductSpace ℂ F]
-variable [SeminormedAddCommGroup G] [InnerProductSpace ℂ G]
-variable [SeminormedAddCommGroup E'] [InnerProductSpace ℝ E']
+variable [SeminormedAddCommGroup E] [InnerProductSpace E]
+variable [SeminormedAddCommGroup F] [InnerProductSpace F]
+variable [SeminormedAddCommGroup G] [InnerProductSpace G]
+-- variable [SeminormedAddCommGroup E'] [InnerProductSpace ℝ E']
 
-local notation "⟪" x ", " y "⟫" => @inner ℂ _ _ x y
+local notation "⟪" x ", " y "⟫" => @inner _ _ x y
 
 namespace LinearMap
 
@@ -92,27 +92,27 @@ theorem IsSymmetric.restrict_invariant {T : E →ₗ[ℂ] E} (hT : IsSymmetric T
 
 section Complex
 
-variable {V : Type*} [SeminormedAddCommGroup V] [InnerProductSpace ℂ V]
+variable {V : Type*} [SeminormedAddCommGroup V] [InnerProductSpace V]
 
-attribute [local simp] map_ofNat in -- use `ofNat` simp theorem with bad keys
-open scoped InnerProductSpace in
-/-- A linear operator on a complex inner product space is symmetric precisely when
-`⟪T v, v⟫_ℂ` is real for all v. -/
-theorem isSymmetric_iff_inner_map_self_real (T : V →ₗ[ℂ] V) :
-    IsSymmetric T ↔ ∀ v : V, conj ⟪T v, v⟫_ℂ = ⟪T v, v⟫_ℂ := by
-  constructor
-  · intro hT v
-    apply IsSymmetric.conj_inner_sym hT
-  · intro h x y
-    rw [← inner_conj_symm x (T y)]
-    rw [inner_map_polarization T x y]
-    simp only [starRingEnd_apply, star_div', star_sub, star_add, star_mul]
-    simp only [← starRingEnd_apply]
-    rw [h (x + y), h (x - y), h (x + Complex.I • y), h (x - Complex.I • y)]
-    simp only [Complex.conj_I]
-    rw [inner_map_polarization']
-    norm_num
-    ring
+-- attribute [local simp] map_ofNat in -- use `ofNat` simp theorem with bad keys
+-- open scoped InnerProductSpace in
+-- /-- A linear operator on a complex inner product space is symmetric precisely when
+-- `⟪T v, v⟫_ℂ` is real for all v. -/
+-- theorem isSymmetric_iff_inner_map_self_real (T : V →ₗ[ℂ] V) :
+--     IsSymmetric T ↔ ∀ v : V, conj ⟪T v, v⟫ = ⟪T v, v⟫ := by
+--   constructor
+--   · intro hT v
+--     apply IsSymmetric.conj_inner_sym hT
+--   · intro h x y
+--     rw [← inner_conj_symm x (T y)]
+--     rw [inner_map_polarization T x y]
+--     simp only [starRingEnd_apply, star_div', star_sub, star_add, star_mul]
+--     simp only [← starRingEnd_apply]
+--     rw [h (x + y), h (x - y), h (x + Complex.I • y), h (x - Complex.I • y)]
+--     simp only [Complex.conj_I]
+--     rw [inner_map_polarization']
+--     norm_num
+--     ring
 
 end Complex
 
@@ -144,12 +144,12 @@ end Seminormed
 section Normed
 
 variable {E E' F G : Type*}
-variable [NormedAddCommGroup E] [InnerProductSpace ℂ E]
-variable [NormedAddCommGroup F] [InnerProductSpace ℂ F]
-variable [NormedAddCommGroup G] [InnerProductSpace ℂ G]
-variable [NormedAddCommGroup E'] [InnerProductSpace ℝ E']
+variable [NormedAddCommGroup E] [InnerProductSpace E]
+variable [NormedAddCommGroup F] [InnerProductSpace F]
+variable [NormedAddCommGroup G] [InnerProductSpace G]
+-- variable [NormedAddCommGroup E'] [InnerProductSpace ℝ E']
 
-local notation "⟪" x ", " y "⟫" => @inner ℂ _ _ x y
+local notation "⟪" x ", " y "⟫" => @inner _ _ x y
 
 namespace LinearMap
 
@@ -159,7 +159,7 @@ theorem IsSymmetric.continuous [CompleteSpace E] {T : E →ₗ[ℂ] E} (hT : IsS
     Continuous T := by
   -- We prove it by using the closed graph theorem
   refine T.continuous_of_seq_closed_graph fun u x y hu hTu => ?_
-  rw [← sub_eq_zero, ← @inner_self_eq_zero ℂ]
+  rw [← sub_eq_zero, ← @inner_self_eq_zero]
   have hlhs : ∀ k : ℕ, ⟪T (u k) - T x, y - T x⟫ = ⟪u k - x, T (y - T x)⟫ := by
     intro k
     rw [← T.map_sub, hT]
@@ -176,7 +176,7 @@ theorem IsSymmetric.inner_map_self_eq_zero {T : E →ₗ[ℂ] E} (hT : T.IsSymme
     (∀ x, ⟪T x, x⟫ = 0) ↔ T = 0 := by
   simp_rw [LinearMap.ext_iff, zero_apply]
   refine ⟨fun h x => ?_, fun h => by simp_rw [h, inner_zero_left, forall_const]⟩
-  rw [← @inner_self_eq_zero ℂ, hT.inner_map_polarization]
+  rw [← @inner_self_eq_zero, hT.inner_map_polarization]
   simp_rw [h _]
   ring
 

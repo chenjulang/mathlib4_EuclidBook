@@ -52,9 +52,9 @@ open Topology Finsupp
 
 variable {E F : Type*}
 variable [NormedAddCommGroup E] [NormedAddCommGroup F]
-variable [InnerProductSpace ℂ E] [InnerProductSpace ℝ F]
+variable [InnerProductSpace E] [InnerProductSpace F]
 
-local notation "⟪" x ", " y "⟫" => @inner ℂ _ _ x y
+-- local notation "⟪" x ", " y "⟫" => @inner _ _ x y
 local notation "absR" => abs
 
 /-! ### Orthogonal projection in inner product spaces -/
@@ -63,203 +63,204 @@ local notation "absR" => abs
 -- FIXME this monolithic proof causes a deterministic timeout with `-T50000`
 -- It should be broken in a sequence of more manageable pieces,
 -- perhaps with individual statements for the three steps below.
-/-- Existence of minimizers
-Let `u` be a point in a real inner product space, and let `K` be a nonempty complete convex subset.
-Then there exists a (unique) `v` in `K` that minimizes the distance `‖u - v‖` to `u`.
- -/
-theorem exists_norm_eq_iInf_of_complete_convex {K : Set F} (ne : K.Nonempty) (h₁ : IsComplete K)
-    (h₂ : Convex ℝ K) : ∀ u : F, ∃ v ∈ K, ‖u - v‖ = ⨅ w : K, ‖u - w‖ := fun u => by
-  let δ := ⨅ w : K, ‖u - w‖
-  letI : Nonempty K := ne.to_subtype
-  have zero_le_δ : 0 ≤ δ := le_ciInf fun _ => norm_nonneg _
-  have δ_le : ∀ w : K, δ ≤ ‖u - w‖ := ciInf_le ⟨0, Set.forall_mem_range.2 fun _ => norm_nonneg _⟩
-  have δ_le' : ∀ w ∈ K, δ ≤ ‖u - w‖ := fun w hw => δ_le ⟨w, hw⟩
-  -- Step 1: since `δ` is the infimum, can find a sequence `w : ℕ → K` in `K`
-  -- such that `‖u - w n‖ < δ + 1 / (n + 1)` (which implies `‖u - w n‖ --> δ`);
-  -- maybe this should be a separate lemma
-  have exists_seq : ∃ w : ℕ → K, ∀ n, ‖u - w n‖ < δ + 1 / (n + 1) := by
-    have hδ : ∀ n : ℕ, δ < δ + 1 / (n + 1) := fun n =>
-      lt_add_of_le_of_pos le_rfl Nat.one_div_pos_of_nat
-    have h := fun n => exists_lt_of_ciInf_lt (hδ n)
-    let w : ℕ → K := fun n => Classical.choose (h n)
-    exact ⟨w, fun n => Classical.choose_spec (h n)⟩
-  rcases exists_seq with ⟨w, hw⟩
-  have norm_tendsto : Tendsto (fun n => ‖u - w n‖) atTop (𝓝 δ) := by
-    have h : Tendsto (fun _ : ℕ => δ) atTop (𝓝 δ) := tendsto_const_nhds
-    have h' : Tendsto (fun n : ℕ => δ + 1 / (n + 1)) atTop (𝓝 δ) := by
-      convert h.add tendsto_one_div_add_atTop_nhds_zero_nat
-      simp only [add_zero]
-    exact tendsto_of_tendsto_of_tendsto_of_le_of_le h h' (fun x => δ_le _) fun x => le_of_lt (hw _)
-  -- Step 2: Prove that the sequence `w : ℕ → K` is a Cauchy sequence
-  have seq_is_cauchy : CauchySeq fun n => (w n : F) := by
-    rw [cauchySeq_iff_le_tendsto_0]
-    -- splits into three goals
-    let b := fun n : ℕ => 8 * δ * (1 / (n + 1)) + 4 * (1 / (n + 1)) * (1 / (n + 1))
-    use fun n => √(b n)
-    constructor
-    -- first goal :  `∀ (n : ℕ), 0 ≤ √(b n)`
-    · intro n
-      exact sqrt_nonneg _
-    constructor
-    -- second goal : `∀ (n m N : ℕ), N ≤ n → N ≤ m → dist ↑(w n) ↑(w m) ≤ √(b N)`
-    · intro p q N hp hq
-      let wp := (w p : F)
-      let wq := (w q : F)
-      let a := u - wq
-      let b := u - wp
-      let half := 1 / (2 : ℝ)
-      let div := 1 / ((N : ℝ) + 1)
-      have :
-        4 * ‖u - half • (wq + wp)‖ * ‖u - half • (wq + wp)‖ + ‖wp - wq‖ * ‖wp - wq‖ =
-          2 * (‖a‖ * ‖a‖ + ‖b‖ * ‖b‖) :=
-        calc
-          4 * ‖u - half • (wq + wp)‖ * ‖u - half • (wq + wp)‖ + ‖wp - wq‖ * ‖wp - wq‖ =
-              2 * ‖u - half • (wq + wp)‖ * (2 * ‖u - half • (wq + wp)‖) + ‖wp - wq‖ * ‖wp - wq‖ :=
-            by ring
-          _ =
-              absR (2 : ℝ) * ‖u - half • (wq + wp)‖ * (absR (2 : ℝ) * ‖u - half • (wq + wp)‖) +
-                ‖wp - wq‖ * ‖wp - wq‖ := by
-            rw [_root_.abs_of_nonneg]
-            exact zero_le_two
-          _ =
-              ‖(2 : ℝ) • (u - half • (wq + wp))‖ * ‖(2 : ℝ) • (u - half • (wq + wp))‖ +
-                ‖wp - wq‖ * ‖wp - wq‖ := by simp [norm_smul]
-          _ = ‖a + b‖ * ‖a + b‖ + ‖a - b‖ * ‖a - b‖ := by
-            rw [smul_sub, smul_smul, mul_one_div_cancel (_root_.two_ne_zero : (2 : ℝ) ≠ 0), ←
-              one_add_one_eq_two, add_smul]
-            simp only [one_smul]
-            have eq₁ : wp - wq = a - b := (sub_sub_sub_cancel_left _ _ _).symm
-            have eq₂ : u + u - (wq + wp) = a + b := by
-              show u + u - (wq + wp) = u - wq + (u - wp)
-              abel
-            rw [eq₁, eq₂]
-          _ = 2 * (‖a‖ * ‖a‖ + ‖b‖ * ‖b‖) := parallelogram_law_with_norm ℝ _ _
-      have eq : δ ≤ ‖u - half • (wq + wp)‖ := by
-        rw [smul_add]
-        apply δ_le'
-        apply h₂
-        repeat' exact Subtype.mem _
-        repeat' exact le_of_lt one_half_pos
-        exact add_halves 1
-      have eq₁ : 4 * δ * δ ≤ 4 * ‖u - half • (wq + wp)‖ * ‖u - half • (wq + wp)‖ := by
-        simp_rw [mul_assoc]
-        gcongr
-      have eq₂ : ‖a‖ ≤ δ + div :=
-          le_trans (le_of_lt <| hw q) (add_le_add_left (Nat.one_div_le_one_div hq) _)
-      have eq₂' : ‖b‖ ≤ δ + div :=
-          le_trans (le_of_lt <| hw p) (add_le_add_left (Nat.one_div_le_one_div hp) _)
-      rw [dist_eq_norm]
-      apply nonneg_le_nonneg_of_sq_le_sq
-      · exact sqrt_nonneg _
-      rw [mul_self_sqrt]
-      · calc
-        ‖wp - wq‖ * ‖wp - wq‖ =
-            2 * (‖a‖ * ‖a‖ + ‖b‖ * ‖b‖) - 4 * ‖u - half • (wq + wp)‖ * ‖u - half • (wq + wp)‖ := by
-          simp [← this]
-        _ ≤ 2 * (‖a‖ * ‖a‖ + ‖b‖ * ‖b‖) - 4 * δ * δ := by gcongr
-        _ ≤ 2 * ((δ + div) * (δ + div) + (δ + div) * (δ + div)) - 4 * δ * δ := by gcongr
-        _ = 8 * δ * div + 4 * div * div := by ring
-      positivity
-    -- third goal : `Tendsto (fun (n : ℕ) => √(b n)) atTop (𝓝 0)`
-    suffices Tendsto (fun x ↦ √(8 * δ * x + 4 * x * x) : ℝ → ℝ) (𝓝 0) (𝓝 0)
-      from this.comp tendsto_one_div_add_atTop_nhds_zero_nat
-    exact Continuous.tendsto' (by fun_prop) _ _ (by simp)
-  -- Step 3: By completeness of `K`, let `w : ℕ → K` converge to some `v : K`.
-  -- Prove that it satisfies all requirements.
-  rcases cauchySeq_tendsto_of_isComplete h₁ (fun n => Subtype.mem _) seq_is_cauchy with
-    ⟨v, hv, w_tendsto⟩
-  use v
-  use hv
-  have h_cont : Continuous fun v => ‖u - v‖ :=
-    Continuous.comp continuous_norm (Continuous.sub continuous_const continuous_id)
-  have : Tendsto (fun n => ‖u - w n‖) atTop (𝓝 ‖u - v‖) := by
-    convert Tendsto.comp h_cont.continuousAt w_tendsto
-  exact tendsto_nhds_unique this norm_tendsto
+-- /-- Existence of minimizers
+-- Let `u` be a point in a real inner product space, and let `K` be a nonempty complete convex
+-- subset.
+-- Then there exists a (unique) `v` in `K` that minimizes the distance `‖u - v‖` to `u`.
+--  -/
+-- theorem exists_norm_eq_iInf_of_complete_convex {K : Set F} (ne : K.Nonempty) (h₁ : IsComplete K)
+--     (h₂ : Convex ℝ K) : ∀ u : F, ∃ v ∈ K, ‖u - v‖ = ⨅ w : K, ‖u - w‖ := fun u => by
+--   let δ := ⨅ w : K, ‖u - w‖
+--   letI : Nonempty K := ne.to_subtype
+--   have zero_le_δ : 0 ≤ δ := le_ciInf fun _ => norm_nonneg _
+--   have δ_le : ∀ w : K, δ ≤ ‖u - w‖ := ciInf_le ⟨0, Set.forall_mem_range.2 fun _ => norm_nonneg _⟩
+--   have δ_le' : ∀ w ∈ K, δ ≤ ‖u - w‖ := fun w hw => δ_le ⟨w, hw⟩
+--   -- Step 1: since `δ` is the infimum, can find a sequence `w : ℕ → K` in `K`
+--   -- such that `‖u - w n‖ < δ + 1 / (n + 1)` (which implies `‖u - w n‖ --> δ`);
+--   -- maybe this should be a separate lemma
+--   have exists_seq : ∃ w : ℕ → K, ∀ n, ‖u - w n‖ < δ + 1 / (n + 1) := by
+--     have hδ : ∀ n : ℕ, δ < δ + 1 / (n + 1) := fun n =>
+--       lt_add_of_le_of_pos le_rfl Nat.one_div_pos_of_nat
+--     have h := fun n => exists_lt_of_ciInf_lt (hδ n)
+--     let w : ℕ → K := fun n => Classical.choose (h n)
+--     exact ⟨w, fun n => Classical.choose_spec (h n)⟩
+--   rcases exists_seq with ⟨w, hw⟩
+--   have norm_tendsto : Tendsto (fun n => ‖u - w n‖) atTop (𝓝 δ) := by
+--     have h : Tendsto (fun _ : ℕ => δ) atTop (𝓝 δ) := tendsto_const_nhds
+--     have h' : Tendsto (fun n : ℕ => δ + 1 / (n + 1)) atTop (𝓝 δ) := by
+--       convert h.add tendsto_one_div_add_atTop_nhds_zero_nat
+--       simp only [add_zero]
+--     exact tendsto_of_tendsto_of_tendsto_of_le_of_le h h' (fun x => δ_le _) fun x => le_of_lt (hw _)
+--   -- Step 2: Prove that the sequence `w : ℕ → K` is a Cauchy sequence
+--   have seq_is_cauchy : CauchySeq fun n => (w n : F) := by
+--     rw [cauchySeq_iff_le_tendsto_0]
+--     -- splits into three goals
+--     let b := fun n : ℕ => 8 * δ * (1 / (n + 1)) + 4 * (1 / (n + 1)) * (1 / (n + 1))
+--     use fun n => √(b n)
+--     constructor
+--     -- first goal :  `∀ (n : ℕ), 0 ≤ √(b n)`
+--     · intro n
+--       exact sqrt_nonneg _
+--     constructor
+--     -- second goal : `∀ (n m N : ℕ), N ≤ n → N ≤ m → dist ↑(w n) ↑(w m) ≤ √(b N)`
+--     · intro p q N hp hq
+--       let wp := (w p : F)
+--       let wq := (w q : F)
+--       let a := u - wq
+--       let b := u - wp
+--       let half := 1 / (2 : ℝ)
+--       let div := 1 / ((N : ℝ) + 1)
+--       have :
+--         4 * ‖u - half • (wq + wp)‖ * ‖u - half • (wq + wp)‖ + ‖wp - wq‖ * ‖wp - wq‖ =
+--           2 * (‖a‖ * ‖a‖ + ‖b‖ * ‖b‖) :=
+--         calc
+--           4 * ‖u - half • (wq + wp)‖ * ‖u - half • (wq + wp)‖ + ‖wp - wq‖ * ‖wp - wq‖ =
+--               2 * ‖u - half • (wq + wp)‖ * (2 * ‖u - half • (wq + wp)‖) + ‖wp - wq‖ * ‖wp - wq‖ :=
+--             by ring
+--           _ =
+--               absR (2 : ℝ) * ‖u - half • (wq + wp)‖ * (absR (2 : ℝ) * ‖u - half • (wq + wp)‖) +
+--                 ‖wp - wq‖ * ‖wp - wq‖ := by
+--             rw [_root_.abs_of_nonneg]
+--             exact zero_le_two
+--           _ =
+--               ‖(2 : ℝ) • (u - half • (wq + wp))‖ * ‖(2 : ℝ) • (u - half • (wq + wp))‖ +
+--                 ‖wp - wq‖ * ‖wp - wq‖ := by simp [norm_smul]
+--           _ = ‖a + b‖ * ‖a + b‖ + ‖a - b‖ * ‖a - b‖ := by
+--             rw [smul_sub, smul_smul, mul_one_div_cancel (_root_.two_ne_zero : (2 : ℝ) ≠ 0), ←
+--               one_add_one_eq_two, add_smul]
+--             simp only [one_smul]
+--             have eq₁ : wp - wq = a - b := (sub_sub_sub_cancel_left _ _ _).symm
+--             have eq₂ : u + u - (wq + wp) = a + b := by
+--               show u + u - (wq + wp) = u - wq + (u - wp)
+--               abel
+--             rw [eq₁, eq₂]
+--           _ = 2 * (‖a‖ * ‖a‖ + ‖b‖ * ‖b‖) := parallelogram_law_with_norm ℝ _ _
+--       have eq : δ ≤ ‖u - half • (wq + wp)‖ := by
+--         rw [smul_add]
+--         apply δ_le'
+--         apply h₂
+--         repeat' exact Subtype.mem _
+--         repeat' exact le_of_lt one_half_pos
+--         exact add_halves 1
+--       have eq₁ : 4 * δ * δ ≤ 4 * ‖u - half • (wq + wp)‖ * ‖u - half • (wq + wp)‖ := by
+--         simp_rw [mul_assoc]
+--         gcongr
+--       have eq₂ : ‖a‖ ≤ δ + div :=
+--           le_trans (le_of_lt <| hw q) (add_le_add_left (Nat.one_div_le_one_div hq) _)
+--       have eq₂' : ‖b‖ ≤ δ + div :=
+--           le_trans (le_of_lt <| hw p) (add_le_add_left (Nat.one_div_le_one_div hp) _)
+--       rw [dist_eq_norm]
+--       apply nonneg_le_nonneg_of_sq_le_sq
+--       · exact sqrt_nonneg _
+--       rw [mul_self_sqrt]
+--       · calc
+--         ‖wp - wq‖ * ‖wp - wq‖ =
+--             2 * (‖a‖ * ‖a‖ + ‖b‖ * ‖b‖) - 4 * ‖u - half • (wq + wp)‖ * ‖u - half • (wq + wp)‖ := by
+--           simp [← this]
+--         _ ≤ 2 * (‖a‖ * ‖a‖ + ‖b‖ * ‖b‖) - 4 * δ * δ := by gcongr
+--         _ ≤ 2 * ((δ + div) * (δ + div) + (δ + div) * (δ + div)) - 4 * δ * δ := by gcongr
+--         _ = 8 * δ * div + 4 * div * div := by ring
+--       positivity
+--     -- third goal : `Tendsto (fun (n : ℕ) => √(b n)) atTop (𝓝 0)`
+--     suffices Tendsto (fun x ↦ √(8 * δ * x + 4 * x * x) : ℝ → ℝ) (𝓝 0) (𝓝 0)
+--       from this.comp tendsto_one_div_add_atTop_nhds_zero_nat
+--     exact Continuous.tendsto' (by fun_prop) _ _ (by simp)
+--   -- Step 3: By completeness of `K`, let `w : ℕ → K` converge to some `v : K`.
+--   -- Prove that it satisfies all requirements.
+--   rcases cauchySeq_tendsto_of_isComplete h₁ (fun n => Subtype.mem _) seq_is_cauchy with
+--     ⟨v, hv, w_tendsto⟩
+--   use v
+--   use hv
+--   have h_cont : Continuous fun v => ‖u - v‖ :=
+--     Continuous.comp continuous_norm (Continuous.sub continuous_const continuous_id)
+--   have : Tendsto (fun n => ‖u - w n‖) atTop (𝓝 ‖u - v‖) := by
+--     convert Tendsto.comp h_cont.continuousAt w_tendsto
+--   exact tendsto_nhds_unique this norm_tendsto
 
-/-- Characterization of minimizers for the projection on a convex set in a real inner product
-space. -/
-theorem norm_eq_iInf_iff_real_inner_le_zero {K : Set F} (h : Convex ℝ K) {u : F} {v : F}
-    (hv : v ∈ K) : (‖u - v‖ = ⨅ w : K, ‖u - w‖) ↔ ∀ w ∈ K, ⟪u - v, w - v⟫_ℝ ≤ 0 := by
-  letI : Nonempty K := ⟨⟨v, hv⟩⟩
-  constructor
-  · intro eq w hw
-    let δ := ⨅ w : K, ‖u - w‖
-    let p := ⟪u - v, w - v⟫_ℝ
-    let q := ‖w - v‖ ^ 2
-    have δ_le (w : K) : δ ≤ ‖u - w‖ := ciInf_le ⟨0, fun _ ⟨_, h⟩ => h ▸ norm_nonneg _⟩ _
-    have δ_le' (w) (hw : w ∈ K) : δ ≤ ‖u - w‖ := δ_le ⟨w, hw⟩
-    have (θ : ℝ) (hθ₁ : 0 < θ) (hθ₂ : θ ≤ 1) : 2 * p ≤ θ * q := by
-      have : ‖u - v‖ ^ 2 ≤ ‖u - v‖ ^ 2 - 2 * θ * ⟪u - v, w - v⟫_ℝ + θ * θ * ‖w - v‖ ^ 2 :=
-        calc ‖u - v‖ ^ 2
-          _ ≤ ‖u - (θ • w + (1 - θ) • v)‖ ^ 2 := by
-            simp only [sq]; apply mul_self_le_mul_self (norm_nonneg _)
-            rw [eq]; apply δ_le'
-            apply h hw hv
-            exacts [le_of_lt hθ₁, sub_nonneg.2 hθ₂, add_sub_cancel _ _]
-          _ = ‖u - v - θ • (w - v)‖ ^ 2 := by
-            have : u - (θ • w + (1 - θ) • v) = u - v - θ • (w - v) := by
-              rw [smul_sub, sub_smul, one_smul]
-              simp only [sub_eq_add_neg, add_comm, add_left_comm, add_assoc, neg_add_rev]
-            rw [this]
-          _ = ‖u - v‖ ^ 2 - 2 * θ * inner (u - v) (w - v) + θ * θ * ‖w - v‖ ^ 2 := by
-            rw [@norm_sub_sq ℝ, inner_smul_right, norm_smul]
-            simp only [sq]
-            show
-              ‖u - v‖ * ‖u - v‖ - 2 * (θ * inner (u - v) (w - v)) +
-                absR θ * ‖w - v‖ * (absR θ * ‖w - v‖) =
-              ‖u - v‖ * ‖u - v‖ - 2 * θ * inner (u - v) (w - v) + θ * θ * (‖w - v‖ * ‖w - v‖)
-            rw [abs_of_pos hθ₁]; ring
-      have eq₁ :
-        ‖u - v‖ ^ 2 - 2 * θ * inner (u - v) (w - v) + θ * θ * ‖w - v‖ ^ 2 =
-          ‖u - v‖ ^ 2 + (θ * θ * ‖w - v‖ ^ 2 - 2 * θ * inner (u - v) (w - v)) := by
-        abel
-      rw [eq₁, le_add_iff_nonneg_right] at this
-      have eq₂ :
-        θ * θ * ‖w - v‖ ^ 2 - 2 * θ * inner (u - v) (w - v) =
-          θ * (θ * ‖w - v‖ ^ 2 - 2 * inner (u - v) (w - v)) := by ring
-      rw [eq₂] at this
-      exact le_of_sub_nonneg (nonneg_of_mul_nonneg_right this hθ₁)
-    by_cases hq : q = 0
-    · rw [hq] at this
-      have : p ≤ 0 := by
-        have := this (1 : ℝ) (by norm_num) (by norm_num)
-        linarith
-      exact this
-    · have q_pos : 0 < q := lt_of_le_of_ne (sq_nonneg _) fun h ↦ hq h.symm
-      by_contra hp
-      rw [not_le] at hp
-      let θ := min (1 : ℝ) (p / q)
-      have eq₁ : θ * q ≤ p :=
-        calc
-          θ * q ≤ p / q * q := mul_le_mul_of_nonneg_right (min_le_right _ _) (sq_nonneg _)
-          _ = p := div_mul_cancel₀ _ hq
-      have : 2 * p ≤ p :=
-        calc
-          2 * p ≤ θ * q := by
-            exact this θ (lt_min (by norm_num) (div_pos hp q_pos)) (by norm_num [θ])
-          _ ≤ p := eq₁
-      linarith
-  · intro h
-    apply le_antisymm
-    · apply le_ciInf
-      intro w
-      apply nonneg_le_nonneg_of_sq_le_sq (norm_nonneg _)
-      have := h w w.2
-      calc
-        ‖u - v‖ * ‖u - v‖ ≤ ‖u - v‖ * ‖u - v‖ - 2 * inner (u - v) ((w : F) - v) := by linarith
-        _ ≤ ‖u - v‖ ^ 2 - 2 * inner (u - v) ((w : F) - v) + ‖(w : F) - v‖ ^ 2 := by
-          rw [sq]
-          refine le_add_of_nonneg_right ?_
-          exact sq_nonneg _
-        _ = ‖u - v - (w - v)‖ ^ 2 := (@norm_sub_sq ℝ _ _ _ _ _ _).symm
-        _ = ‖u - w‖ * ‖u - w‖ := by
-          have : u - v - (w - v) = u - w := by abel
-          rw [this, sq]
-    · show ⨅ w : K, ‖u - w‖ ≤ (fun w : K => ‖u - w‖) ⟨v, hv⟩
-      apply ciInf_le
-      use 0
-      rintro y ⟨z, rfl⟩
-      exact norm_nonneg _
+-- /-- Characterization of minimizers for the projection on a convex set in a real inner product
+-- space. -/
+-- theorem norm_eq_iInf_iff_real_inner_le_zero {K : Set F} (h : Convex ℝ K) {u : F} {v : F}
+--     (hv : v ∈ K) : (‖u - v‖ = ⨅ w : K, ‖u - w‖) ↔ ∀ w ∈ K, ⟪u - v, w - v⟫_ℝ ≤ 0 := by
+--   letI : Nonempty K := ⟨⟨v, hv⟩⟩
+--   constructor
+--   · intro eq w hw
+--     let δ := ⨅ w : K, ‖u - w‖
+--     let p := ⟪u - v, w - v⟫_ℝ
+--     let q := ‖w - v‖ ^ 2
+--     have δ_le (w : K) : δ ≤ ‖u - w‖ := ciInf_le ⟨0, fun _ ⟨_, h⟩ => h ▸ norm_nonneg _⟩ _
+--     have δ_le' (w) (hw : w ∈ K) : δ ≤ ‖u - w‖ := δ_le ⟨w, hw⟩
+--     have (θ : ℝ) (hθ₁ : 0 < θ) (hθ₂ : θ ≤ 1) : 2 * p ≤ θ * q := by
+--       have : ‖u - v‖ ^ 2 ≤ ‖u - v‖ ^ 2 - 2 * θ * ⟪u - v, w - v⟫_ℝ + θ * θ * ‖w - v‖ ^ 2 :=
+--         calc ‖u - v‖ ^ 2
+--           _ ≤ ‖u - (θ • w + (1 - θ) • v)‖ ^ 2 := by
+--             simp only [sq]; apply mul_self_le_mul_self (norm_nonneg _)
+--             rw [eq]; apply δ_le'
+--             apply h hw hv
+--             exacts [le_of_lt hθ₁, sub_nonneg.2 hθ₂, add_sub_cancel _ _]
+--           _ = ‖u - v - θ • (w - v)‖ ^ 2 := by
+--             have : u - (θ • w + (1 - θ) • v) = u - v - θ • (w - v) := by
+--               rw [smul_sub, sub_smul, one_smul]
+--               simp only [sub_eq_add_neg, add_comm, add_left_comm, add_assoc, neg_add_rev]
+--             rw [this]
+--           _ = ‖u - v‖ ^ 2 - 2 * θ * inner (u - v) (w - v) + θ * θ * ‖w - v‖ ^ 2 := by
+--             rw [@norm_sub_sq ℝ, inner_smul_right, norm_smul]
+--             simp only [sq]
+--             show
+--               ‖u - v‖ * ‖u - v‖ - 2 * (θ * inner (u - v) (w - v)) +
+--                 absR θ * ‖w - v‖ * (absR θ * ‖w - v‖) =
+--               ‖u - v‖ * ‖u - v‖ - 2 * θ * inner (u - v) (w - v) + θ * θ * (‖w - v‖ * ‖w - v‖)
+--             rw [abs_of_pos hθ₁]; ring
+--       have eq₁ :
+--         ‖u - v‖ ^ 2 - 2 * θ * inner (u - v) (w - v) + θ * θ * ‖w - v‖ ^ 2 =
+--           ‖u - v‖ ^ 2 + (θ * θ * ‖w - v‖ ^ 2 - 2 * θ * inner (u - v) (w - v)) := by
+--         abel
+--       rw [eq₁, le_add_iff_nonneg_right] at this
+--       have eq₂ :
+--         θ * θ * ‖w - v‖ ^ 2 - 2 * θ * inner (u - v) (w - v) =
+--           θ * (θ * ‖w - v‖ ^ 2 - 2 * inner (u - v) (w - v)) := by ring
+--       rw [eq₂] at this
+--       exact le_of_sub_nonneg (nonneg_of_mul_nonneg_right this hθ₁)
+--     by_cases hq : q = 0
+--     · rw [hq] at this
+--       have : p ≤ 0 := by
+--         have := this (1 : ℝ) (by norm_num) (by norm_num)
+--         linarith
+--       exact this
+--     · have q_pos : 0 < q := lt_of_le_of_ne (sq_nonneg _) fun h ↦ hq h.symm
+--       by_contra hp
+--       rw [not_le] at hp
+--       let θ := min (1 : ℝ) (p / q)
+--       have eq₁ : θ * q ≤ p :=
+--         calc
+--           θ * q ≤ p / q * q := mul_le_mul_of_nonneg_right (min_le_right _ _) (sq_nonneg _)
+--           _ = p := div_mul_cancel₀ _ hq
+--       have : 2 * p ≤ p :=
+--         calc
+--           2 * p ≤ θ * q := by
+--             exact this θ (lt_min (by norm_num) (div_pos hp q_pos)) (by norm_num [θ])
+--           _ ≤ p := eq₁
+--       linarith
+--   · intro h
+--     apply le_antisymm
+--     · apply le_ciInf
+--       intro w
+--       apply nonneg_le_nonneg_of_sq_le_sq (norm_nonneg _)
+--       have := h w w.2
+--       calc
+--         ‖u - v‖ * ‖u - v‖ ≤ ‖u - v‖ * ‖u - v‖ - 2 * inner (u - v) ((w : F) - v) := by linarith
+--         _ ≤ ‖u - v‖ ^ 2 - 2 * inner (u - v) ((w : F) - v) + ‖(w : F) - v‖ ^ 2 := by
+--           rw [sq]
+--           refine le_add_of_nonneg_right ?_
+--           exact sq_nonneg _
+--         _ = ‖u - v - (w - v)‖ ^ 2 := (@norm_sub_sq ℝ _ _ _ _ _ _).symm
+--         _ = ‖u - w‖ * ‖u - w‖ := by
+--           have : u - v - (w - v) = u - w := by abel
+--           rw [this, sq]
+--     · show ⨅ w : K, ‖u - w‖ ≤ (fun w : K => ‖u - w‖) ⟨v, hv⟩
+--       apply ciInf_le
+--       use 0
+--       rintro y ⟨z, rfl⟩
+--       exact norm_nonneg _
 
 variable (K : Submodule ℂ E)
 
@@ -270,54 +271,55 @@ This point `v` is usually called the orthogonal projection of `u` onto `K`.
 -/
 theorem exists_norm_eq_iInf_of_complete_subspace (h : IsComplete (↑K : Set E)) :
     ∀ u : E, ∃ v ∈ K, ‖u - v‖ = ⨅ w : (K : Set E), ‖u - w‖ := by
-  letI : InnerProductSpace ℝ E := InnerProductSpace.rclikeToReal ℂ E
-  letI : Module ℝ E := RestrictScalars.module ℝ ℂ E
-  let K' : Submodule ℝ E := Submodule.restrictScalars ℝ K
-  exact exists_norm_eq_iInf_of_complete_convex ⟨0, K'.zero_mem⟩ h K'.convex
+  sorry
+  -- letI : InnerProductSpace ℝ E := InnerProductSpace.rclikeToReal ℂ E
+  -- letI : Module ℝ E := RestrictScalars.module ℝ ℂ E
+  -- let K' : Submodule ℝ E := Submodule.restrictScalars ℝ K
+  -- exact exists_norm_eq_iInf_of_complete_convex ⟨0, K'.zero_mem⟩ h K'.convex
 
-/-- Characterization of minimizers in the projection on a subspace, in the real case.
-Let `u` be a point in a real inner product space, and let `K` be a nonempty subspace.
-Then point `v` minimizes the distance `‖u - v‖` over points in `K` if and only if
-for all `w ∈ K`, `⟪u - v, w⟫ = 0` (i.e., `u - v` is orthogonal to the subspace `K`).
-This is superseded by `norm_eq_iInf_iff_inner_eq_zero` that gives the same conclusion over
-any `RCLike` field.
--/
-theorem norm_eq_iInf_iff_real_inner_eq_zero (K : Submodule ℝ F) {u : F} {v : F} (hv : v ∈ K) :
-    (‖u - v‖ = ⨅ w : (↑K : Set F), ‖u - w‖) ↔ ∀ w ∈ K, ⟪u - v, w⟫_ℝ = 0 :=
-  Iff.intro
-    (by
-      intro h
-      have h : ∀ w ∈ K, ⟪u - v, w - v⟫_ℝ ≤ 0 := by
-        rwa [norm_eq_iInf_iff_real_inner_le_zero] at h
-        exacts [K.convex, hv]
-      intro w hw
-      have le : ⟪u - v, w⟫_ℝ ≤ 0 := by
-        let w' := w + v
-        have : w' ∈ K := Submodule.add_mem _ hw hv
-        have h₁ := h w' this
-        have h₂ : w' - v = w := by
-          simp only [w', add_neg_cancel_right, sub_eq_add_neg]
-        rw [h₂] at h₁
-        exact h₁
-      have ge : ⟪u - v, w⟫_ℝ ≥ 0 := by
-        let w'' := -w + v
-        have : w'' ∈ K := Submodule.add_mem _ (Submodule.neg_mem _ hw) hv
-        have h₁ := h w'' this
-        have h₂ : w'' - v = -w := by
-          simp only [w'', neg_inj, add_neg_cancel_right, sub_eq_add_neg]
-        rw [h₂, inner_neg_right] at h₁
-        linarith
-      exact le_antisymm le ge)
-    (by
-      intro h
-      have : ∀ w ∈ K, ⟪u - v, w - v⟫_ℝ ≤ 0 := by
-        intro w hw
-        let w' := w - v
-        have : w' ∈ K := Submodule.sub_mem _ hw hv
-        have h₁ := h w' this
-        exact le_of_eq h₁
-      rwa [norm_eq_iInf_iff_real_inner_le_zero]
-      exacts [Submodule.convex _, hv])
+-- /-- Characterization of minimizers in the projection on a subspace, in the real case.
+-- Let `u` be a point in a real inner product space, and let `K` be a nonempty subspace.
+-- Then point `v` minimizes the distance `‖u - v‖` over points in `K` if and only if
+-- for all `w ∈ K`, `⟪u - v, w⟫ = 0` (i.e., `u - v` is orthogonal to the subspace `K`).
+-- This is superseded by `norm_eq_iInf_iff_inner_eq_zero` that gives the same conclusion over
+-- any `RCLike` field.
+-- -/
+-- theorem norm_eq_iInf_iff_real_inner_eq_zero (K : Submodule ℝ F) {u : F} {v : F} (hv : v ∈ K) :
+--     (‖u - v‖ = ⨅ w : (↑K : Set F), ‖u - w‖) ↔ ∀ w ∈ K, ⟪u - v, w⟫ = 0 :=
+--   Iff.intro
+--     (by
+--       intro h
+--       have h : ∀ w ∈ K, ⟪u - v, w - v⟫_ℝ ≤ 0 := by
+--         rwa [norm_eq_iInf_iff_real_inner_le_zero] at h
+--         exacts [K.convex, hv]
+--       intro w hw
+--       have le : ⟪u - v, w⟫_ℝ ≤ 0 := by
+--         let w' := w + v
+--         have : w' ∈ K := Submodule.add_mem _ hw hv
+--         have h₁ := h w' this
+--         have h₂ : w' - v = w := by
+--           simp only [w', add_neg_cancel_right, sub_eq_add_neg]
+--         rw [h₂] at h₁
+--         exact h₁
+--       have ge : ⟪u - v, w⟫_ℝ ≥ 0 := by
+--         let w'' := -w + v
+--         have : w'' ∈ K := Submodule.add_mem _ (Submodule.neg_mem _ hw) hv
+--         have h₁ := h w'' this
+--         have h₂ : w'' - v = -w := by
+--           simp only [w'', neg_inj, add_neg_cancel_right, sub_eq_add_neg]
+--         rw [h₂, inner_neg_right] at h₁
+--         linarith
+--       exact le_antisymm le ge)
+--     (by
+--       intro h
+--       have : ∀ w ∈ K, ⟪u - v, w - v⟫_ℝ ≤ 0 := by
+--         intro w hw
+--         let w' := w - v
+--         have : w' ∈ K := Submodule.sub_mem _ hw hv
+--         have h₁ := h w' this
+--         exact le_of_eq h₁
+--       rwa [norm_eq_iInf_iff_real_inner_le_zero]
+--       exacts [Submodule.convex _, hv])
 
 /-- Characterization of minimizers in the projection on a subspace.
 Let `u` be a point in an inner product space, and let `K` be a nonempty subspace.
@@ -326,27 +328,28 @@ for all `w ∈ K`, `⟪u - v, w⟫ = 0` (i.e., `u - v` is orthogonal to the subs
 -/
 theorem norm_eq_iInf_iff_inner_eq_zero {u : E} {v : E} (hv : v ∈ K) :
     (‖u - v‖ = ⨅ w : K, ‖u - w‖) ↔ ∀ w ∈ K, ⟪u - v, w⟫ = 0 := by
-  letI : InnerProductSpace ℝ E := InnerProductSpace.rclikeToReal ℂ E
-  letI : Module ℝ E := RestrictScalars.module ℝ ℂ E
-  let K' : Submodule ℝ E := K.restrictScalars ℝ
-  constructor
-  · intro H
-    have A : ∀ w ∈ K, re ⟪u - v, w⟫ = 0 := (norm_eq_iInf_iff_real_inner_eq_zero K' hv).1 H
-    intro w hw
-    apply RCLike.ext
-    · simp [A w hw]
-    · symm
-      calc
-        im (0 : ℂ) = 0 := im.map_zero
-        _ = re ⟪u - v, (-I : ℂ) • w⟫ := (A _ (K.smul_mem (-I) hw)).symm
-        _ = re (-I * ⟪u - v, w⟫) := by rw [inner_smul_right]
-        _ = im ⟪u - v, w⟫ := by simp
-  · intro H
-    have : ∀ w ∈ K', ⟪u - v, w⟫_ℝ = 0 := by
-      intro w hw
-      rw [real_inner_eq_re_inner, H w hw]
-      exact zero_re'
-    exact (norm_eq_iInf_iff_real_inner_eq_zero K' hv).2 this
+  sorry
+  -- letI : InnerProductSpace ℝ E := InnerProductSpace.rclikeToReal ℂ E
+  -- letI : Module ℝ E := RestrictScalars.module ℝ ℂ E
+  -- let K' : Submodule ℝ E := K.restrictScalars ℝ
+  -- constructor
+  -- · intro H
+  --   have A : ∀ w ∈ K, re ⟪u - v, w⟫ = 0 := (norm_eq_iInf_iff_real_inner_eq_zero K' hv).1 H
+  --   intro w hw
+  --   apply RCLike.ext
+  --   · simp [A w hw]
+  --   · symm
+  --     calc
+  --       im (0 : ℂ) = 0 := im.map_zero
+  --       _ = re ⟪u - v, (-I : ℂ) • w⟫ := (A _ (K.smul_mem (-I) hw)).symm
+  --       _ = re (-I * ⟪u - v, w⟫) := by rw [inner_smul_right]
+  --       _ = im ⟪u - v, w⟫ := by simp
+  -- · intro H
+  --   have : ∀ w ∈ K', ⟪u - v, w⟫_ℝ = 0 := by
+  --     intro w hw
+  --     rw [real_inner_eq_re_inner, H w hw]
+  --     exact zero_re'
+  --   exact (norm_eq_iInf_iff_real_inner_eq_zero K' hv).2 this
 
 /-- A subspace `K : Submodule ℂ E` has an orthogonal projection if every vector `v : E` admits an
 orthogonal projection to `K`. -/
@@ -369,7 +372,7 @@ instance [HasOrthogonalProjection K] : HasOrthogonalProjection Kᗮ where
     exact K.le_orthogonal_orthogonal hwK
 
 instance HasOrthogonalProjection.map_linearIsometryEquiv [HasOrthogonalProjection K]
-    {E' : Type*} [NormedAddCommGroup E'] [InnerProductSpace ℂ E'] (f : E ≃ₗᵢ[ℂ] E') :
+    {E' : Type*} [NormedAddCommGroup E'] [InnerProductSpace E'] (f : E ≃ₗᵢ[ℂ] E') :
     HasOrthogonalProjection (K.map (f.toLinearEquiv : E →ₗ[ℂ] E')) where
   exists_orthogonal v := by
     rcases HasOrthogonalProjection.exists_orthogonal (K := K) (f.symm v) with ⟨w, hwK, hw⟩
@@ -377,7 +380,7 @@ instance HasOrthogonalProjection.map_linearIsometryEquiv [HasOrthogonalProjectio
     erw [← f.symm.inner_map_map, f.symm_apply_apply, map_sub, f.symm_apply_apply, hw u hu]
 
 instance HasOrthogonalProjection.map_linearIsometryEquiv' [HasOrthogonalProjection K]
-    {E' : Type*} [NormedAddCommGroup E'] [InnerProductSpace ℂ E'] (f : E ≃ₗᵢ[ℂ] E') :
+    {E' : Type*} [NormedAddCommGroup E'] [InnerProductSpace E'] (f : E ≃ₗᵢ[ℂ] E') :
     HasOrthogonalProjection (K.map f.toLinearIsometry) :=
   HasOrthogonalProjection.map_linearIsometryEquiv K f
 
@@ -415,7 +418,7 @@ in setting up the bundled version and should not be used once that is
 defined. -/
 theorem eq_orthogonalProjectionFn_of_mem_of_inner_eq_zero {u v : E} (hvm : v ∈ K)
     (hvo : ∀ w ∈ K, ⟪u - v, w⟫ = 0) : orthogonalProjectionFn K u = v := by
-  rw [← sub_eq_zero, ← @inner_self_eq_zero ℂ]
+  rw [← sub_eq_zero, ← @inner_self_eq_zero]
   have hvs : orthogonalProjectionFn K u - v ∈ K :=
     Submodule.sub_mem K (orthogonalProjectionFn_mem u) hvm
   have huo : ⟪u - orthogonalProjectionFn K u, orthogonalProjectionFn K u - v⟫ = 0 :=
@@ -438,45 +441,48 @@ theorem orthogonalProjectionFn_norm_sq (v : E) :
 
 /-- The orthogonal projection onto a complete subspace. -/
 def orthogonalProjection : E →L[ℂ] K :=
-  LinearMap.mkContinuous
-    { toFun := fun v => ⟨orthogonalProjectionFn K v, orthogonalProjectionFn_mem v⟩
-      map_add' := fun x y => by
-        have hm : orthogonalProjectionFn K x + orthogonalProjectionFn K y ∈ K :=
-          Submodule.add_mem K (orthogonalProjectionFn_mem x) (orthogonalProjectionFn_mem y)
-        have ho :
-          ∀ w ∈ K, ⟪x + y - (orthogonalProjectionFn K x + orthogonalProjectionFn K y), w⟫ = 0 := by
-          intro w hw
-          rw [add_sub_add_comm, inner_add_left, orthogonalProjectionFn_inner_eq_zero _ w hw,
-            orthogonalProjectionFn_inner_eq_zero _ w hw, add_zero]
-        ext
-        simp [eq_orthogonalProjectionFn_of_mem_of_inner_eq_zero hm ho]
-      map_smul' := fun c x => by
-        have hm : c • orthogonalProjectionFn K x ∈ K :=
-          Submodule.smul_mem K _ (orthogonalProjectionFn_mem x)
-        have ho : ∀ w ∈ K, ⟪c • x - c • orthogonalProjectionFn K x, w⟫ = 0 := by
-          intro w hw
-          rw [← smul_sub, inner_smul_left, orthogonalProjectionFn_inner_eq_zero _ w hw,
-            mul_zero]
-        ext
-        simp [eq_orthogonalProjectionFn_of_mem_of_inner_eq_zero hm ho] }
-    1 fun x => by
-    simp only [one_mul, LinearMap.coe_mk]
-    refine le_of_pow_le_pow_left two_ne_zero (norm_nonneg _) ?_
-    change ‖orthogonalProjectionFn K x‖ ^ 2 ≤ ‖x‖ ^ 2
-    nlinarith [orthogonalProjectionFn_norm_sq K x]
+  sorry
+  -- LinearMap.mkContinuous
+  --   { toFun := fun v => ⟨orthogonalProjectionFn K v, orthogonalProjectionFn_mem v⟩
+  --     map_add' := fun x y => by
+  --       have hm : orthogonalProjectionFn K x + orthogonalProjectionFn K y ∈ K :=
+  --         Submodule.add_mem K (orthogonalProjectionFn_mem x) (orthogonalProjectionFn_mem y)
+  --       have ho :
+  --         ∀ w ∈ K, ⟪x + y - (orthogonalProjectionFn K x + orthogonalProjectionFn K y), w⟫ = 0 :=
+  -- by
+  --         intro w hw
+  --         rw [add_sub_add_comm, inner_add_left, orthogonalProjectionFn_inner_eq_zero _ w hw,
+  --           orthogonalProjectionFn_inner_eq_zero _ w hw, add_zero]
+  --       ext
+  --       simp [eq_orthogonalProjectionFn_of_mem_of_inner_eq_zero hm ho]
+  --     map_smul' := fun c x => by
+  --       have hm : c • orthogonalProjectionFn K x ∈ K :=
+  --         Submodule.smul_mem K _ (orthogonalProjectionFn_mem x)
+  --       have ho : ∀ w ∈ K, ⟪c • x - c • orthogonalProjectionFn K x, w⟫ = 0 := by
+  --         intro w hw
+  --         rw [← smul_sub, inner_smul_left, orthogonalProjectionFn_inner_eq_zero _ w hw,
+  --           mul_zero]
+  --       ext
+  --       simp [eq_orthogonalProjectionFn_of_mem_of_inner_eq_zero hm ho] }
+  --   1 fun x => by
+  --   simp only [one_mul, LinearMap.coe_mk]
+  --   refine le_of_pow_le_pow_left two_ne_zero (norm_nonneg _) ?_
+  --   change ‖orthogonalProjectionFn K x‖ ^ 2 ≤ ‖x‖ ^ 2
+  --   nlinarith [orthogonalProjectionFn_norm_sq K x]
 
 variable {K}
 
 @[simp]
 theorem orthogonalProjectionFn_eq (v : E) :
     orthogonalProjectionFn K v = (orthogonalProjection K v : E) :=
-  rfl
+  sorry
 
 /-- The characterization of the orthogonal projection. -/
 @[simp]
 theorem orthogonalProjection_inner_eq_zero (v : E) :
     ∀ w ∈ K, ⟪v - orthogonalProjection K v, w⟫ = 0 :=
-  orthogonalProjectionFn_inner_eq_zero v
+  -- orthogonalProjectionFn_inner_eq_zero v
+  sorry
 
 /-- The difference of `v` from its orthogonal projection onto `K` is in `Kᗮ`. -/
 @[simp]
@@ -489,13 +495,15 @@ theorem sub_orthogonalProjection_mem_orthogonal (v : E) : v - orthogonalProjecti
 orthogonality property. -/
 theorem eq_orthogonalProjection_of_mem_of_inner_eq_zero {u v : E} (hvm : v ∈ K)
     (hvo : ∀ w ∈ K, ⟪u - v, w⟫ = 0) : (orthogonalProjection K u : E) = v :=
-  eq_orthogonalProjectionFn_of_mem_of_inner_eq_zero hvm hvo
+  sorry
+  -- eq_orthogonalProjectionFn_of_mem_of_inner_eq_zero hvm hvo
 
 /-- A point in `K` with the orthogonality property (here characterized in terms of `Kᗮ`) must be the
 orthogonal projection. -/
 theorem eq_orthogonalProjection_of_mem_orthogonal {u v : E} (hv : v ∈ K)
     (hvo : u - v ∈ Kᗮ) : (orthogonalProjection K u : E) = v :=
-  eq_orthogonalProjectionFn_of_mem_of_inner_eq_zero hv <| (Submodule.mem_orthogonal' _ _).1 hvo
+  sorry
+  -- eq_orthogonalProjectionFn_of_mem_of_inner_eq_zero hv <| (Submodule.mem_orthogonal' _ _).1 hvo
 
 /-- A point in `K` with the orthogonality property (here characterized in terms of `Kᗮ`) must be the
 orthogonal projection. -/
@@ -550,7 +558,7 @@ theorem ker_orthogonalProjection : LinearMap.ker (orthogonalProjection K) = Kᗮ
   ext; exact orthogonalProjection_eq_zero_iff
 
 theorem LinearIsometry.map_orthogonalProjection {E E' : Type*} [NormedAddCommGroup E]
-    [NormedAddCommGroup E'] [InnerProductSpace ℂ E] [InnerProductSpace ℂ E'] (f : E →ₗᵢ[ℂ] E')
+    [NormedAddCommGroup E'] [InnerProductSpace E] [InnerProductSpace E'] (f : E →ₗᵢ[ℂ] E')
     (p : Submodule ℂ E) [HasOrthogonalProjection p] [HasOrthogonalProjection (p.map f.toLinearMap)]
     (x : E) : f (orthogonalProjection p x) = orthogonalProjection (p.map f.toLinearMap) (f x) := by
   refine (eq_orthogonalProjection_of_mem_of_inner_eq_zero ?_ fun y hy => ?_).symm
@@ -559,7 +567,7 @@ theorem LinearIsometry.map_orthogonalProjection {E E' : Type*} [NormedAddCommGro
   rw [← f.map_sub, f.inner_map_map, orthogonalProjection_inner_eq_zero x x' hx']
 
 theorem LinearIsometry.map_orthogonalProjection' {E E' : Type*} [NormedAddCommGroup E]
-    [NormedAddCommGroup E'] [InnerProductSpace ℂ E] [InnerProductSpace ℂ E'] (f : E →ₗᵢ[ℂ] E')
+    [NormedAddCommGroup E'] [InnerProductSpace E] [InnerProductSpace E'] (f : E →ₗᵢ[ℂ] E')
     (p : Submodule ℂ E) [HasOrthogonalProjection p] [HasOrthogonalProjection (p.map f)] (x : E) :
     f (orthogonalProjection p x) = orthogonalProjection (p.map f) (f x) :=
   have : HasOrthogonalProjection (p.map f.toLinearMap) := ‹_›
@@ -567,7 +575,7 @@ theorem LinearIsometry.map_orthogonalProjection' {E E' : Type*} [NormedAddCommGr
 
 /-- Orthogonal projection onto the `Submodule.map` of a subspace. -/
 theorem orthogonalProjection_map_apply {E E' : Type*} [NormedAddCommGroup E]
-    [NormedAddCommGroup E'] [InnerProductSpace ℂ E] [InnerProductSpace ℂ E'] (f : E ≃ₗᵢ[ℂ] E')
+    [NormedAddCommGroup E'] [InnerProductSpace E] [InnerProductSpace E'] (f : E ≃ₗᵢ[ℂ] E')
     (p : Submodule ℂ E) [HasOrthogonalProjection p] (x : E') :
     (orthogonalProjection (p.map (f.toLinearEquiv : E →ₗ[ℂ] E')) x : E') =
       f (orthogonalProjection p (f.symm x)) := by
@@ -582,7 +590,7 @@ variable (K)
 
 /-- The orthogonal projection has norm `≤ 1`. -/
 theorem orthogonalProjection_norm_le : ‖orthogonalProjection K‖ ≤ 1 :=
-  LinearMap.mkContinuous_norm_le _ (by norm_num) _
+  LinearMap.mkContinuous_norm_le _ (by norm_num) sorry
 
 theorem smul_orthogonalProjection_singleton {v : E} (w : E) :
     ((‖v‖ ^ 2 : ℝ) : ℂ) • (orthogonalProjection (ℂ ∙ v) w : E) = ⟪v, w⟫ • v := by
@@ -687,14 +695,14 @@ theorem reflection_mem_subspace_eq_self {x : E} (hx : x ∈ K) : reflection K x 
 
 /-- Reflection in the `Submodule.map` of a subspace. -/
 theorem reflection_map_apply {E E' : Type*} [NormedAddCommGroup E] [NormedAddCommGroup E']
-    [InnerProductSpace ℂ E] [InnerProductSpace ℂ E'] (f : E ≃ₗᵢ[ℂ] E') (K : Submodule ℂ E)
+    [InnerProductSpace E] [InnerProductSpace E'] (f : E ≃ₗᵢ[ℂ] E') (K : Submodule ℂ E)
     [HasOrthogonalProjection K] (x : E') :
     reflection (K.map (f.toLinearEquiv : E →ₗ[ℂ] E')) x = f (reflection K (f.symm x)) := by
   simp [two_smul, reflection_apply, orthogonalProjection_map_apply f K x]
 
 /-- Reflection in the `Submodule.map` of a subspace. -/
 theorem reflection_map {E E' : Type*} [NormedAddCommGroup E] [NormedAddCommGroup E']
-    [InnerProductSpace ℂ E] [InnerProductSpace ℂ E'] (f : E ≃ₗᵢ[ℂ] E') (K : Submodule ℂ E)
+    [InnerProductSpace E] [InnerProductSpace E'] (f : E ≃ₗᵢ[ℂ] E') (K : Submodule ℂ E)
     [HasOrthogonalProjection K] :
     reflection (K.map (f.toLinearEquiv : E →ₗ[ℂ] E')) = f.symm.trans ((reflection K).trans f) :=
   LinearIsometryEquiv.ext <| reflection_map_apply f K
@@ -1047,7 +1055,7 @@ variable {ι : Type*}
 they provide an internal direct sum decomposition of `E`) if and only if their span has trivial
 orthogonal complement. -/
 theorem OrthogonalFamily.isInternal_iff_of_isComplete [DecidableEq ι] {V : ι → Submodule ℂ E}
-    (hV : OrthogonalFamily ℂ (fun i => V i) fun i => (V i).subtypeₗᵢ)
+    (hV : OrthogonalFamily (fun i => V i) fun i => (V i).subtypeₗᵢ)
     (hc : IsComplete (↑(iSup V) : Set E)) : DirectSum.IsInternal V ↔ (iSup V)ᗮ = ⊥ := by
   haveI : CompleteSpace (↥(iSup V)) := hc.completeSpace_coe
   simp only [DirectSum.isInternal_submodule_iff_independent_and_iSup_eq_top, hV.independent,
@@ -1057,7 +1065,7 @@ theorem OrthogonalFamily.isInternal_iff_of_isComplete [DecidableEq ι] {V : ι �
 they provide an internal direct sum decomposition of `E`) if and only if their span has trivial
 orthogonal complement. -/
 theorem OrthogonalFamily.isInternal_iff [DecidableEq ι] [FiniteDimensional ℂ E]
-    {V : ι → Submodule ℂ E} (hV : OrthogonalFamily ℂ (fun i => V i) fun i => (V i).subtypeₗᵢ) :
+    {V : ι → Submodule ℂ E} (hV : OrthogonalFamily (fun i => V i) fun i => (V i).subtypeₗᵢ) :
     DirectSum.IsInternal V ↔ (iSup V)ᗮ = ⊥ :=
   haveI h := FiniteDimensional.proper_rclike ℂ (↥(iSup V))
   hV.isInternal_iff_of_isComplete (completeSpace_coe_iff_isComplete.mp inferInstance)
@@ -1066,7 +1074,7 @@ open DirectSum
 
 /-- If `x` lies within an orthogonal family `v`, it can be expressed as a sum of projections. -/
 theorem OrthogonalFamily.sum_projection_of_mem_iSup [Fintype ι] {V : ι → Submodule ℂ E}
-    [∀ i, CompleteSpace (V i)] (hV : OrthogonalFamily ℂ (fun i => V i) fun i => (V i).subtypeₗᵢ)
+    [∀ i, CompleteSpace (V i)] (hV : OrthogonalFamily (fun i => V i) fun i => (V i).subtypeₗᵢ)
     (x : E) (hx : x ∈ iSup V) : (∑ i, (orthogonalProjection (V i) x : E)) = x := by
   -- Porting note: switch to the better `induction _ using`. Need the primed induction principle,
   -- the unprimed one doesn't work with `induction` (as it isn't as syntactically general)
@@ -1086,7 +1094,7 @@ theorem OrthogonalFamily.sum_projection_of_mem_iSup [Fintype ι] {V : ι → Sub
 /-- If a family of submodules is orthogonal, then the `orthogonalProjection` on a direct sum
 is just the coefficient of that direct sum. -/
 theorem OrthogonalFamily.projection_directSum_coeAddHom [DecidableEq ι] {V : ι → Submodule ℂ E}
-    (hV : OrthogonalFamily ℂ (fun i => V i) fun i => (V i).subtypeₗᵢ) (x : ⨁ i, V i) (i : ι)
+    (hV : OrthogonalFamily (fun i => V i) fun i => (V i).subtypeₗᵢ) (x : ⨁ i, V i) (i : ι)
     [CompleteSpace (V i)] :
     orthogonalProjection (V i) (DirectSum.coeAddMonoidHom V x) = x i := by
   induction' x using DirectSum.induction_on with j x x y hx hy
@@ -1110,7 +1118,7 @@ The projection function is `decompose V x i = orthogonalProjection (V i) x`.
 
 See note [reducible non-instances]. -/
 abbrev OrthogonalFamily.decomposition [DecidableEq ι] [Fintype ι] {V : ι → Submodule ℂ E}
-    [∀ i, CompleteSpace (V i)] (hV : OrthogonalFamily ℂ (fun i => V i) fun i => (V i).subtypeₗᵢ)
+    [∀ i, CompleteSpace (V i)] (hV : OrthogonalFamily (fun i => V i) fun i => (V i).subtypeₗᵢ)
     (h : iSup V = ⊤) : DirectSum.Decomposition V where
   decompose' x := DFinsupp.equivFunOnFintype.symm fun i => orthogonalProjection (V i) x
   left_inv x := by

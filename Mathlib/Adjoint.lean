@@ -11,7 +11,7 @@ open scoped ComplexConjugate
 
 variable {E F : Type}
 variable [NormedAddCommGroup E] [NormedAddCommGroup F]
-variable [InnerProductSpace ℂ E] [InnerProductSpace ℂ F]
+variable [InnerProductSpace E] [InnerProductSpace F]
 variable [CompleteSpace E] [CompleteSpace F]
 
 -- #time

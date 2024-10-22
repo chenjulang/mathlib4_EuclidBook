@@ -24,10 +24,10 @@ Note this is not the same unicode symbol as `⊥` (`Bot`).
 -/
 
 variable {E F : Type*}
-variable [NormedAddCommGroup E] [InnerProductSpace ℂ E]
-variable [NormedAddCommGroup F] [InnerProductSpace ℂ F]
+variable [NormedAddCommGroup E] [InnerProductSpace E]
+variable [NormedAddCommGroup F] [InnerProductSpace F]
 
-local notation "⟪" x ", " y "⟫" => @inner ℂ _ _ x y
+local notation "⟪" x ", " y "⟫" => @inner _ _ x y
 
 namespace Submodule
 
@@ -100,7 +100,7 @@ theorem orthogonal_disjoint : Disjoint K Kᗮ := by simp [disjoint_iff, K.inf_or
 
 /-- `Kᗮ` can be characterized as the intersection of the kernels of the operations of
 inner product with each of the elements of `K`. -/
-theorem orthogonal_eq_inter : Kᗮ = ⨅ v : K, LinearMap.ker (innerSL ℂ (v : E)) := by
+theorem orthogonal_eq_inter : Kᗮ = ⨅ v : K, LinearMap.ker (innerSL (v : E)) := by
   apply le_antisymm
   · rw [le_iInf_iff]
     rintro ⟨v, hv⟩ w hw
@@ -112,7 +112,7 @@ theorem orthogonal_eq_inter : Kᗮ = ⨅ v : K, LinearMap.ker (innerSL ℂ (v : 
 /-- The orthogonal complement of any submodule `K` is closed. -/
 theorem isClosed_orthogonal : IsClosed (Kᗮ : Set E) := by
   rw [orthogonal_eq_inter K]
-  convert isClosed_iInter <| fun v : K => ContinuousLinearMap.isClosed_ker (innerSL ℂ (v : E))
+  convert isClosed_iInter <| fun v : K => ContinuousLinearMap.isClosed_ker (innerSL (v : E))
   simp only [iInf_coe]
 
 /-- In a complete space, the orthogonal complement of any submodule `K` is complete. -/
@@ -183,7 +183,7 @@ theorem orthogonal_eq_top_iff : Kᗮ = ⊤ ↔ K = ⊥ := by
   rwa [h, inf_comm, top_inf_eq] at this
 
 theorem orthogonalFamily_self :
-    OrthogonalFamily ℂ (fun b => ↥(cond b K Kᗮ)) fun b => (cond b K Kᗮ).subtypeₗᵢ
+    OrthogonalFamily (fun b => ↥(cond b K Kᗮ)) fun b => (cond b K Kᗮ).subtypeₗᵢ
   | true, true => absurd rfl
   | true, false => fun _ x y => inner_right_of_mem_orthogonal x.prop y.prop
   | false, true => fun _ x y => inner_left_of_mem_orthogonal y.prop x.prop
@@ -346,7 +346,7 @@ theorem IsOrtho.comap_iff (f : E ≃ₗᵢ[ℂ] F) {U V : Submodule ℂ F} : U.c
 end Submodule
 
 theorem orthogonalFamily_iff_pairwise {ι} {V : ι → Submodule ℂ E} :
-    (OrthogonalFamily ℂ (fun i => V i) fun i => (V i).subtypeₗᵢ) ↔ Pairwise ((· ⟂ ·) on V) :=
+    (OrthogonalFamily (fun i => V i) fun i => (V i).subtypeₗᵢ) ↔ Pairwise ((· ⟂ ·) on V) :=
   forall₃_congr fun _i _j _hij =>
     Subtype.forall.trans <|
       forall₂_congr fun _x _hx => Subtype.forall.trans <|
@@ -356,6 +356,6 @@ alias ⟨OrthogonalFamily.pairwise, OrthogonalFamily.of_pairwise⟩ := orthogona
 
 /-- Two submodules in an orthogonal family with different indices are orthogonal. -/
 theorem OrthogonalFamily.isOrtho {ι} {V : ι → Submodule ℂ E}
-    (hV : OrthogonalFamily ℂ (fun i => V i) fun i => (V i).subtypeₗᵢ) {i j : ι} (hij : i ≠ j) :
+    (hV : OrthogonalFamily (fun i => V i) fun i => (V i).subtypeₗᵢ) {i j : ι} (hij : i ≠ j) :
     V i ⟂ V j :=
   hV.pairwise hij

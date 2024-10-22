@@ -45,9 +45,9 @@ namespace InnerProductSpace
 
 open RCLike ContinuousLinearMap
 
-variable (E : Type*) [NormedAddCommGroup E] [InnerProductSpace ℂ E]
+variable (E : Type*) [NormedAddCommGroup E] [InnerProductSpace E]
 
-local notation "⟪" x ", " y "⟫" => @inner ℂ E _ x y
+-- local notation "⟪" x ", " y "⟫" => @inner E _ x y
 
 local postfix:90 "†" => starRingEnd _
 
@@ -58,7 +58,7 @@ If `E` is complete, this operation is surjective, hence a conjugate-linear isome
 see `toDual`.
 -/
 def toDualMap : E →ₗᵢ⋆[ℂ] NormedSpace.Dual ℂ E :=
-  { innerSL ℂ with norm_map' := innerSL_apply_norm _ }
+  { innerSL with norm_map' := innerSL_apply_norm }
 
 variable {E}
 
@@ -66,7 +66,7 @@ variable {E}
 theorem toDualMap_apply {x y : E} : toDualMap E x y = ⟪x, y⟫ :=
   rfl
 
-theorem innerSL_norm [Nontrivial E] : ‖(innerSL ℂ : E →L⋆[ℂ] E →L[ℂ] ℂ)‖ = 1 :=
+theorem innerSL_norm [Nontrivial E] : ‖(innerSL : E →L⋆[ℂ] E →L[ℂ] ℂ)‖ = 1 :=
   show ‖(toDualMap E).toContinuousLinearMap‖ = 1 from LinearIsometry.norm_toContinuousLinearMap _
 
 theorem ext_inner_left_basis {ι : Type*} {x y : E} (b : Basis ι ℂ E)
@@ -162,7 +162,7 @@ theorem continuousLinearMapOfBilin_apply (v w : E) : ⟪B♯ v, w⟫ = B v w := 
 
 theorem unique_continuousLinearMapOfBilin {v f : E} (is_lax_milgram : ∀ w, ⟪f, w⟫ = B v w) :
     f = B♯ v := by
-  refine ext_inner_right ℂ ?_
+  refine ext_inner_right ?_
   intro w
   rw [continuousLinearMapOfBilin_apply]
   exact is_lax_milgram w
