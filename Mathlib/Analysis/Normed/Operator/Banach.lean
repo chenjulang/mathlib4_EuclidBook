@@ -6,7 +6,6 @@ Authors: Sébastien Gouëzel
 import Mathlib.Topology.Baire.Lemmas
 import Mathlib.Topology.Baire.CompleteMetrizable
 import Mathlib.Analysis.NormedSpace.OperatorNorm.NormedSpace
-import Mathlib.Analysis.Normed.Affine.Isometry
 import Mathlib.Analysis.Normed.Group.InfiniteSum
 
 /-!
@@ -253,14 +252,6 @@ protected theorem quotientMap (surj : Surjective f) : QuotientMap f :=
   (f.isOpenMap surj).to_quotientMap f.continuous surj
 
 end
-
-theorem _root_.AffineMap.isOpenMap {F : Type*} [NormedAddCommGroup F] [NormedSpace 𝕜 F]
-    [CompleteSpace F] {P Q : Type*} [MetricSpace P] [NormedAddTorsor E P] [MetricSpace Q]
-    [NormedAddTorsor F Q] (f : P →ᵃ[𝕜] Q) (hf : Continuous f) (surj : Surjective f) :
-    IsOpenMap f :=
-  AffineMap.isOpenMap_linear_iff.mp <|
-    ContinuousLinearMap.isOpenMap { f.linear with cont := AffineMap.continuous_linear_iff.mpr hf }
-      (f.linear_surjective_iff.mpr surj)
 
 /-! ### Applications of the Banach open mapping theorem -/
 

@@ -20,5 +20,7 @@ variable [CompleteSpace E] [CompleteSpace F]
 noncomputable def ContinuousLinearMap.adjoint : (E →L[ℂ] F) →ₗᵢ⋆[ℂ] F →L[ℂ] E :=
   ((InnerProductSpace.toDual E).symm.toLinearIsometry.compSL F _).comp <|
     (ContinuousLinearMap.flipₗᵢ'' E F ℂ conj (RingHom.id ℂ)).toLinearIsometry.comp <|
-    ((Complex.conjSLIE.toLinearIsometry.compSL F _).comp
-      (InnerProductSpace.toDual F).toLinearIsometry).compSL E _
+    LinearIsometry.compSL E _
+      (LinearIsometry.comp
+        (Complex.conjSLIE.toLinearIsometry.compSL F _)
+        (InnerProductSpace.toDual F).toLinearIsometry)

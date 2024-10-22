@@ -6,7 +6,6 @@ Authors: Sébastien Gouëzel
 import Mathlib.Analysis.Asymptotics.AsymptoticEquivalent
 import Mathlib.Analysis.Normed.Group.Lemmas
 import Mathlib.Analysis.Normed.Affine.AddTorsor
-import Mathlib.Analysis.Normed.Affine.Isometry
 import Mathlib.Analysis.NormedSpace.OperatorNorm.NormedSpace
 import Mathlib.Analysis.NormedSpace.RieszLemma
 import Mathlib.Analysis.NormedSpace.Pointwise
@@ -78,72 +77,12 @@ theorem toLinearIsometryEquiv_apply (li : E₁ →ₗᵢ[R₁] F) (h : finrank R
 
 end LinearIsometry
 
-namespace AffineIsometry
-
-open AffineMap
-
-variable {𝕜 : Type*} {V₁ V₂ : Type*} {P₁ P₂ : Type*} [NormedField 𝕜] [NormedAddCommGroup V₁]
-  [SeminormedAddCommGroup V₂] [NormedSpace 𝕜 V₁] [NormedSpace 𝕜 V₂] [MetricSpace P₁]
-  [PseudoMetricSpace P₂] [NormedAddTorsor V₁ P₁] [NormedAddTorsor V₂ P₂]
-
-variable [FiniteDimensional 𝕜 V₁] [FiniteDimensional 𝕜 V₂]
-
-/-- An affine isometry between finite dimensional spaces of equal dimension can be upgraded
-    to an affine isometry equivalence. -/
-def toAffineIsometryEquiv [Inhabited P₁] (li : P₁ →ᵃⁱ[𝕜] P₂) (h : finrank 𝕜 V₁ = finrank 𝕜 V₂) :
-    P₁ ≃ᵃⁱ[𝕜] P₂ :=
-  AffineIsometryEquiv.mk' li (li.linearIsometry.toLinearIsometryEquiv h)
-    (Inhabited.default (α := P₁)) fun p => by simp
-
-@[simp]
-theorem coe_toAffineIsometryEquiv [Inhabited P₁] (li : P₁ →ᵃⁱ[𝕜] P₂)
-    (h : finrank 𝕜 V₁ = finrank 𝕜 V₂) : (li.toAffineIsometryEquiv h : P₁ → P₂) = li :=
-  rfl
-
-@[simp]
-theorem toAffineIsometryEquiv_apply [Inhabited P₁] (li : P₁ →ᵃⁱ[𝕜] P₂)
-    (h : finrank 𝕜 V₁ = finrank 𝕜 V₂) (x : P₁) : (li.toAffineIsometryEquiv h) x = li x :=
-  rfl
-
-end AffineIsometry
-
 section CompleteField
 
 variable {𝕜 : Type u} [NontriviallyNormedField 𝕜] {E : Type v} [NormedAddCommGroup E]
   [NormedSpace 𝕜 E] {F : Type w} [NormedAddCommGroup F] [NormedSpace 𝕜 F] {F' : Type x}
   [AddCommGroup F'] [Module 𝕜 F'] [TopologicalSpace F'] [TopologicalAddGroup F']
   [ContinuousSMul 𝕜 F'] [CompleteSpace 𝕜]
-
-section Affine
-
-variable {PE PF : Type*} [MetricSpace PE] [NormedAddTorsor E PE] [MetricSpace PF]
-  [NormedAddTorsor F PF] [FiniteDimensional 𝕜 E]
-
-theorem AffineMap.continuous_of_finiteDimensional (f : PE →ᵃ[𝕜] PF) : Continuous f :=
-  AffineMap.continuous_linear_iff.1 f.linear.continuous_of_finiteDimensional
-
-theorem AffineEquiv.continuous_of_finiteDimensional (f : PE ≃ᵃ[𝕜] PF) : Continuous f :=
-  f.toAffineMap.continuous_of_finiteDimensional
-
-/-- Reinterpret an affine equivalence as a homeomorphism. -/
-def AffineEquiv.toHomeomorphOfFiniteDimensional (f : PE ≃ᵃ[𝕜] PF) : PE ≃ₜ PF where
-  toEquiv := f.toEquiv
-  continuous_toFun := f.continuous_of_finiteDimensional
-  continuous_invFun :=
-    haveI : FiniteDimensional 𝕜 F := f.linear.finiteDimensional
-    f.symm.continuous_of_finiteDimensional
-
-@[simp]
-theorem AffineEquiv.coe_toHomeomorphOfFiniteDimensional (f : PE ≃ᵃ[𝕜] PF) :
-    ⇑f.toHomeomorphOfFiniteDimensional = f :=
-  rfl
-
-@[simp]
-theorem AffineEquiv.coe_toHomeomorphOfFiniteDimensional_symm (f : PE ≃ᵃ[𝕜] PF) :
-    ⇑f.toHomeomorphOfFiniteDimensional.symm = f.symm :=
-  rfl
-
-end Affine
 
 theorem ContinuousLinearMap.continuous_det : Continuous fun f : E →L[𝕜] E => f.det := by
   change Continuous fun f : E →L[𝕜] E => LinearMap.det (f : E →ₗ[𝕜] E)
