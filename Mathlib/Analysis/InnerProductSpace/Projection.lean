@@ -594,26 +594,6 @@ theorem smul_orthogonalProjection_singleton {v : E} (w : E) :
   · rw [← Submodule.mem_orthogonal', Submodule.mem_orthogonal_singleton_iff_inner_left]
     simp [inner_sub_left, inner_smul_left, inner_self_eq_norm_sq_to_K, mul_comm]
 
-/-- Formula for orthogonal projection onto a single vector. -/
-theorem orthogonalProjection_singleton {v : E} (w : E) :
-    (orthogonalProjection (ℂ ∙ v) w : E) = (⟪v, w⟫ / ((‖v‖ ^ 2 : ℝ) : ℂ)) • v := by
-  by_cases hv : v = 0
-  · rw [hv, eq_orthogonalProjection_of_eq_submodule (Submodule.span_zero_singleton ℂ)]
-    simp
-  have hv' : ‖v‖ ≠ 0 := ne_of_gt (norm_pos_iff.mpr hv)
-  have key :
-    (((‖v‖ ^ 2 : ℝ) : ℂ)⁻¹ * ((‖v‖ ^ 2 : ℝ) : ℂ)) • ((orthogonalProjection (ℂ ∙ v) w) : E) =
-      (((‖v‖ ^ 2 : ℝ) : ℂ)⁻¹ * ⟪v, w⟫) • v := by
-    simp [mul_smul, smul_orthogonalProjection_singleton w, -map_pow]
-    sorry
-  convert key using 1 <;> field_simp [hv']
-
-/-- Formula for orthogonal projection onto a single unit vector. -/
-theorem orthogonalProjection_unit_singleton {v : E} (hv : ‖v‖ = 1) (w : E) :
-    (orthogonalProjection (ℂ ∙ v) w : E) = ⟪v, w⟫ • v := by
-  rw [← smul_orthogonalProjection_singleton w]
-  simp [hv]
-
 end orthogonalProjection
 
 section reflection
@@ -694,11 +674,6 @@ theorem reflection_orthogonal : reflection Kᗮ = .trans (reflection K) (.neg _)
   ext; apply reflection_orthogonal_apply
 
 variable {K}
-
-theorem reflection_singleton_apply (u v : E) :
-    reflection (ℂ ∙ u) v = 2 • (⟪u, v⟫ / ((‖u‖ : ℂ) ^ 2)) • u - v := by
-  rw [reflection_apply, orthogonalProjection_singleton]
-  sorry
 
 /-- A point is its own reflection if and only if it is in the subspace. -/
 theorem reflection_eq_self_iff (x : E) : reflection K x = x ↔ x ∈ K := by
