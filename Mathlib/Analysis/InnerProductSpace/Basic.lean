@@ -9,7 +9,6 @@ import Mathlib.Algebra.QuadraticDiscriminant
 import Mathlib.Analysis.Complex.Basic
 import Mathlib.Analysis.Convex.Uniform
 import Mathlib.Analysis.Normed.Module.Completion
-import Mathlib.Analysis.Normed.Operator.BoundedLinearMaps
 
 /-!
 # Inner product space
