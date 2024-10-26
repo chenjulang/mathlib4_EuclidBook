@@ -84,14 +84,17 @@ theorem lcm_union [DecidableEq β] : (s₁ ∪ s₂).lcm f = GCDMonoid.lcm (s₁
   Finset.induction_on s₁ (by rw [empty_union, lcm_empty, lcm_one_left, normalize_lcm])
     fun a s _ ih ↦ by rw [insert_union, lcm_insert, lcm_insert, ih, lcm_assoc]
 
+@[congr]
 theorem lcm_congr {f g : β → α} (hs : s₁ = s₂) (hfg : ∀ a ∈ s₂, f a = g a) :
     s₁.lcm f = s₂.lcm g := by
   subst hs
   exact Finset.fold_congr hfg
 
+@[gcongr]
 theorem lcm_mono_fun {g : β → α} (h : ∀ b ∈ s, f b ∣ g b) : s.lcm f ∣ s.lcm g :=
   lcm_dvd fun b hb ↦ (h b hb).trans (dvd_lcm hb)
 
+@[gcongr]
 theorem lcm_mono (h : s₁ ⊆ s₂) : s₁.lcm f ∣ s₂.lcm f :=
   lcm_dvd fun _ hb ↦ dvd_lcm (h hb)
 
@@ -157,14 +160,17 @@ theorem gcd_union [DecidableEq β] : (s₁ ∪ s₂).gcd f = GCDMonoid.gcd (s₁
   Finset.induction_on s₁ (by rw [empty_union, gcd_empty, gcd_zero_left, normalize_gcd])
     fun a s _ ih ↦ by rw [insert_union, gcd_insert, gcd_insert, ih, gcd_assoc]
 
+@[congr]
 theorem gcd_congr {f g : β → α} (hs : s₁ = s₂) (hfg : ∀ a ∈ s₂, f a = g a) :
     s₁.gcd f = s₂.gcd g := by
   subst hs
   exact Finset.fold_congr hfg
 
+@[gcongr]
 theorem gcd_mono_fun {g : β → α} (h : ∀ b ∈ s, f b ∣ g b) : s.gcd f ∣ s.gcd g :=
   dvd_gcd fun b hb ↦ (gcd_dvd hb).trans (h b hb)
 
+@[gcongr]
 theorem gcd_mono (h : s₁ ⊆ s₂) : s₂.gcd f ∣ s₁.gcd f :=
   dvd_gcd fun _ hb ↦ gcd_dvd (h hb)
 
