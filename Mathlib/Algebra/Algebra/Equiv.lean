@@ -6,8 +6,6 @@ Authors: Kenny Lau, Yury Kudryashov
 import Mathlib.Algebra.Algebra.Hom
 import Mathlib.Algebra.Ring.Aut
 
-assert_not_exists Cardinal
-
 /-!
 # Isomorphisms of `R`-algebras
 
@@ -21,6 +19,8 @@ This file defines bundled isomorphisms of `R`-algebras.
 
 * `A ≃ₐ[R] B` : `R`-algebra equivalence from `A` to `B`.
 -/
+
+assert_not_exists Cardinal
 
 universe u v w u₁ v₁
 
