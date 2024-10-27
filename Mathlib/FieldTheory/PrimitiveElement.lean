@@ -6,6 +6,7 @@ Authors: Thomas Browning, Patrick Lutz
 import Mathlib.Algebra.Algebra.Equiv.Card
 import Mathlib.FieldTheory.IsAlgClosed.AlgebraicClosure
 import Mathlib.RingTheory.IntegralDomain
+import Mathlib.LinearAlgebra.FreeModule.Finite.Matrix
 
 /-!
 # Primitive Element Theorem
@@ -425,7 +426,7 @@ lemma aux1 : Nat.card (K' →ₐ[K] K') = 1 := by
   have := IsAlgClosure.isAlgClosed K (K := K')
   rw [AlgHom.natCard K K' K']
   let e := (IsAlgClosure.equiv K K K').toLinearEquiv
-  rw [← e.finrank_eq, FiniteDimensional.finrank_self]
+  rw [← e.finrank_eq, Module.finrank_self]
 
 instance : Subsingleton (K' →ₐ[K] K') :=
   Finite.card_le_one_iff_subsingleton.mp (aux1 ..).le
