@@ -16,8 +16,8 @@ The structures are induced by those on `ContinuousMultilinearMap`s,
 and most of the lemmas follow from the corresponding lemmas about `ContinuousMultilinearMap`s.
 -/
 
-open Bornology Function Set
-open scoped Topology UniformConvergence Filter
+open Bornology Function Set Topology
+open scoped UniformConvergence Filter
 
 namespace ContinuousAlternatingMap
 
@@ -89,7 +89,7 @@ section CompleteSpace
 variable [ContinuousSMul 𝕜 E] [ContinuousConstSMul 𝕜 F] [CompleteSpace F]
 
 open UniformOnFun in
-theorem completeSpace (h : RestrictGenTopology {s : Set (ι → E) | IsVonNBounded 𝕜 s}) :
+theorem completeSpace (h : IsRestrictGen {s : Set (ι → E) | IsVonNBounded 𝕜 s}) :
     CompleteSpace (E [⋀^ι]→L[𝕜] F) := by
   wlog hF : T2Space F generalizing F
   · rw [(isUniformInducing_postcomp (SeparationQuotient.mkCLM _ _)
