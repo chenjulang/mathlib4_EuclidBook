@@ -14,12 +14,7 @@ import Mathlib.Tactic.CategoryTheory.Elementwise
 # Products and coproducts in the category of topological spaces
 -/
 
-
-open TopologicalSpace
-
-open CategoryTheory
-
-open CategoryTheory.Limits
+open CategoryTheory CategoryTheory.Limits Set TopologicalSpace Topology
 
 universe v u w
 

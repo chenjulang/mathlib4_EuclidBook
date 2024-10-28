@@ -47,7 +47,7 @@ a bit to `E →L[𝕜] F` where `F` is an normed space, and `E` actually only ne
 space with some topology for most results in this file.
 -/
 
-open scoped Topology
+open Topology
 
 /-- The type copy of `E →L[𝕜] F` endowed with the weak operator topology, denoted as
 `E →WOT[𝕜] F`. -/

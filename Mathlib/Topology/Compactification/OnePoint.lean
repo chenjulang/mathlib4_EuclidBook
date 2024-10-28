@@ -241,7 +241,7 @@ theorem continuous_coe : Continuous ((↑) : X → OnePoint X) :=
 theorem isOpenMap_coe : IsOpenMap ((↑) : X → OnePoint X) := fun _ => isOpen_image_coe.2
 
 theorem isOpenEmbedding_coe : IsOpenEmbedding ((↑) : X → OnePoint X) :=
-  isOpenEmbedding_of_continuous_injective_open continuous_coe coe_injective isOpenMap_coe
+  .of_continuous_injective_isOpenMap continuous_coe coe_injective isOpenMap_coe
 
 @[deprecated (since := "2024-10-18")]
 alias openEmbedding_coe := isOpenEmbedding_coe

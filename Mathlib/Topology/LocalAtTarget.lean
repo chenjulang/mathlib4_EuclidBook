@@ -46,7 +46,7 @@ theorem Set.restrictPreimage_isEmbedding (s : Set β) (h : IsEmbedding f) :
 @[deprecated (since := "2024-10-26")]
 alias Set.restrictPreimage_embedding := Set.restrictPreimage_isEmbedding
 
-alias IsEmbedding.restrictPreimage := Set.restrictPreimage_isEmbedding
+alias Topology.IsEmbedding.restrictPreimage := Set.restrictPreimage_isEmbedding
 
 @[deprecated (since := "2024-10-26")]
 alias Embedding.restrictPreimage := IsEmbedding.restrictPreimage
@@ -59,7 +59,7 @@ theorem Set.restrictPreimage_isOpenEmbedding (s : Set β) (h : IsOpenEmbedding f
 @[deprecated (since := "2024-10-18")]
 alias Set.restrictPreimage_openEmbedding := Set.restrictPreimage_isOpenEmbedding
 
-alias IsOpenEmbedding.restrictPreimage := Set.restrictPreimage_isOpenEmbedding
+alias Topology.IsOpenEmbedding.restrictPreimage := Set.restrictPreimage_isOpenEmbedding
 
 @[deprecated (since := "2024-10-18")]
 alias OpenEmbedding.restrictPreimage := IsOpenEmbedding.restrictPreimage
@@ -72,7 +72,7 @@ theorem Set.restrictPreimage_isClosedEmbedding (s : Set β) (h : IsClosedEmbeddi
 @[deprecated (since := "2024-10-20")]
 alias Set.restrictPreimage_closedEmbedding := Set.restrictPreimage_isClosedEmbedding
 
-alias IsClosedEmbedding.restrictPreimage := Set.restrictPreimage_isClosedEmbedding
+alias Topology.IsClosedEmbedding.restrictPreimage := Set.restrictPreimage_isClosedEmbedding
 
 @[deprecated (since := "2024-10-20")]
 alias ClosedEmbedding.restrictPreimage := IsClosedEmbedding.restrictPreimage

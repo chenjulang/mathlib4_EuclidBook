@@ -80,6 +80,7 @@ def coinduced (f : X → Y) (t : TopologicalSpace X) : TopologicalSpace Y where
 
 end TopologicalSpace
 
+namespace Topology
 variable {X Y : Type*} [tX : TopologicalSpace X] [tY : TopologicalSpace Y]
 
 /-- We say that restrictions of the topology on `X` to sets from a family `S`
@@ -91,7 +92,7 @@ if either of the following equivalent conditions hold:
 - for any topological space `Y`, a function `f : X → Y` is continuous
   provided that it is continuous on each `s ∈ S`.
 -/
-structure Topology.IsRestrictGen (S : Set (Set X)) : Prop where
+structure IsRestrictGen (S : Set (Set X)) : Prop where
   isOpen_of_forall_induced (u : Set X) : (∀ s ∈ S, IsOpen ((↑) ⁻¹' u : Set s)) → IsOpen u
 
 /-- A function `f : X → Y` between topological spaces is inducing if the topology on `X` is induced
@@ -142,3 +143,5 @@ structure IsQuotientMap {X : Type*} {Y : Type*} [tX : TopologicalSpace X] [tY : 
 
 @[deprecated (since := "2024-10-22")]
 alias QuotientMap := IsQuotientMap
+
+end Topology
