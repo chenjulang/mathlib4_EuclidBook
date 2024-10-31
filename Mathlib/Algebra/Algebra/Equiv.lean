@@ -807,3 +807,14 @@ def toAlgAut : G →* A ≃ₐ[R] A where
 end
 
 end MulSemiringAction
+
+section Finite
+
+variable (K M L : Type*) [CommSemiring K] [Semiring M] [Algebra K M]
+  [Semiring L] [Algebra K L] [Finite (M →ₐ[K] L)]
+
+/-- See also `Finite.algHom` -/
+instance Finite.algEquiv : Finite (M ≃ₐ[K] L) :=
+  Finite.of_injective _ AlgEquiv.coe_algHom_injective
+
+end Finite
