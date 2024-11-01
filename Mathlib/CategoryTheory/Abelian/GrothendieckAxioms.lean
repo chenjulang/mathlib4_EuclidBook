@@ -14,7 +14,6 @@ import Mathlib.CategoryTheory.Adjunction.AdjointFunctorTheorems
 import Mathlib.CategoryTheory.Abelian.Subobject
 import Mathlib.CategoryTheory.Subobject.WellPowered
 import Mathlib.CategoryTheory.Abelian.Opposite
-import Mathlib.CategoryTheory.Limits.Constructions.Filtered
 
 /-!
 
@@ -105,6 +104,9 @@ class AB5Star [HasCofilteredLimits C] where
 
 attribute [instance] AB5Star.preservesFiniteColimits
 
+/--
+A category `C` which has `AB5` and admits a separator is called a Grothendieck category.
+-/
 class GrothendieckCategory [Abelian C] [HasFilteredColimits C] [AB5 C] [HasSeparator C] : Prop where
 
 variable [HasFilteredColimits C] [AB5 C] [Abelian C] [HasSeparator C] [h : GrothendieckCategory C]

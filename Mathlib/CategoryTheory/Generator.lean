@@ -570,15 +570,30 @@ theorem wellPowered_of_isDetector [HasPullbacks C] (G : C) (hG : IsDetector G) :
 
 section HasGenerator
 
+/--
+A category instantiates `HasSeparator` if and only if it has a separator.
+-/
 class HasSeparator : Prop :=
   hasSeparator : ∃ G : E, IsSeparator G
 
+
+/--
+A category instantiates `HasCoseparator` if and only if it has a coseparator.
+-/
 class HasCoseparator : Prop :=
   hasCoseparator : ∃ G : E, IsCoseparator G
 
+
+/--
+A category instantiates `HasDetector` if and only if it has a detector.
+-/
 class HasDetector : Prop :=
   hasDetector : ∃ G : E, IsDetector G
 
+
+/--
+A category instantiates `HasCodetector` if and only if it has a detector.
+-/
 class HasCodetector : Prop :=
   hasCodetector : ∃ G : E, IsCodetector G
 
