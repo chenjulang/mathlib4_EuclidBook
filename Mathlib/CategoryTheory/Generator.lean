@@ -49,13 +49,14 @@ We
 -/
 
 
-universe w v₁ v₂ u₁ u₂
+universe w v₁ v₂ v₃ u₁ u₂ u₃
 
 open CategoryTheory.Limits Opposite
 
 namespace CategoryTheory
 
 variable {C : Type u₁} [Category.{v₁} C] {D : Type u₂} [Category.{v₂} D]
+  (E : Type u₃) [Category.{v₃} E]
 
 /-- We say that `𝒢` is a separating set if the functors `C(G, -)` for `G ∈ 𝒢` are collectively
     faithful, i.e., if `h ≫ f = h ≫ g` for all `h` with domain in `𝒢` implies `f = g`. -/
@@ -386,7 +387,7 @@ theorem IsCodetector.isCoseparator [HasCoequalizers C] {G : C} : IsCodetector G 
 theorem IsSeparator.isDetector [Balanced C] {G : C} : IsSeparator G → IsDetector G :=
   IsSeparating.isDetecting
 
-theorem IsCospearator.isCodetector [Balanced C] {G : C} : IsCoseparator G → IsCodetector G :=
+theorem IsCoseparator.isCodetector [Balanced C] {G : C} : IsCoseparator G → IsCodetector G :=
   IsCoseparating.isCodetecting
 
 theorem isSeparator_def (G : C) :
@@ -566,5 +567,80 @@ theorem wellPowered_of_isDetector [HasPullbacks C] (G : C) (hG : IsDetector G) :
   -- Porting note: added the following `haveI` to prevent universe issues
   haveI := small_subsingleton ({G} : Set C)
   wellPowered_of_isDetecting hG
+
+section HasGenerator
+
+class HasSeparator : Prop :=
+  hasSeparator : ∃ G : E, IsSeparator G
+
+class HasCoseparator : Prop :=
+  hasCoseparator : ∃ G : E, IsCoseparator G
+
+class HasDetector : Prop :=
+  hasDetector : ∃ G : E, IsDetector G
+
+class HasCodetector : Prop :=
+  hasCodetector : ∃ G : E, IsCodetector G
+
+theorem HasSeparator.hasDetector [Balanced E] [HasSeparator E] : HasDetector E := by
+  obtain ⟨G, hG⟩ : HasSeparator E := inferInstance
+  exact ⟨G, hG.isDetector⟩
+
+theorem HasDetector.hasSeparator [HasEqualizers E] [HasDetector E] : HasSeparator E := by
+  obtain ⟨G, hG⟩ : HasDetector E := inferInstance
+  exact ⟨G, hG.isSeparator⟩
+
+theorem HasCoseparator.hasCodetector [Balanced E] [HasCoseparator E] : HasCodetector E := by
+  obtain ⟨G, hG⟩ : HasCoseparator E := inferInstance
+  exact ⟨G, hG.isCodetector⟩
+
+theorem HasCodetector.hasCoseparator [HasCoequalizers E] [HasCodetector E] : HasCoseparator E := by
+  obtain ⟨G, hG⟩ : HasCodetector E := inferInstance
+  exact ⟨G, hG.isCoseparator⟩
+
+theorem HasDetector.wellPowered [HasPullbacks E] [HasDetector E] : WellPowered E := by
+  obtain ⟨G, hG⟩ : HasDetector E := inferInstance
+  exact wellPowered_of_isDetector G hG
+
+theorem HasSeparator.wellPowered [HasPullbacks E] [Balanced E] [HasSeparator E] :
+    WellPowered E := (HasSeparator.hasDetector E).wellPowered
+
+end HasGenerator
+
+section Dual
+
+theorem HasSeparator.hasCoseparator_op [HasSeparator C] : HasCoseparator Cᵒᵖ := by
+  obtain ⟨G, hG⟩ : HasSeparator C := inferInstance
+  exact ⟨op G, (isCoseparator_op_iff G).mpr hG⟩
+
+theorem HasSeparator.hasCoseparator_unop [HasSeparator Cᵒᵖ] : HasCoseparator C := by
+  obtain ⟨G, hG⟩ : HasSeparator Cᵒᵖ := inferInstance
+  exact ⟨unop G, (isCoseparator_unop_iff G).mpr hG⟩
+
+theorem HasCoseparator.hasSeparator_op [HasCoseparator C] : HasSeparator Cᵒᵖ := by
+  obtain ⟨G, hG⟩ : HasCoseparator C := inferInstance
+  exact ⟨op G, (isSeparator_op_iff G).mpr hG⟩
+
+theorem HasCoseparator.hasSeparator_unop [HasCoseparator Cᵒᵖ] : HasSeparator C := by
+  obtain ⟨G, hG⟩ : HasCoseparator Cᵒᵖ := inferInstance
+  exact ⟨unop G, (isSeparator_unop_iff G).mpr hG⟩
+
+theorem HasDetector.hasCodetector_op [HasDetector C] : HasCodetector Cᵒᵖ := by
+  obtain ⟨G, hG⟩ : HasDetector C := inferInstance
+  exact ⟨op G, (isCodetector_op_iff G).mpr hG⟩
+
+theorem HasDetector.hasCoDetector_unop [HasDetector Cᵒᵖ] : HasCodetector C := by
+  obtain ⟨G, hG⟩ : HasDetector Cᵒᵖ := inferInstance
+  exact ⟨unop G, (isCodetector_unop_iff G).mpr hG⟩
+
+theorem HasCodetector.hasDetector_op [HasCodetector C] : HasDetector Cᵒᵖ := by
+  obtain ⟨G, hG⟩ : HasCodetector C := inferInstance
+  exact ⟨op G, (isDetector_op_iff G).mpr hG⟩
+
+theorem HasCodetector.hasDetector_unop [HasCodetector Cᵒᵖ] : HasDetector C := by
+  obtain ⟨G, hG⟩ : HasCodetector Cᵒᵖ := inferInstance
+  exact ⟨unop G, (isDetector_unop_iff G).mpr hG⟩
+
+end Dual
 
 end CategoryTheory

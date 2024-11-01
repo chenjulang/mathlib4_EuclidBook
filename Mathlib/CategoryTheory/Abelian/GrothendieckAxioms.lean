@@ -7,6 +7,14 @@ Authors: Isaac Hernando, Coleton Kotch, Adam Topaz
 import Mathlib.CategoryTheory.Limits.Constructions.Filtered
 import Mathlib.CategoryTheory.Limits.Shapes.Biproducts
 import Mathlib.CategoryTheory.Limits.Preserves.FunctorCategory
+import Mathlib.CategoryTheory.Limits.Final
+import Mathlib.CategoryTheory.Limits.FinallySmall
+import Mathlib.CategoryTheory.Generator
+import Mathlib.CategoryTheory.Adjunction.AdjointFunctorTheorems
+import Mathlib.CategoryTheory.Abelian.Subobject
+import Mathlib.CategoryTheory.Subobject.WellPowered
+import Mathlib.CategoryTheory.Abelian.Opposite
+import Mathlib.CategoryTheory.Limits.Constructions.Filtered
 
 /-!
 
@@ -97,6 +105,18 @@ class AB5Star [HasCofilteredLimits C] where
 
 attribute [instance] AB5Star.preservesFiniteColimits
 
+class GrothendieckCategory [Abelian C] [HasFilteredColimits C] [AB5 C] [HasSeparator C] : Prop where
+
+variable [HasFilteredColimits C] [AB5 C] [Abelian C] [HasSeparator C] [h : GrothendieckCategory C]
+
+instance GrothendieckCategory.instWellPowered : WellPowered C := HasSeparator.wellPowered C
+
+instance GrothendieckCategory.instHasColimits : HasColimits C :=
+  has_colimits_of_finite_and_filtered
+
+instance GrothendieckCategory.instHasLimits : HasLimits C :=
+  hasLimits_of_hasColimits_of_hasSeparator
+
 noncomputable section
 
 open CoproductsFromFiniteFiltered
@@ -117,7 +137,7 @@ instance preservesFiniteLimitsLiftToFinset : PreservesFiniteLimits (liftToFinset
     preservesFiniteLimitsOfNatIso (liftToFinsetEvaluationIso  I).symm
 
 /-- A category with finite biproducts and finite limits is AB4 if it is AB5. -/
-def AB4.ofAB5 [HasFiniteCoproducts C] [HasFilteredColimits C] [AB5 C] : AB4 C where
+def AB4.ofAB5 [HasFilteredColimits C] [AB5 C] : AB4 C where
   preservesFiniteLimits J :=
     letI : PreservesFiniteLimits (liftToFinset C J ⋙ colim) :=
       compPreservesFiniteLimits _ _
