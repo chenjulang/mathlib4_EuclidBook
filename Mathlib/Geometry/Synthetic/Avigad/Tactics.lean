@@ -91,18 +91,18 @@ lemma Para21 {L M : Line}: Para L M ↔ Para M L := by
 
 namespace Lean.Elab.Tactic
 
-/-- Definitions for perm tactic-/
+/-- 获取第n个参数吗？ Definitions for perm tactic-/
 def getNthArgName (tgt : Expr) (n : Nat) : MetaM Name :=
   do
     let some id := Lean.Expr.fvarId? (Lean.Expr.getArg! tgt n) | throwError
       "argument {n} is not a free variable"
     id.getUserName
 
-/-- Definitions for perm tactic-/
+/-- 这个是做什么的？ Definitions for perm tactic-/
 def lte (n1 : @& Name) (n2: @& Name) : Bool :=
   Name.lt n1 n2 || n1 = n2
 
-/-- ## Conv tactic `area_nf`
+/-- 这个是做什么的？ ## Conv tactic `area_nf`
 A conv tactic for permuting the variables in an `area` expression. A building block for the `perm`
 tactic.
  -/

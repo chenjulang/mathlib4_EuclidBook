@@ -18,10 +18,13 @@ variable [I : IncidenceGeometry] {a a1 a2 b b1 b2 c d e f g h i j k l m n o p q 
 namespace IncidenceGeometry
 
 -------------------------------------------------- new  API ----------------------------------------
-theorem ne_23_of_B (Babc : B a b c) : b ≠ c := (ne_12_of_B $ B_symm Babc).symm
+theorem ne_23_of_B (Babc : B a b c) : b ≠ c := (ne_12_of_B $ (B_symm Babc)).symm
+-- theorem ne_23_of_B (Babc : B a b c) : b ≠ c := (ne_12_of_B (B_symm Babc)).symm
 
 theorem online_of_line L : ∃ a, OnLine a L := by
-  rcases more_pts ∅ Set.finite_empty with ⟨a, -⟩
+  have h1 := more_pts ∅ Set.finite_empty
+  -- rcases h1 with ⟨a, a2⟩ --
+  rcases h1 with ⟨a, -⟩ -- 也就是舍弃了这个a2命题
   exact Classical.by_cases (fun aL => by use a)
     (fun aL => by rcases diffSide_of_not_onLine aL with ⟨b, -, abL⟩; rcases line_of_pts a b with
       ⟨M, aM, bM⟩; rcases pt_of_linesInter (lines_inter_of_not_sameSide aM bM abL) with
@@ -33,7 +36,7 @@ theorem online_ne_of_line L : ∃ a b, a ≠ b ∧ OnLine  a L ∧ OnLine  b L :
   rcases pts_of_lineCircleInter (lineCircleInter_of_inside_onLine aL
   (inside_circle_of_center acen)) with ⟨c, d, cd, cL, dL, -, -⟩; exact ⟨c, d, cd, cL, dL⟩
 
-theorem online_ne_of_point_line a L : ∃ b, a ≠ b ∧ OnLine b L := by
+theorem online_ne_of_point_line a L : ∃ b, a ≠ b ∧ OnLine b L := by -- a和L还能这样简写啊～～～
   rcases online_ne_of_line L with ⟨b, c, bc, bL, cL⟩
   by_cases c = a; use b; rw[h] at bc; exact ⟨bc.symm, bL⟩
   use c; exact ⟨Ne.symm h, cL⟩
@@ -343,6 +346,8 @@ theorem angle_extension_of_B_B (be : b ≠ e) (Babc : B a b c) (Babd : B a b d) 
 theorem online_of_sameside_inter (ab : a ≠ b) (aL : OnLine a L) (aM : OnLine a M) (bL : OnLine b L)
     (cM : OnLine c M) (cdL : SameSide c d L) : ¬OnLine b M :=
   fun bM => (not_onLine_of_sameSide cdL) (by rwa [line_unique_of_pts ab aM bM aL bL] at cM)
+
+
 
 theorem DiffSide_of_sameside_sameside (aL : OnLine a L) (aM : OnLine a M) (aN : OnLine a N)
     (bL : OnLine b L) (cM : OnLine c M) (dN : OnLine d N) (dcL : SameSide d c L)
