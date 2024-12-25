@@ -58,7 +58,7 @@ class IncidenceGeometry where
     diffSide_of_not_onLine : ∀ {L a}, ¬OnLine a L → ∃ b, ¬OnLine b L ∧ ¬SameSide a b L
     /--Get a line from two points-/
     line_of_pts : ∀ a b, ∃ L, OnLine a L ∧ OnLine b L
-    /--Getting a circle with center and point on it-/
+    /--Getting a circle with center and point on it。圆规画个圆-/
     circle_of_ne : ∀ {a b}, a ≠ b → ∃ α, CenterCircle a α ∧ OnCircle b α
     /--If lines intersect then this gives you the point of intersection-/
     pt_of_linesInter : ∀ {L M}, LinesInter L M → ∃ a, OnLine a L ∧ OnLine a M
@@ -68,7 +68,7 @@ class IncidenceGeometry where
     /--Getting points on circles-/
     pt_on_circle_of_inside_outside : ∀ {b c α}, ¬OnCircle c α → InCircle b α → ¬InCircle c α →
       ∃ a, B b a c ∧ OnCircle a α
-    /--Getting points on circles-/
+    /--Getting points on circles。 ab直线和圆交点c-/
     pt_oncircle_of_inside_ne : ∀ {a b α}, a ≠ b → InCircle b α → ∃ c, B a b c ∧ OnCircle c α
     /--Getting points of intersection of two circles-/
     pts_of_circlesInter : ∀ {α β}, CirclesInter α β →
@@ -82,7 +82,7 @@ class IncidenceGeometry where
       L = M
     /--The center of a circle is unique-/
     centerCircle_unique : ∀ {a b α}, CenterCircle a α → CenterCircle b α → a = b
-    /--The center of a circle is inside the circle-/
+    /--The center of a circle is inside the circle。圆心在圆里面-/
     inside_circle_of_center : ∀ {a α}, CenterCircle a α → InCircle a α
     /--If a point is on a circle then it is not inside-/
     not_on_circle_of_inside : ∀ {a α}, InCircle a α → ¬OnCircle a α
