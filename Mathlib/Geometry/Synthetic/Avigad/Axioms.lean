@@ -62,7 +62,7 @@ class IncidenceGeometry where
     circle_of_ne : ∀ {a b}, a ≠ b → ∃ α, CenterCircle a α ∧ OnCircle b α
     /--If lines intersect then this gives you the point of intersection。两线交一点-/
     pt_of_linesInter : ∀ {L M}, LinesInter L M → ∃ a, OnLine a L ∧ OnLine a M
-    /--Gives you the points of intersection when a circle and line intersect-/
+    /--Gives you the points of intersection when a circle and line intersect。 线和圆相交可得两个交点。-/
     pts_of_lineCircleInter : ∀ {L α}, LineCircleInter L α →
       ∃ a b, a ≠ b ∧ OnLine a L ∧ OnLine b L ∧ OnCircle a α ∧ OnCircle b α
     /--Getting points on circles-/
@@ -148,7 +148,7 @@ class IncidenceGeometry where
     /--Condition for line circle intersection-/
     lineCircleInter_of_not_sameSide : ∀ {a b L α}, ¬SameSide a b L → OnCircle a α ∨ InCircle a α →
       OnCircle b α ∨ InCircle b α → LineCircleInter L α
-    /--Condition for line circle intersection-/
+    /--Condition for line circle intersection。a点同时在直线上，圆里面。则直线和圆相交 -/
     lineCircleInter_of_inside_onLine : ∀ {a L α}, OnLine a L → InCircle a α → LineCircleInter L α
     /--Condition for circle circle intersection-/
     circlesInter_of_inside_on_circle : ∀ {a b α β}, OnCircle b α → OnCircle a β → InCircle a α →

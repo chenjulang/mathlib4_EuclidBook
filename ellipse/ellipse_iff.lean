@@ -101,11 +101,24 @@ theorem online_of_line L : ∃ a, OnLine a L := by
     exact ⟨c, cL⟩
   }
 
-theorem online_ne_of_line L : ∃ a b, a ≠ b ∧ OnLine  a L ∧ OnLine  b L := by
-  rcases online_of_line L with ⟨a, aL⟩; rcases more_pts {a} (Set.finite_singleton a) with ⟨b, hb⟩;
-  rcases circle_of_ne $ ne_of_mem_of_not_mem (Set.mem_singleton a) hb with ⟨α, acen, -⟩;
-  rcases pts_of_lineCircleInter (lineCircleInter_of_inside_onLine aL
-  (inside_circle_of_center acen)) with ⟨c, d, cd, cL, dL, -, -⟩; exact ⟨c, d, cd, cL, dL⟩
+/-- 对于一条线，存在两个不同的点都在这条线上。 -/
+-- 和这个online_of_line就差一个两点不同。
+theorem online_ne_of_line L :
+∃ c d,
+c ≠ d
+∧
+OnLine c L
+∧
+OnLine d L
+:= by
+  rcases online_of_line L with ⟨a, aL⟩;
+  rcases more_pts {a} (Set.finite_singleton a) with ⟨b, hb⟩;
+  have h1:= ne_of_mem_of_not_mem (Set.mem_singleton a) hb -- 用到了集合的基础logic
+  rcases circle_of_ne h1 with ⟨α, acen, -⟩;
+  have h1:= (inside_circle_of_center acen)
+  have h2:= lineCircleInter_of_inside_onLine aL h1
+  rcases pts_of_lineCircleInter h2 with ⟨c, d, cd, cL, dL, -, -⟩;
+  exact ⟨c, d, cd, cL, dL⟩
 
 lemma len_pos_of_nq (ab : a ≠ b) : 0 < length a b :=
   (Ne.symm (not_imp_not.mpr length_eq_zero_iff.mp ab)).le_iff_lt.mp (length_nonneg a b)
