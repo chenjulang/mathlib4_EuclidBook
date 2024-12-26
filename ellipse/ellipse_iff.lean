@@ -120,18 +120,30 @@ OnLine d L
   rcases pts_of_lineCircleInter h2 with ⟨c, d, cd, cL, dL, -, -⟩;
   exact ⟨c, d, cd, cL, dL⟩
 
+/-- 两个不同的点a，b的距离大于0 -/
+-- 思路：用的公理length_nonneg
 lemma len_pos_of_nq (ab : a ≠ b) : 0 < length a b :=
-  (Ne.symm (not_imp_not.mpr length_eq_zero_iff.mp ab)).le_iff_lt.mp (length_nonneg a b)
+  (Ne.symm (not_imp_not.mpr length_eq_zero_iff.mp ab)).le_iff_lt.mp (length_nonneg a b) -- 用到logic，Core
 
+/-- abc按顺序共线，则b和c不同 -/
 theorem ne_23_of_B (Babc : B a b c) : b ≠ c := (ne_12_of_B $ (B_symm Babc)).symm
 
+/-- abc按顺序共线，则任意两点距离都大于0，且ab+bc=ac -/
+-- 思路：用的公理
 theorem length_sum_perm_of_B (Babc : B a b c) : 0 < length a b ∧ 0 < length b c ∧
     0 < length a c ∧ length a b + length b c = length a c := by
-  splitAll; exact len_pos_of_nq $ ne_12_of_B Babc; exact len_pos_of_nq $ ne_23_of_B Babc
-  exact len_pos_of_nq $ ne_13_of_B Babc; exact length_sum_of_B Babc
+  splitAll;
+  exact len_pos_of_nq $ ne_12_of_B Babc;
+  exact len_pos_of_nq $ ne_23_of_B Babc
+  exact len_pos_of_nq $ ne_13_of_B Babc;
+  exact length_sum_of_B Babc
 
+/-- 两点ab不同，长度ab=cd，则cd两点也不同 -/
+-- 思路：反证法，证明ab长度同时为0和大于0
 theorem ne_of_ne_len (ab : a ≠ b) (ab_cd : length a b = length c d) : c ≠ d :=
-  fun ac => by linarith[length_eq_zero_iff.mpr ac, len_pos_of_nq ab]
+  fun ac => by linarith [length_eq_zero_iff.mpr ac, len_pos_of_nq ab]
+
+-- /-- 对于直线L，存在一个点不在直线L上。-/
 
 theorem not_online_of_line L : ∃ a, ¬OnLine a L := by
   rcases online_ne_of_line L with ⟨b, c, bc, bL, cL⟩
@@ -144,6 +156,28 @@ theorem not_online_of_line L : ∃ a, ¬OnLine a L := by
   refine ⟨a, fun aL => (by push_neg; splitAll; all_goals exact (fun Bet =>
     by linarith[length_sum_perm_of_B Bet]) : ¬ (B b c a ∨ B c b a ∨ B b a c)) $
     B_of_three_onLine_ne bc (ne_of_ne_len bc bc_ba) (ne_of_ne_len bc.symm cb_ca) bL cL aL⟩
+
+/-- 对于直线L，存在一个点不在直线L上。-/
+theorem not_online_of_line2 L : ∃ a, ¬OnLine a L := by
+  rcases online_ne_of_line L with ⟨b, c, bc, bL, cL⟩
+  rcases circle_of_ne bc with ⟨α, bα, cα⟩
+  rcases circle_of_ne bc.symm with ⟨β, cβ, bβ⟩
+  have h1:=(inside_circle_of_center cβ)
+  have h2:= inside_circle_of_center bα
+  have h3:= circlesInter_of_inside_on_circle cα bβ h2 h1
+  rcases pts_of_circlesInter h3 with ⟨a, -, -, aα, aβ, -, -⟩
+  have bc_ba := (on_circle_iff_length_eq bα cα).mpr aα
+  have cb_ca := (on_circle_iff_length_eq cβ bβ).mpr aβ
+  use a
+  intro aL
+  have h4:= (ne_of_ne_len bc.symm cb_ca)
+  have h5:= (ne_of_ne_len bc bc_ba)
+  have h6:= B_of_three_onLine_ne bc h5 h4 bL cL aL
+  push_neg;
+  splitAll;
+  -- all_goals exact (fun Bet =>
+  --   by linarith[length_sum_perm_of_B Bet]) : ¬ (B b c a ∨ B c b a ∨ B b a c)) $
+  --   h6⟩
 
 theorem online_of_circlesinter (aα : CenterCircle a α) (bβ : CenterCircle b β)
     (αβ : CirclesInter α β) : ∃ c L, OnLine a L ∧ OnLine b L ∧ OnCircle c α ∧
