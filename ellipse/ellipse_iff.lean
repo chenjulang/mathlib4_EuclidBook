@@ -65,23 +65,41 @@ have h1 := inside_circle_of_center bα
 rcases pt_oncircle_of_inside_ne ab h1 with ⟨d, Babd, dα⟩;
 exact ⟨d, α, Babd, bα, cα, dα⟩
 
-
-
-theorem length_eq_B_of_ne (ab : a ≠ b) (bc : b ≠ c) : ∃ d, B a b d ∧ length b c = length b d := by
-  rcases B_circ_of_ne ab bc with ⟨d, α, Babd, bα, cα, dα⟩;
+-- 有趣思考：lean是如何考虑到所有abc三个点之间的相对关系，做到滴水不漏的呢？来看：
+/-- 点a，b,c互不相同。则，=》存在一个点d，使得满足a,b,d按顺序共线；且使得bc距离等于bd距离 -/
+-- 思路：就是用的之前的存在行定理，造出一个点，一个圆。
+theorem length_eq_B_of_ne
+(ab : a ≠ b)
+(bc : b ≠ c)
+: ∃ d,
+B a b d
+∧
+length b c = length b d
+:= by
+  rcases B_circ_of_ne ab bc with ⟨d, α, Babd, bα, cα, dα⟩
   exact ⟨d, Babd, length_eq_of_oncircle bα cα dα⟩
 
-
+/-- a,b,c严格按顺序共线。则，=》b和a不相同 -/
+-- 思路：就是公理里面的严格，导致不同。
 theorem ne_21_of_B (Babc : B a b c) : b ≠ a := Ne.symm $ ne_12_of_B Babc
 
+/-- 任何一条直线L，则，=》存在点a，a在直线L上 -/
+-- 思路：首先凭空造一个点，然后分类讨论是否在线上。
+-- 不在线上就用“两点交一线”反推，反推需要“两线相交”。
+-- “两线相交”用两点共线1，不同侧线2反推，反推需要“两点共线1”，“不同侧线2”
+-- “两点共线1”用公理
+-- “不同侧线2”用公理“直线两侧存在不同的点都不在直线上”
 theorem online_of_line L : ∃ a, OnLine a L := by
   have h1 := more_pts ∅ Set.finite_empty
-  -- rcases h1 with ⟨a, a2⟩ --
-  rcases h1 with ⟨a, -⟩ -- 也就是舍弃了这个a2命题
-  exact Classical.by_cases (fun aL => by use a)
-    (fun aL => by rcases diffSide_of_not_onLine aL with ⟨b, -, abL⟩; rcases line_of_pts a b with
-      ⟨M, aM, bM⟩; rcases pt_of_linesInter (lines_inter_of_not_sameSide aM bM abL) with
-      ⟨c, cL, -⟩; exact ⟨c, cL⟩)
+  rcases h1 with ⟨a, -⟩ -- 也就是舍弃了这个a2命题 -- rcases h1 with ⟨a, a2⟩ --
+  by_cases (OnLine a L)
+  { use a}
+  {
+    rcases diffSide_of_not_onLine h with ⟨b, -, abL⟩
+    rcases line_of_pts a b with ⟨M, aM, bM⟩
+    rcases pt_of_linesInter (lines_inter_of_not_sameSide aM bM abL) with ⟨c, cL, -⟩;
+    exact ⟨c, cL⟩
+  }
 
 theorem online_ne_of_line L : ∃ a b, a ≠ b ∧ OnLine  a L ∧ OnLine  b L := by
   rcases online_of_line L with ⟨a, aL⟩; rcases more_pts {a} (Set.finite_singleton a) with ⟨b, hb⟩;

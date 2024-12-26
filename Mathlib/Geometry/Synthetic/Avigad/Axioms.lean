@@ -48,19 +48,19 @@ class IncidenceGeometry where
     rightangle : ℝ
     /--The area made by three points-/
     area : Point → Point → Point → ℝ
-    /--From a set of points getting one additional one-/
+    /--From a set of points getting one additional one。 对于一个有限的点集合，世界上存在一个额外的点不在里面。-/
     more_pts : ∀ (S : Set Point), S.Finite → ∃ a, a ∉ S
     /--Interpolating a segment by an arbitrary amount-/
     pt_B_of_ne : ∀ {b c}, b ≠ c → ∃ a, B b a c
     /--Extending a segment by an arbitrary amount-/
     pt_extension_of_ne : ∀ {b c}, b ≠ c → ∃ a, B b c a
-    /--Obtaining a point opposite a line and point-/
+    /--Obtaining a point opposite a line and point。a不在线L上，则，=》存在一个点b也不在线L上，且b和a不同侧-/
     diffSide_of_not_onLine : ∀ {L a}, ¬OnLine a L → ∃ b, ¬OnLine b L ∧ ¬SameSide a b L
-    /--Get a line from two points-/
+    /--Get a line from two points。 两点成一线-/
     line_of_pts : ∀ a b, ∃ L, OnLine a L ∧ OnLine b L
-    /--Getting a circle with center and point on it。圆规画个圆-/
+    /--Getting a circle with center and point on it。两点画个圆-/
     circle_of_ne : ∀ {a b}, a ≠ b → ∃ α, CenterCircle a α ∧ OnCircle b α
-    /--If lines intersect then this gives you the point of intersection-/
+    /--If lines intersect then this gives you the point of intersection。两线交一点-/
     pt_of_linesInter : ∀ {L M}, LinesInter L M → ∃ a, OnLine a L ∧ OnLine a M
     /--Gives you the points of intersection when a circle and line intersect-/
     pts_of_lineCircleInter : ∀ {L α}, LineCircleInter L α →
@@ -142,7 +142,7 @@ class IncidenceGeometry where
     not_sameSide_of_circle_inter : ∀ {a b c d L α β},  c ≠ d → α ≠ β →  OnLine a L → OnLine b L →
       OnCircle c α → OnCircle c β → OnCircle d α → OnCircle d β → CenterCircle a α →
       CenterCircle b β → CirclesInter α β → ¬SameSide c d L
-    /--Condition for lines intersecting-/
+    /--Condition for lines intersecting。 a、b都在线2上，且a、b在线1的两侧，则，=》线1和线2相交-/
     lines_inter_of_not_sameSide : ∀ {a b L M}, OnLine a M → OnLine b M → ¬SameSide a b L →
       LinesInter L M
     /--Condition for line circle intersection-/
