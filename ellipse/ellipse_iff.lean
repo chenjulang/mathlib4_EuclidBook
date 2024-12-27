@@ -456,7 +456,7 @@ theorem B_of_col_DiffSide (col_abc : Colinear a b c) (bL : OnLine b L)
     (ne_of_online bL acL.2.1) (ne_of_DiffSide acL) (ne_line_of_online' aM acL.1) aM bM cM bL acL.2.2
 
 
-/-- Euclid I.14, the converse of I.13. If angles add to two right angles then you have betweeness-/
+/-- Euclid I.14, the converse of I.13. If angles add to two right angles then you have betweeness。平角就是一个顺序直线。 -/
 theorem flat_of_two_right_angle (bd : b ≠ d) (bL : OnLine b L) (dL : OnLine d L)
     (acL : DiffSide a c L) (two_ra : angle d b a + angle d b c = 2 * rightangle) : B a b c := by
   rcases line_of_pts a b with ⟨N, aN, bN⟩
@@ -1025,7 +1025,7 @@ lemma not_B_of_right_le_right (tri_abc : Triangle a b c) (col_bcd : Colinear b c
     0 < angle d c a), angle_extension_of_B (ne_of_online dL $ online_1_of_Triangle bL cL
     tri_abc) Bdbc]
 
-/--A big enough angle has its perpendicular on a Triangle side-/
+/--A big enough angle has its perpendicular on a Triangle side。钝角三角形可以在长边做一条垂线。 -/
 lemma right_B_of_le_right (tri_abc : Triangle a b c) (cab_le_ra : rightangle ≤ angle c a b) :
     ∃ d, angle a d b = rightangle ∧ angle a d c = rightangle ∧ B b d c := by
   rcases line_of_pts b c with ⟨L, bL, cL⟩
@@ -1085,13 +1085,26 @@ theorem Para_trans (MN : M ≠ N) (ParaLM : Para L M) (ParaLN : Para L N) : Para
   linarith[zero_lt_angle_of_tri $ Triangle_of_ne_online (ne_of_sameside xO baO).symm int.2 bN
     (not_onLine_of_sameSide $ sameSide_symm yaN)]
 
-
+/-- 直线肯定相交～～ -/
 lemma inter_sq_of_perp (Bbxc : B b x c) (aX : OnLine a X) (xX : OnLine x X)
     (pgram1 : Paragram b c d e L O P Q) (adL : DiffSide a d L) : ∃ l, OnLine l X ∧ OnLine l P := by
   have ⟨bL, cL, _, _, _, _, _, _, ParaLP, _⟩ := pgram1
-  by_cases ParaXP : Para X P; have := onLine_2_of_B Bbxc bL cL; have := Para_trans
-    (ne_line_of_online aX adL.1) (Para_symm ParaLP) (Para_symm ParaXP) x; tauto
-  unfold Para at ParaXP; push_neg at ParaXP; exact ParaXP
+  by_cases ParaXP : Para X P;
+  { have h3 := onLine_2_of_B Bbxc bL cL;
+    have h1:= Para_trans
+      (ne_line_of_online aX adL.1) (Para_symm ParaLP) (Para_symm ParaXP);
+    unfold Para at h1 ParaLP ParaXP
+    have h2:= h1 x
+    -- tauto -- ???
+    -- 解法1:
+    -- exact Or.casesOn h2 (fun h ↦ absurd h3 h) (fun h ↦ absurd xX h)
+    have h4: ¬OnLine x X := by
+      exact offline_of_Para h3 h1
+    exact (h4 xX).elim -- 所以这种分类讨论是不可能存在的
+    }
+  { unfold Para at ParaXP;
+    push_neg at ParaXP;
+    exact ParaXP}
 
 theorem sameside_of_Para_online' (aN : OnLine a N) (bN : OnLine b N) (ParaMN : Para M N) :
     SameSide a b M := sameside_of_Para_online aN bN (Para_symm ParaMN)
@@ -1464,7 +1477,7 @@ theorem quad_add_of_quad (Babc : B a b c) (Bdef : B d e f) (aL : OnLine a L) (bL
 
 -- 反向看
 
-/--  -/
+/-- 勾股定理 -/
 theorem pythagoras (tri_abc : Triangle a b c) (ang : angle c a b = rightangle)
     (sq1 : Square c d e b) (sq2 : Square a g f b) (sq3 : Square a h k c)
     (pgram1 : Paragram b c d e L O P Q) (pgram2 : Paragram g a b f T N R S) (pgram3 : Paragram h a c k U M W V)
@@ -1479,48 +1492,48 @@ theorem pythagoras (tri_abc : Triangle a b c) (ang : angle c a b = rightangle)
   rcases right_B_of_le_right tri_abc (by linarith) with ⟨x, axb, axc, Bbxc⟩
   rcases line_of_pts a x with ⟨X, aX, xX⟩
   rcases inter_sq_of_perp Bbxc aX xX pgram1 adL with ⟨l, lX, lP⟩
-  have ParaQX := Para_of_ang_eq (ne_12_of_B Bbxc) eQ bQ bL (onLine_2_of_B Bbxc bL cL) xX aX
-    (DiffSide_of_sameside_DiffSide (sameside_of_Para_online' dP eP ParaLP) (DiffSide_symm adL))
-    (by linperm[angle_extension_of_B (ne_of_Para bL eP ParaLP) Bbxc])
-  have ParaOX := Para_of_ang_eq (ne_32_of_B Bbxc) dO cO cL (onLine_2_of_B Bbxc bL cL) xX aX
-    (DiffSide_symm adL) (by linperm[angle_extension_of_B (ne_of_Para cL dP ParaLP) $ B_symm Bbxc])
-  have Beld := B_of_sq Bbxc xX lX lP ParaQX ParaOX pgram1
-  have fbc_split := angle_add_of_sameside bR fR bL cL (sameSide_symm $ sameside_of_Para_online aT
-    (onLine_3_of_B (B_symm Bcag) gT aT) ParaTR) $ sameside_of_sameside_DiffSide bR bN bL fR aN cL
-    (sameside_of_Para_online aT (onLine_3_of_B (B_symm Bcag) gT aT) ParaTR) $
-    DiffSide_of_sameside_DiffSide (sameSide_symm $ sameside_of_Para_online' fS gS ParaNS) $
-    DiffSide_symm cgN
-  have abe_split := angle_add_of_sameside bN aN bQ eQ (sameside_of_sameside_DiffSide bQ bL bN eQ cL
-    aN (sameSide_symm $ sameside_of_pyth Beld aX lX pgram1 ParaQX) $ DiffSide_of_sameside_DiffSide
-    (sameside_of_Para_online' dP eP ParaLP) $ DiffSide_symm adL) $ sameside_of_pyth Beld aX lX
-    pgram1 ParaQX
-  have bck_split := angle_add_of_sameside cL bL cW kW (sameside_of_sameside_DiffSide cW cM cL kW aM
-    bL (sameside_of_Para_online aU (onLine_3_of_B (B_symm Bbah) hU aU) ParaUW) $
-    DiffSide_of_sameside_DiffSide (sameside_of_Para_online' hV kV ParaMV) $ DiffSide_symm bhM)
-    (sameSide_symm $ sameside_of_Para_online aU (onLine_3_of_B (B_symm Bbah) hU aU) ParaUW)
-  have acd_split := angle_add_of_sameside cM aM cO dO (sameside_of_sameside_DiffSide cO cL cM dO bL
-    aM (sameSide_symm $ sameside_of_pyth (B_symm Beld) aX lX ⟨cL, bL, bQ, eQ, eP, dP, dO, cO,
-    ParaLP, Para_symm ParaOQ⟩ ParaOX) $ DiffSide_symm adL) $ sameside_of_pyth (B_symm Beld) aX lX
-    ⟨cL, bL, bQ, eQ, eP, dP, dO, cO, ParaLP, Para_symm ParaOQ⟩ ParaOX
-  have ⟨ae_fc, _, _⟩ := sas (by linperm : length b a = length b f)
-    (by linperm : length b e = length b c) $ by linperm
-  have tri1_eq := area_eq_of_SSS (by linperm : length b a = length b f)
-    (by linperm : length b e = length b c) ae_fc
-  have ⟨ad_kb, _, _⟩ := sas (by linperm : length c a = length c k)
-    (by linperm : length c d = length c b) $ by linperm
-  have tri2_eq := area_eq_of_SSS (by linperm : length c a = length c k)
-    (by linperm : length c d = length c b) ad_kb
-  have tri_req1 := twice_pgram_of_tri aX
-    ⟨xX, lX, lP, eP, eQ, bQ, bL, onLine_2_of_B Bbxc bL cL, Para_symm ParaQX, Para_symm ParaLP⟩
-  have tri_req2 := twice_pgram_of_tri (onLine_3_of_B (B_symm Bcag) gT aT) pgram2
-  have tri_req3 := twice_pgram_of_tri aX
-    ⟨lX, xX, onLine_2_of_B Bbxc bL cL, cL, cO, dO, dP, lP, Para_symm ParaOX, ParaLP⟩
-  have tri_req4 := twice_pgram_of_tri (onLine_3_of_B (B_symm Bbah) hU aU) pgram3
-  have sq_split := quad_add_of_quad Bbxc Beld bL (onLine_2_of_B Bbxc bL cL) cO dO eP lP
-    (sameside_of_Para_online bL cL ParaLP) (sameside_of_Para_online' dP lP ParaLP)
-    $ sameside_of_Para_online' bQ eQ ParaOQ
-  have right_half := quad_area_comm (onLine_2_of_B Bbxc bL cL) cL cO dO dP lP
-    (sameside_of_Para_online (onLine_2_of_B Bbxc bL cL) cL ParaLP)
-    (sameside_of_Para_online' dP lP ParaLP) $ sameside_of_Para_online' xX lX ParaOX
-  linperm
-  done
+  -- have ParaQX := Para_of_ang_eq (ne_12_of_B Bbxc) eQ bQ bL (onLine_2_of_B Bbxc bL cL) xX aX
+  --   (DiffSide_of_sameside_DiffSide (sameside_of_Para_online' dP eP ParaLP) (DiffSide_symm adL))
+  --   (by linperm[angle_extension_of_B (ne_of_Para bL eP ParaLP) Bbxc])
+  -- have ParaOX := Para_of_ang_eq (ne_32_of_B Bbxc) dO cO cL (onLine_2_of_B Bbxc bL cL) xX aX
+  --   (DiffSide_symm adL) (by linperm[angle_extension_of_B (ne_of_Para cL dP ParaLP) $ B_symm Bbxc])
+  -- have Beld := B_of_sq Bbxc xX lX lP ParaQX ParaOX pgram1
+  -- have fbc_split := angle_add_of_sameside bR fR bL cL (sameSide_symm $ sameside_of_Para_online aT
+  --   (onLine_3_of_B (B_symm Bcag) gT aT) ParaTR) $ sameside_of_sameside_DiffSide bR bN bL fR aN cL
+  --   (sameside_of_Para_online aT (onLine_3_of_B (B_symm Bcag) gT aT) ParaTR) $
+  --   DiffSide_of_sameside_DiffSide (sameSide_symm $ sameside_of_Para_online' fS gS ParaNS) $
+  --   DiffSide_symm cgN
+  -- have abe_split := angle_add_of_sameside bN aN bQ eQ (sameside_of_sameside_DiffSide bQ bL bN eQ cL
+  --   aN (sameSide_symm $ sameside_of_pyth Beld aX lX pgram1 ParaQX) $ DiffSide_of_sameside_DiffSide
+  --   (sameside_of_Para_online' dP eP ParaLP) $ DiffSide_symm adL) $ sameside_of_pyth Beld aX lX
+  --   pgram1 ParaQX
+  -- have bck_split := angle_add_of_sameside cL bL cW kW (sameside_of_sameside_DiffSide cW cM cL kW aM
+  --   bL (sameside_of_Para_online aU (onLine_3_of_B (B_symm Bbah) hU aU) ParaUW) $
+  --   DiffSide_of_sameside_DiffSide (sameside_of_Para_online' hV kV ParaMV) $ DiffSide_symm bhM)
+  --   (sameSide_symm $ sameside_of_Para_online aU (onLine_3_of_B (B_symm Bbah) hU aU) ParaUW)
+  -- have acd_split := angle_add_of_sameside cM aM cO dO (sameside_of_sameside_DiffSide cO cL cM dO bL
+  --   aM (sameSide_symm $ sameside_of_pyth (B_symm Beld) aX lX ⟨cL, bL, bQ, eQ, eP, dP, dO, cO,
+  --   ParaLP, Para_symm ParaOQ⟩ ParaOX) $ DiffSide_symm adL) $ sameside_of_pyth (B_symm Beld) aX lX
+  --   ⟨cL, bL, bQ, eQ, eP, dP, dO, cO, ParaLP, Para_symm ParaOQ⟩ ParaOX
+  -- have ⟨ae_fc, _, _⟩ := sas (by linperm : length b a = length b f)
+  --   (by linperm : length b e = length b c) $ by linperm
+  -- have tri1_eq := area_eq_of_SSS (by linperm : length b a = length b f)
+  --   (by linperm : length b e = length b c) ae_fc
+  -- have ⟨ad_kb, _, _⟩ := sas (by linperm : length c a = length c k)
+  --   (by linperm : length c d = length c b) $ by linperm
+  -- have tri2_eq := area_eq_of_SSS (by linperm : length c a = length c k)
+  --   (by linperm : length c d = length c b) ad_kb
+  -- have tri_req1 := twice_pgram_of_tri aX
+  --   ⟨xX, lX, lP, eP, eQ, bQ, bL, onLine_2_of_B Bbxc bL cL, Para_symm ParaQX, Para_symm ParaLP⟩
+  -- have tri_req2 := twice_pgram_of_tri (onLine_3_of_B (B_symm Bcag) gT aT) pgram2
+  -- have tri_req3 := twice_pgram_of_tri aX
+  --   ⟨lX, xX, onLine_2_of_B Bbxc bL cL, cL, cO, dO, dP, lP, Para_symm ParaOX, ParaLP⟩
+  -- have tri_req4 := twice_pgram_of_tri (onLine_3_of_B (B_symm Bbah) hU aU) pgram3
+  -- have sq_split := quad_add_of_quad Bbxc Beld bL (onLine_2_of_B Bbxc bL cL) cO dO eP lP
+  --   (sameside_of_Para_online bL cL ParaLP) (sameside_of_Para_online' dP lP ParaLP)
+  --   $ sameside_of_Para_online' bQ eQ ParaOQ
+  -- have right_half := quad_area_comm (onLine_2_of_B Bbxc bL cL) cL cO dO dP lP
+  --   (sameside_of_Para_online (onLine_2_of_B Bbxc bL cL) cL ParaLP)
+  --   (sameside_of_Para_online' dP lP ParaLP) $ sameside_of_Para_online' xX lX ParaOX
+  -- linperm
+  -- done
