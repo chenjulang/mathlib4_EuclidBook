@@ -10,6 +10,7 @@ namespace IncidenceGeometry
 
 -- todolist
 -- 0.将命题描述成中文，改写代码成不跳步。 -- ok
+-- 0.1. 将几何原本那个文件优化一下，太卡了。
 -- 1.将两个椭圆的定义互相等价证明一下。
 -- theorem putnam_1963_a6
 -- (F1 F2 U V A B C D P Q : EuclideanSpace ℝ (Fin 2))
@@ -34,7 +35,7 @@ namespace IncidenceGeometry
 
 /--  椭圆的第一种定义：
 存在一个定点(S)，一条定直线(XM)，e是一个小于1的常数，点P满足：SP = e * PM 。
-所有这样的点P组成的曲线就是椭圆形。
+所有这样的点P组成的曲线就是椭圆形。 complicated
 -/
 def Point_on_Ellipse (P:Point) (S : Point) (XM :Line) (E : ℝ) : Prop :=
-  (length P S) = E * (distance P XM)
+  (length P S) = E * (distancePL P XM)
