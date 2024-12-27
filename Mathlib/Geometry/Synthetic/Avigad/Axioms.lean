@@ -42,6 +42,8 @@ class IncidenceGeometry where
     CirclesInter : Circle → Circle → Prop
     /--The distance between two points-/
     length : Point → Point → ℝ
+    /-- 点和线之间的距离 -/
+    distancePL : Point → Line → ℝ
     /--The angle made between three points-/
     angle : Point → Point → Point → ℝ
     /--The constant dedicated to the right angle-/
@@ -171,7 +173,7 @@ class IncidenceGeometry where
     area_invariant_cycle : ∀ a b c, area a b c = area c a b
     /--Area is completely symmetric-/
     area_invariant_flip : ∀ a b c, area a b c = area a c b
-    /--If SSS is satisfied then triangles have equal area-/
+    /--If SSS is satisfied then triangles have equal area。 -/
     area_eq_of_SSS : ∀ {a b c a1 b1 c1}, length a b = length a1 b1 →
       length a c = length a1 c1 → length b c = length b1 c1 → area a b c = area a1 b1 c1
     /--Given betweeness the lengths of segments add as expected-/
