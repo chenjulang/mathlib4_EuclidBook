@@ -70,10 +70,10 @@ class IncidenceGeometry where
       ∃ a, B b a c ∧ OnCircle a α
     /--Getting points on circles。 ab直线和圆交点c-/
     pt_oncircle_of_inside_ne : ∀ {a b α}, a ≠ b → InCircle b α → ∃ c, B a b c ∧ OnCircle c α
-    /--Getting points of intersection of two circles-/
+    /--Getting points of intersection of two circles。两圆相交两点。-/
     pts_of_circlesInter : ∀ {α β}, CirclesInter α β →
       ∃ a b, a ≠ b ∧ OnCircle a α ∧ OnCircle a β ∧ OnCircle b α ∧ OnCircle b β
-    /--Obtaining a specific point of intersection between a line and a circle-/
+    /--Obtaining a specific point of intersection between a line and a circle。两圆相交，可以找到一个点不在两圆心的直线上 -/
     pt_sameSide_of_circlesInter : ∀ {b c d L α β}, OnLine c L → OnLine d L → ¬OnLine b L →
       CenterCircle c α → CenterCircle d β → CirclesInter α β → ∃ a, SameSide a b L ∧ OnCircle a α ∧
       OnCircle a β
@@ -102,7 +102,7 @@ class IncidenceGeometry where
     B124_of_B134_B123 : ∀ {a b c d}, B a b c → B a d b → B a d c
     /--Deducing betweeness from four points on a line-/
     B124_of_B123_B234 : ∀ {a b c d}, B a b c → B b c d → B a b d
-    /--If three distict points are on a line then they are between in some way-/
+    /--If three distict points are on a line then they are between in some way。三个共线的点肯定有某种排序顺序。-/
     B_of_three_onLine_ne : ∀ {a b c L}, a ≠ b → a ≠ c → b ≠ c → OnLine a L → OnLine b L →
       OnLine c L → B a b c ∨ B b a c ∨ B a c b
     /--Conditions for not B given four points on a line-/
@@ -150,7 +150,7 @@ class IncidenceGeometry where
       OnCircle b α ∨ InCircle b α → LineCircleInter L α
     /--Condition for line circle intersection。a点同时在直线上，圆里面。则直线和圆相交 -/
     lineCircleInter_of_inside_onLine : ∀ {a L α}, OnLine a L → InCircle a α → LineCircleInter L α
-    /--Condition for circle circle intersection-/
+    /--Condition for circle circle intersection。两个点可以判断两个圆相交。 -/
     circlesInter_of_inside_on_circle : ∀ {a b α β}, OnCircle b α → OnCircle a β → InCircle a α →
       InCircle b β → CirclesInter α β
     /--A length is zero iff the points are equal-/
@@ -176,7 +176,7 @@ class IncidenceGeometry where
       length a c = length a1 c1 → length b c = length b1 c1 → area a b c = area a1 b1 c1
     /--Given betweeness the lengths of segments add as expected-/
     length_sum_of_B : ∀ {a b c}, B a b c → length a b + length b c = length a c
-    /--Points on a circle have the same distance from the radius-/
+    /--Points on a circle have the same distance from the radius。圆上的点到圆心距离相等 -/
     on_circle_iff_length_eq : ∀ {a b c α}, CenterCircle a α → OnCircle b α →
       (length a b = length a c ↔ OnCircle c α)
     /--A point on a circle has a greater distance from the center than a point inside the circle-/
@@ -235,11 +235,11 @@ def IsoTri (a b c : Point) : Prop := Triangle a b c ∧ length a b = length a c
 /--Definition of parallel-/
 def Para (M N : Line) : Prop := ∀ e, ¬OnLine e M ∨ ¬OnLine e N
 
-/--Definition of parallelogram-/
+/--Definition of parallelogram。平行四边形 -/
 def Paragram (a b c d : Point) (L M N O : Line) : Prop := OnLine a L ∧ OnLine b L ∧ OnLine b M ∧
     OnLine c M ∧ OnLine c N ∧ OnLine d N ∧ OnLine d O ∧ OnLine a O ∧ Para L N ∧ Para M O
 
-/--Definition of a square-/
+/--Definition of a square。正方形 -/
 def Square (a b c d : Point) : Prop := length a b = length b c ∧ length a b = length c d ∧
     length a b = length d a ∧ angle a b c = rightangle ∧ angle b c d = rightangle ∧
     angle c d a = rightangle ∧ angle d a b = rightangle
